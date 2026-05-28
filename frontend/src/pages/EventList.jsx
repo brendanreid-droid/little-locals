@@ -52,7 +52,7 @@ export default function EventList() {
       
       {/* Joyful Hero Banner */}
       <div style={{ textAlign: 'center', marginBottom: '48px', animation: 'slideUp 0.4s ease' }}>
-        <div style={{ display: 'inline-flex', padding: '6px 16px', background: 'hsl(14, 95%, 96%)', color: 'var(--primary)', borderRadius: '50px', fontWeight: '800', fontSize: '0.85rem', marginBottom: '16px', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'inline-flex', padding: '6px 16px', background: 'var(--primary-soft)', color: 'var(--primary)', borderRadius: '50px', fontWeight: '800', fontSize: '0.85rem', marginBottom: '16px', gap: '8px', alignItems: 'center' }}>
           <Smile size={16} /> 100% Free Family Fun on the Central Coast
         </div>
         <h1 style={{ fontWeight: 900, marginBottom: '16px', color: 'var(--text-dark)' }}>

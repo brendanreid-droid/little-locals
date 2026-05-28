@@ -427,8 +427,8 @@ Read the full review and guide here: https://littlelocals.au/blog/${postId}`;
             gap: '12px', 
             padding: '16px 20px', 
             borderRadius: 'var(--radius-md)', 
-            backgroundColor: 'hsl(14, 95%, 98%)', 
-            border: '1px solid hsl(14, 95%, 92%)', 
+            backgroundColor: 'var(--primary-soft)', 
+            border: '1px solid var(--border-soft)', 
             margin: '8px 0' 
           }}>
             <input 

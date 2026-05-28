@@ -51,7 +51,7 @@ export default function BlogList() {
       
       {/* Delightful Hero Banner */}
       <div style={{ textAlign: 'center', marginBottom: '48px', animation: 'slideUp 0.4s ease' }}>
-        <div style={{ display: 'inline-flex', padding: '6px 16px', background: 'hsl(198, 93%, 95%)', color: 'var(--secondary)', borderRadius: '50px', fontWeight: '800', fontSize: '0.85rem', marginBottom: '16px', gap: '8px', alignItems: 'center' }}>
+        <div style={{ display: 'inline-flex', padding: '6px 16px', background: 'var(--secondary-soft)', color: 'var(--secondary)', borderRadius: '50px', fontWeight: '800', fontSize: '0.85rem', marginBottom: '16px', gap: '8px', alignItems: 'center' }}>
           <BookOpen size={16} /> Central Coast Parenting Reviews & Guides
         </div>
         <h1 style={{ fontWeight: 900, marginBottom: '16px', color: 'var(--text-dark)' }}>

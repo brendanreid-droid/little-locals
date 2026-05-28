@@ -142,7 +142,7 @@ ${event.description || ''}
               marginBottom: '32px' 
             }}>
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'hsl(14, 95%, 92%)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--primary-soft)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
                   <CalendarIcon size={20} />
                 </div>
                 <div>
@@ -154,7 +154,7 @@ ${event.description || ''}
               </div>
 
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'hsl(198, 93%, 92%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--secondary)' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--secondary-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--secondary)' }}>
                   <Clock size={20} />
                 </div>
                 <div>
@@ -164,7 +164,7 @@ ${event.description || ''}
               </div>
 
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'hsl(168, 76%, 92%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--teal)' }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--teal-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--teal)' }}>
                   <MapPin size={20} />
                 </div>
                 <div>
@@ -204,7 +204,7 @@ ${event.description || ''}
 
         {/* Facebook Review Sharing Helper (Admin Assistant Tool) */}
         <div style={{ 
-          backgroundColor: 'hsl(198, 93%, 98%)', 
+          backgroundColor: 'var(--secondary-soft)', 
           borderRadius: 'var(--radius-lg)', 
           border: '1px dashed var(--secondary)',
           padding: '32px',

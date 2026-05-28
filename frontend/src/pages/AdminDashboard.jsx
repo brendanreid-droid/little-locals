@@ -406,7 +406,7 @@ export default function AdminDashboard() {
         
         /* Tab: Suggested Scrapes List */
         <div>
-          <div style={{ textAlign: 'left', marginBottom: '24px', backgroundColor: 'hsl(168, 76%, 98%)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid hsl(168, 76%, 90%)' }}>
+          <div style={{ textAlign: 'left', marginBottom: '24px', backgroundColor: 'var(--teal-soft)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-soft)' }}>
             <h4 style={{ fontWeight: 800, color: 'var(--teal)' }}>Collate & Approve Scraped Facebook Events</h4>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
               These are free family activities identified on local Central Coast pages. Review the event parameters and click Approve to push them live to the website!

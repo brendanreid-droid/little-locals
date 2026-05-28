@@ -469,8 +469,8 @@ ${form.description || ''}
             gap: '12px', 
             padding: '16px 20px', 
             borderRadius: 'var(--radius-md)', 
-            backgroundColor: 'hsl(198, 93%, 98%)', 
-            border: '1px solid hsl(198, 93%, 92%)', 
+            backgroundColor: 'var(--secondary-soft)', 
+            border: '1px solid var(--border-soft)', 
             margin: '8px 0' 
           }}>
             <input 

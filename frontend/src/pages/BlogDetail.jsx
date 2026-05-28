@@ -167,7 +167,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
 
       {/* Facebook Blog Sharing Helper (Admin Assistant Tool) */}
       <div style={{ 
-        backgroundColor: 'hsl(14, 95%, 98%)', 
+        backgroundColor: 'var(--primary-soft)', 
         borderRadius: 'var(--radius-lg)', 
         border: '1px dashed var(--primary)',
         padding: '32px',

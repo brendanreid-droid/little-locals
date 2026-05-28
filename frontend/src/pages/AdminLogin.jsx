@@ -60,7 +60,7 @@ export default function AdminLogin() {
       }}>
         
         {/* Header */}
-        <div style={{ display: 'inline-flex', width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'hsl(14, 95%, 96%)', color: 'var(--primary)', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+        <div style={{ display: 'inline-flex', width: '60px', height: '60px', borderRadius: '50%', backgroundColor: 'var(--primary-soft)', color: 'var(--primary)', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
           <Lock size={28} />
         </div>
         <h2 style={{ fontWeight: 900, marginBottom: '8px' }}>Admin Portal</h2>
