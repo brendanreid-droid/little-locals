@@ -4,27 +4,27 @@
    ========================================== */
 
 :root {
-  /* HSL Kinetic Community Palette */
-  --primary: hsl(147, 91%, 13%);         /* Forest Green (Deep & Trustworthy) */
+  /* HSL Kinetic Community - Stitch 'Updated Palette' */
+  --primary: hsl(147, 91%, 13%);          /* Forest Green (Trustworthy Brand Anchor) */
   --primary-hover: hsl(147, 90%, 9%);
-  --primary-soft: hsl(147, 40%, 94%);
+  --primary-soft: hsl(129, 68%, 83%);     /* Soft Mint green (#b6f1bf) */
   
-  --secondary: hsl(330, 46%, 42%);       /* Vibrant Pink (Energetic Action Accent) */
-  --secondary-hover: hsl(330, 46%, 35%);
-  --secondary-soft: hsl(330, 60%, 95%);
+  --secondary: hsl(33, 100%, 28%);       /* Burnt Ochre Orange/Brown (#8e4e00) */
+  --secondary-hover: hsl(33, 100%, 20%);
+  --secondary-soft: hsl(24, 100%, 88%);   /* Soft Peach/Orange (#ffdcc1) */
   
-  --teal: hsl(181, 78%, 33%);            /* Community Teal (Category Badge Teal) */
-  --teal-hover: hsl(181, 78%, 27%);
-  --teal-soft: hsl(181, 40%, 92%);
+  --yellow: hsl(34, 100%, 50%);          /* Saturated Orange Highlight (#fd9000) */
+  --yellow-hover: hsl(34, 100%, 45%);
+  --yellow-soft: hsl(48, 100%, 72%);      /* Soft Sunflower Yellow (#ffe170) */
   
-  --yellow: hsl(334, 100%, 77%);         /* Soft Pink Accent Highlight */
-  --yellow-hover: hsl(334, 100%, 70%);
-  --yellow-soft: hsl(334, 100%, 95%);
+  --teal: hsl(50, 100%, 22%);            /* Olive Gold (#705d00) */
+  --teal-hover: hsl(50, 100%, 17%);
+  --teal-soft: hsl(50, 100%, 39%);       /* Sunflower Gold (#c9a900) */
   
   /* Neutral scale */
-  --bg-cream: hsl(18, 100%, 98%);        /* Cozy warm oatmeal/off-white background */
+  --bg-cream: hsl(15, 20%, 98%);         /* Oatmeal off-white (#fcf9f8) */
   --bg-white: hsl(0, 0%, 100%);
-  --text-dark: hsl(22, 13%, 11%);        /* Deep Night Plum (Sophisticated Contrast) */
+  --text-dark: hsl(0, 0%, 11%);          /* Deep Onyx Charcoal (#1c1b1b) */
   --text-muted: hsl(22, 8%, 45%);
   --border-soft: hsl(18, 20%, 90%);
   --border-focus: hsl(147, 91%, 35%);
