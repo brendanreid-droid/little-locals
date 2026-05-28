@@ -1,0 +1,574 @@
+/* ==========================================
+   LITTLE LOCALS - DESIGN SYSTEM & RULES
+   High-Fidelity, Joyful & Family-Friendly
+   ========================================== */
+
+:root {
+  /* HSL Joyful and Premium Palette (Australian Theme) */
+  --primary: hsl(14, 95%, 62%);       /* Sunrise Coral (Joy & Energy) */
+  --primary-hover: hsl(14, 90%, 54%);
+  --secondary: hsl(198, 93%, 60%);     /* Sky Ocean Blue (Central Coast Beaches) */
+  --secondary-hover: hsl(198, 85%, 52%);
+  --teal: hsl(168, 76%, 42%);          /* Seafoam Teal (Nature & Play) */
+  --teal-hover: hsl(168, 70%, 35%);
+  --yellow: hsl(45, 98%, 56%);         /* Sunbeam Yellow (Accents/Highlights) */
+  
+  /* Neutral scale */
+  --bg-cream: hsl(36, 100%, 98%);      /* Soft warm background, easy on parents' eyes */
+  --bg-white: hsl(0, 0%, 100%);
+  --text-dark: hsl(230, 25%, 18%);     /* Deep slate blue/gray for excellent readability */
+  --text-muted: hsl(220, 12%, 48%);
+  --border-soft: hsl(30, 30%, 92%);
+  --border-focus: hsl(14, 95%, 80%);
+  --shadow-light: 0 4px 20px -2px rgba(14, 20, 40, 0.05), 0 2px 8px -1px rgba(0, 0, 0, 0.02);
+  --shadow-hover: 0 16px 32px -4px rgba(14, 20, 40, 0.12), 0 4px 12px -2px rgba(14, 20, 40, 0.04);
+  --shadow-coral: 0 10px 25px -5px rgba(244, 105, 68, 0.3);
+  --shadow-teal: 0 10px 25px -5px rgba(26, 188, 156, 0.25);
+  
+  /* Fonts */
+  --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+  
+  /* Borders & Radius */
+  --radius-lg: 24px;
+  --radius-md: 16px;
+  --radius-sm: 8px;
+  
+  /* Transitions */
+  --transition-bouncy: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  --transition-smooth: all 0.25s ease;
+}
+
+/* Base resets */
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--bg-cream);
+  color: var(--text-dark);
+  min-height: 100vh;
+  line-height: 1.6;
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: var(--transition-smooth);
+}
+
+button, input, select, textarea {
+  font-family: inherit;
+}
+
+/* Layout container */
+.app-container {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  max-width: 1400px;
+  margin: 0 auto;
+  position: relative;
+  background-color: var(--bg-white);
+  box-shadow: 0 0 40px rgba(0,0,0,0.02);
+}
+
+/* Delightful Utility Elements */
+.text-gradient {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--teal) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.text-gradient-coral {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--yellow) 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Badges */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  border-radius: 50px;
+  gap: 6px;
+  transition: var(--transition-smooth);
+}
+
+.badge-free {
+  background-color: hsl(168, 76%, 95%);
+  color: var(--teal);
+}
+
+.badge-coral {
+  background-color: hsl(14, 95%, 96%);
+  color: var(--primary);
+}
+
+.badge-blue {
+  background-color: hsl(198, 93%, 95%);
+  color: var(--secondary);
+}
+
+.badge-yellow {
+  background-color: hsl(45, 98%, 92%);
+  color: hsl(45, 90%, 35%);
+}
+
+/* Buttons */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px 28px;
+  font-size: 0.95rem;
+  font-weight: 700;
+  border-radius: 50px;
+  border: none;
+  cursor: pointer;
+  gap: 8px;
+  transition: var(--transition-bouncy);
+}
+
+.btn:active {
+  transform: scale(0.96);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, var(--primary) 0%, hsl(14, 95%, 68%) 100%);
+  color: var(--bg-white);
+  box-shadow: var(--shadow-coral);
+}
+
+.btn-primary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px -5px rgba(244, 105, 68, 0.45);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, var(--teal) 0%, hsl(168, 70%, 48%) 100%);
+  color: var(--bg-white);
+  box-shadow: var(--shadow-teal);
+}
+
+.btn-secondary:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 30px -5px rgba(26, 188, 156, 0.35);
+}
+
+.btn-outline {
+  background-color: transparent;
+  border: 2px solid var(--border-soft);
+  color: var(--text-dark);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+  background-color: hsl(14, 95%, 98%);
+  transform: translateY(-2px);
+}
+
+.btn-icon-only {
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Cards Grid */
+.event-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 28px;
+  padding: 20px 0;
+}
+
+/* Event Card styling */
+.event-card {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-soft);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  box-shadow: var(--shadow-light);
+  transition: var(--transition-bouncy);
+}
+
+.event-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-hover);
+}
+
+.event-image-container {
+  position: relative;
+  height: 200px;
+  width: 100%;
+  overflow: hidden;
+}
+
+.event-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.6s cubic-bezier(0.165, 0.84, 0.44, 1);
+}
+
+.event-card:hover .event-image {
+  transform: scale(1.08);
+}
+
+.event-price-tag {
+  position: absolute;
+  top: 16px;
+  left: 16px;
+  background-color: var(--teal);
+  color: var(--bg-white);
+  padding: 6px 16px;
+  border-radius: 50px;
+  font-size: 0.85rem;
+  font-weight: 800;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.15);
+}
+
+.event-details-bar {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: linear-gradient(transparent, rgba(0,0,0,0.7));
+  padding: 24px 16px 12px;
+  color: var(--bg-white);
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.event-card-content {
+  padding: 24px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  gap: 12px;
+}
+
+.event-card-title {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: var(--text-dark);
+  line-height: 1.3;
+}
+
+.event-card-description {
+  font-size: 0.95rem;
+  color: var(--text-muted);
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  flex-grow: 1;
+}
+
+.event-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-soft);
+  margin-top: auto;
+}
+
+.event-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+}
+
+/* Beautiful Interactive Calendar view */
+.calendar-view {
+  background: var(--bg-white);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--border-soft);
+  padding: 32px;
+  box-shadow: var(--shadow-light);
+  margin-top: 20px;
+}
+
+.calendar-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 28px;
+}
+
+.calendar-title {
+  font-size: 1.6rem;
+  font-weight: 900;
+  color: var(--text-dark);
+}
+
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 12px;
+}
+
+.calendar-weekday {
+  text-align: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 12px;
+}
+
+.calendar-day {
+  aspect-ratio: 1.1;
+  background-color: var(--bg-cream);
+  border-radius: var(--radius-md);
+  border: 2px solid transparent;
+  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  cursor: pointer;
+  position: relative;
+  transition: var(--transition-bouncy);
+}
+
+.calendar-day:hover:not(.empty-day) {
+  transform: scale(1.05);
+  border-color: var(--primary-hover);
+  background-color: var(--bg-white);
+  box-shadow: var(--shadow-hover);
+  z-index: 2;
+}
+
+.calendar-day-number {
+  font-weight: 800;
+  font-size: 1rem;
+  color: var(--text-dark);
+}
+
+.calendar-day-today {
+  border-color: var(--secondary) !important;
+  background-color: hsl(198, 93%, 97%);
+}
+
+.calendar-day-today .calendar-day-number {
+  color: var(--secondary);
+}
+
+.calendar-day-selected {
+  border-color: var(--primary) !important;
+  background-color: hsl(14, 95%, 97%);
+}
+
+.calendar-day-selected .calendar-day-number {
+  color: var(--primary);
+}
+
+.empty-day {
+  background-color: transparent;
+  cursor: default;
+}
+
+.calendar-events-indicator {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  margin-top: 6px;
+  max-height: 24px;
+  overflow: hidden;
+}
+
+.calendar-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background-color: var(--primary);
+}
+
+.calendar-dot-multiple {
+  font-size: 0.7rem;
+  background: var(--primary);
+  color: white;
+  border-radius: 4px;
+  padding: 1px 4px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+/* Public Event details popover drawer */
+.event-popover {
+  margin-top: 24px;
+  background-color: hsl(14, 95%, 98%);
+  border: 1px dashed var(--primary);
+  border-radius: var(--radius-lg);
+  padding: 24px;
+  animation: slideUp 0.3s ease;
+}
+
+/* Beautiful Form controls */
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+  text-align: left;
+}
+
+.form-label {
+  font-weight: 800;
+  font-size: 0.9rem;
+  color: var(--text-dark);
+}
+
+.form-control {
+  width: 100%;
+  padding: 14px 20px;
+  border-radius: 50px;
+  border: 2px solid var(--border-soft);
+  background-color: var(--bg-cream);
+  font-size: 0.95rem;
+  color: var(--text-dark);
+  font-weight: 500;
+  transition: var(--transition-smooth);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--primary);
+  background-color: var(--bg-white);
+  box-shadow: 0 0 0 4px var(--border-focus);
+}
+
+textarea.form-control {
+  border-radius: var(--radius-md);
+  resize: vertical;
+  min-height: 120px;
+}
+
+/* Mobile-first bottom nav & desktop header layout */
+.header {
+  padding: 24px 40px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid var(--border-soft);
+  background: var(--bg-white);
+}
+
+.logo-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-weight: 900;
+  font-size: 1.5rem;
+  color: var(--text-dark);
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--yellow) 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  box-shadow: var(--shadow-coral);
+}
+
+.nav-links {
+  display: flex;
+  align-items: center;
+  gap: 32px;
+}
+
+.nav-link {
+  font-weight: 700;
+  font-size: 1rem;
+  color: var(--text-muted);
+  position: relative;
+  padding: 4px 0;
+}
+
+.nav-link:hover, .nav-link.active {
+  color: var(--primary);
+}
+
+.nav-link.active::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background-color: var(--primary);
+  border-radius: 50px;
+  animation: expandIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.footer {
+  padding: 48px 40px;
+  background-color: hsl(230, 25%, 98%);
+  border-top: 1px solid var(--border-soft);
+  margin-top: auto;
+  text-align: center;
+  color: var(--text-muted);
+}
+
+/* Animation utilities */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes expandIn {
+  from { transform: scaleX(0); }
+  to { transform: scaleX(1); }
+}
+
+/* Responsive queries */
+@media (max-width: 768px) {
+  .header {
+    padding: 16px 20px;
+  }
+  .nav-links {
+    display: none; /* Hide header links on mobile, we can use mobile drawer or simple nav */
+  }
+  .calendar-view {
+    padding: 16px;
+  }
+  .calendar-grid {
+    gap: 6px;
+  }
+  .calendar-day {
+    padding: 4px;
+  }
+  .calendar-day-number {
+    font-size: 0.85rem;
+  }
+  .calendar-dot {
+    width: 6px;
+    height: 6px;
+  }
+}

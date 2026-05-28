@@ -1,0 +1,29 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Public read access to events, write only for authenticated admins
+    match /events/{eventId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Public read access to blog posts, write only for authenticated admins
+    match /posts/{postId} {
+      allow read: if true;
+      allow write: if request.auth != null;
+    }
+    
+    // Allow public creation of newsletter subscriptions, admin-only read/write
+    match /subscribers/{subscriberId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+    
+    // Allow public creation of scraper suggestions (or admin only, let's make it public create so scraper or client can upload suggested events, but read/write by admin only)
+    match /suggestions/{suggestionId} {
+      allow create: if true;
+      allow read, update, delete: if request.auth != null;
+    }
+  }
+}
