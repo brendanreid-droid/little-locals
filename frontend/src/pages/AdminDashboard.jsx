@@ -3,12 +3,13 @@ import { useNavigate, Link } from 'react-router-dom';
 import { collection, getDocs, doc, deleteDoc, addDoc, query, orderBy } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../firebase';
-import { Plus, Edit2, Trash2, LogOut, Search, Calendar, MapPin, Smile, CheckCircle, XCircle, BookOpen } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, Search, Calendar, MapPin, Smile, CheckCircle, XCircle, BookOpen, Cpu, RefreshCw } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [events, setEvents] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [scraping, setScraping] = useState(false);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('events'); // 'events', 'suggestions', or 'posts'
   const [searchTerm, setSearchTerm] = useState('');
@@ -132,6 +133,50 @@ export default function AdminDashboard() {
     } catch (error) {
       console.error("Error rejecting suggestion:", error);
       alert("Failed to dismiss suggestion: " + error.message);
+    }
+  };
+
+  const handleRunScraper = async () => {
+    setScraping(true);
+    try {
+      const response = await fetch('/api/scrape-events', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      const data = await response.json();
+      
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to execute scraper.');
+      }
+      
+      const newSuggestions = data.suggestions || [];
+      if (newSuggestions.length === 0) {
+        alert("Scraper executed successfully, but found no new free events this time.");
+        setScraping(false);
+        return;
+      }
+      
+      // Save each scraped suggestion to Firestore
+      const suggestionsCol = collection(db, 'suggestions');
+      const addedSuggestions = [];
+      
+      for (const item of newSuggestions) {
+        const docRef = await addDoc(suggestionsCol, item);
+        addedSuggestions.push({ id: docRef.id, ...item });
+      }
+      
+      // Update local state instantly so the user sees the new listings
+      setSuggestions(prev => [...addedSuggestions, ...prev]);
+      
+      alert(`Scraper completed successfully! (${data.mode})\n\nFound and loaded ${newSuggestions.length} new suggested activities into your queue.`);
+    } catch (error) {
+      console.error("Scraper handler error:", error);
+      alert("Scraper run encountered an error: " + error.message);
+    } finally {
+      setScraping(false);
     }
   };
 
@@ -406,11 +451,52 @@ export default function AdminDashboard() {
         
         /* Tab: Suggested Scrapes List */
         <div>
-          <div style={{ textAlign: 'left', marginBottom: '24px', backgroundColor: 'var(--teal-soft)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid var(--border-soft)' }}>
-            <h4 style={{ fontWeight: 800, color: 'var(--teal)' }}>Collate & Approve Scraped Facebook Events</h4>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              These are free family activities identified on local Central Coast pages. Review the event parameters and click Approve to push them live to the website!
-            </p>
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            flexWrap: 'wrap', 
+            gap: '20px', 
+            textAlign: 'left', 
+            marginBottom: '24px', 
+            backgroundColor: 'var(--teal-soft)', 
+            padding: '20px', 
+            borderRadius: 'var(--radius-md)', 
+            border: '1px solid var(--border-soft)' 
+          }}>
+            <div style={{ flex: '1 1 500px' }}>
+              <h4 style={{ fontWeight: 800, color: 'var(--teal)' }}>Collate & Approve Scraped Facebook Events</h4>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
+                These are free family activities identified on local Central Coast pages. Review the event parameters and click Approve to push them live to the website!
+              </p>
+            </div>
+            <div>
+              <button 
+                onClick={handleRunScraper} 
+                disabled={scraping}
+                className={`btn ${scraping ? 'btn-outline' : 'btn-secondary'}`}
+                style={{ 
+                  padding: '10px 20px', 
+                  fontSize: '0.85rem', 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '8px',
+                  backgroundColor: scraping ? 'transparent' : 'var(--teal)',
+                  borderColor: 'var(--teal)',
+                  color: scraping ? 'var(--teal)' : 'white'
+                }}
+              >
+                {scraping ? (
+                  <>
+                    <RefreshCw className="animate-spin" size={16} /> Crawling Feeds...
+                  </>
+                ) : (
+                  <>
+                    <Cpu size={16} /> Run Scraper Now
+                  </>
+                )}
+              </button>
+            </div>
           </div>
 
           {suggestions.length === 0 ? (
