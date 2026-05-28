@@ -1,8 +1,9 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
 import { doc, getDoc, collection, addDoc, updateDoc } from 'firebase/firestore';
-import { db, auth } from '../firebase';
+import { db, auth, storage } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Save, ArrowLeft, Image, Sparkles, AlertCircle } from 'lucide-react';
 
 export default function EventForm() {
@@ -23,8 +24,11 @@ export default function EventForm() {
     age_group: 'All Ages'
   });
 
+  const [shareToFacebook, setShareToFacebook] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditMode);
+  const [uploading, setUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
 
   const categories = ['Playground', 'Library', 'Art & Craft', 'Outdoors', 'Sports', 'Music & Storytime'];
@@ -80,19 +84,46 @@ export default function EventForm() {
     setForm(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleSuggestImage = () => {
-    // Generate lovely Unsplash image queries based on categories
-    let query = 'playground-kids';
-    if (form.category === 'Library') query = 'kids-reading-books';
-    if (form.category === 'Art & Craft') query = 'kids-painting-crafts';
-    if (form.category === 'Outdoors') query = 'kids-park-nature';
-    if (form.category === 'Sports') query = 'kids-playing-sports';
-    if (form.category === 'Music & Storytime') query = 'kids-singing-storytelling';
+  const handleFileUpload = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
 
-    const randomId = Math.floor(Math.random() * 1000);
-    const suggestedUrl = `https://images.unsplash.com/photo-${randomId === 0 ? '1596464716127' : '1502082553048'}-f2a82984de30?auto=format&fit=crop&w=800&q=80&sig=${randomId}&q=${query}`;
-    
-    // Instead of random hash signature, provide nice high-quality stock kids assets
+    setUploading(true);
+    setUploadProgress(0);
+    setError('');
+
+    const storageRef = ref(storage, `event_images/${Date.now()}_${file.name}`);
+    const uploadTask = uploadBytesResumable(storageRef, file);
+
+    uploadTask.on(
+      'state_changed',
+      (snapshot) => {
+        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+        setUploadProgress(progress);
+      },
+      (err) => {
+        console.error("Storage upload error:", err);
+        setUploading(false);
+        if (err.code === 'storage/unauthorized') {
+          setError('Failed to upload image: Permission denied. Ensure Cloud Storage is set up in your Firebase Console.');
+        } else {
+          setError(`Failed to upload image: ${err.message}. Please activate Storage in your console.`);
+        }
+      },
+      async () => {
+        try {
+          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+          setForm((prev) => ({ ...prev, image_url: downloadUrl }));
+        } catch (err) {
+          setError('Error getting download URL: ' + err.message);
+        } finally {
+          setUploading(false);
+        }
+      }
+    );
+  };
+
+  const handleSuggestImage = () => {
     const assets = {
       'Playground': 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80',
       'Library': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
@@ -103,6 +134,26 @@ export default function EventForm() {
     };
 
     setForm(prev => ({ ...prev, image_url: assets[form.category] || assets['Playground'] }));
+  };
+
+  // Generate Facebook share text
+  const getFormattedFacebookPost = (eventId) => {
+    const dateFormatted = form.date 
+      ? new Date(form.date).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+      : 'Flexible Date';
+    
+    return `🎒 FREE CENTRAL COAST KIDS ACTIVITY! 🎒
+
+Discover: ${form.title}
+
+📅 Date: ${dateFormatted}
+⏰ Time: ${form.time || 'Flexible / Check listing'}
+📍 Location: ${form.location}
+👶 Age Suitability: ${form.age_group || 'All Ages'}
+
+${form.description || ''}
+
+✨ Find more 100% free family events and reviews at: https://littlelocals.au/events/${eventId}`;
   };
 
   const handleSubmit = async (e) => {
@@ -116,13 +167,45 @@ export default function EventForm() {
     setError('');
 
     try {
+      let eventId = id;
+      
       if (isEditMode) {
         const docRef = doc(db, 'events', id);
         await updateDoc(docRef, form);
       } else {
         const colRef = collection(db, 'events');
-        await addDoc(colRef, form);
+        const docAdded = await addDoc(colRef, form);
+        eventId = docAdded.id;
       }
+
+      // If checked, post directly to Facebook via Vercel serverless function
+      if (shareToFacebook) {
+        try {
+          const fbMessage = getFormattedFacebookPost(eventId);
+          const response = await fetch('/api/post-to-facebook', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              message: fbMessage,
+              link: `https://littlelocals.au/events/${eventId}`,
+              image_url: form.image_url
+            })
+          });
+
+          const fbData = await response.json();
+          if (!response.ok) {
+            alert(`Listing saved successfully! However, direct Facebook posting failed: ${fbData.error || 'Server error'}. You can still copy the caption manually from the event details page!`);
+          } else {
+            alert("Listing saved and successfully shared directly to your Facebook Page! 🎉");
+          }
+        } catch (fbErr) {
+          console.error("Facebook post catch error:", fbErr);
+          alert("Listing saved successfully, but direct Facebook post failed due to a connection error. You can still share it manually!");
+        }
+      }
+
       navigate('/admin/dashboard');
     } catch (err) {
       console.error("Error saving event:", err);
@@ -195,7 +278,7 @@ export default function EventForm() {
               className="form-control"
               value={form.title}
               onChange={handleChange}
-              disabled={loading}
+              disabled={loading || uploading}
             />
           </div>
 
@@ -210,7 +293,7 @@ export default function EventForm() {
                 className="form-control"
                 value={form.date}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || uploading}
               />
             </div>
 
@@ -224,7 +307,7 @@ export default function EventForm() {
                 className="form-control"
                 value={form.time}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || uploading}
               />
             </div>
           </div>
@@ -240,7 +323,7 @@ export default function EventForm() {
               className="form-control"
               value={form.location}
               onChange={handleChange}
-              disabled={loading}
+              disabled={loading || uploading}
             />
           </div>
 
@@ -254,7 +337,7 @@ export default function EventForm() {
                 className="form-control"
                 value={form.category}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || uploading}
               >
                 {categories.map(cat => (
                   <option key={cat} value={cat}>{cat}</option>
@@ -270,7 +353,7 @@ export default function EventForm() {
                 className="form-control"
                 value={form.age_group}
                 onChange={handleChange}
-                disabled={loading}
+                disabled={loading || uploading}
               >
                 {ageGroups.map(age => (
                   <option key={age} value={age}>{age}</option>
@@ -279,9 +362,39 @@ export default function EventForm() {
             </div>
           </div>
 
-          {/* Image URL with auto suggestion */}
+          {/* Image Uploader & URL selector */}
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label" htmlFor="image_url">Thumbnail Image URL</label>
+            <label className="form-label">Activity Image / Photo</label>
+            
+            {/* File Upload Selector */}
+            <div style={{ marginBottom: '12px', padding: '16px', border: '2px dashed var(--border-soft)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-cream)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-dark)' }}>Upload Image from Device</span>
+              <input 
+                type="file" 
+                accept="image/*" 
+                onChange={handleFileUpload} 
+                disabled={loading || uploading} 
+                style={{ fontSize: '0.9rem' }}
+              />
+              {uploading && (
+                <div style={{ marginTop: '6px' }}>
+                  <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--border-soft)', borderRadius: '50px', overflow: 'hidden' }}>
+                    <div style={{ height: '100%', width: `${uploadProgress}%`, backgroundColor: 'var(--teal)', transition: 'width 0.2s ease' }} />
+                  </div>
+                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
+                    Uploading to Firebase Storage... {uploadProgress}%
+                  </span>
+                </div>
+              )}
+            </div>
+
+            <div style={{ display: 'flex', gap: '12px', alignItems: 'center', margin: '8px 0', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+              <div style={{ height: '1px', flexGrow: 1, backgroundColor: 'var(--border-soft)' }} />
+              <span>OR USE IMAGE URL</span>
+              <div style={{ height: '1px', flexGrow: 1, backgroundColor: 'var(--border-soft)' }} />
+            </div>
+
+            {/* Input URL */}
             <div style={{ display: 'flex', gap: '12px' }}>
               <div style={{ position: 'relative', flexGrow: 1 }}>
                 <Image style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
@@ -294,7 +407,7 @@ export default function EventForm() {
                   style={{ paddingLeft: '48px' }}
                   value={form.image_url}
                   onChange={handleChange}
-                  disabled={loading}
+                  disabled={loading || uploading}
                 />
               </div>
               <button 
@@ -302,13 +415,22 @@ export default function EventForm() {
                 className="btn btn-outline" 
                 style={{ padding: '0 20px', gap: '6px', whiteSpace: 'nowrap' }} 
                 onClick={handleSuggestImage}
+                disabled={loading || uploading}
               >
                 <Sparkles size={16} style={{ color: 'var(--primary)' }} /> Auto-Suggest
               </button>
             </div>
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              Provide an image URL or click Auto-Suggest to generate a beautiful kid stock photo based on she's selected category.
-            </span>
+            
+            {form.image_url && (
+              <div style={{ marginTop: '12px' }}>
+                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Image Preview:</span>
+                <img 
+                  src={form.image_url} 
+                  alt="Preview" 
+                  style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-soft)' }} 
+                />
+              </div>
+            )}
           </div>
 
           {/* Website Link */}
@@ -322,7 +444,7 @@ export default function EventForm() {
               className="form-control"
               value={form.link}
               onChange={handleChange}
-              disabled={loading}
+              disabled={loading || uploading}
             />
           </div>
 
@@ -336,8 +458,33 @@ export default function EventForm() {
               className="form-control"
               value={form.description}
               onChange={handleChange}
-              disabled={loading}
+              disabled={loading || uploading}
             />
+          </div>
+
+          {/* Direct Facebook Page share trigger */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            padding: '16px 20px', 
+            borderRadius: 'var(--radius-md)', 
+            backgroundColor: 'hsl(198, 93%, 98%)', 
+            border: '1px solid hsl(198, 93%, 92%)', 
+            margin: '8px 0' 
+          }}>
+            <input 
+              type="checkbox" 
+              id="share_to_facebook" 
+              style={{ width: '20px', height: '20px', accentColor: 'var(--secondary)', cursor: 'pointer' }}
+              checked={shareToFacebook}
+              onChange={(e) => setShareToFacebook(e.target.checked)}
+              disabled={loading || uploading}
+            />
+            <label htmlFor="share_to_facebook" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-dark)', cursor: 'pointer' }}>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--secondary)"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+              Share directly to Little Locals Facebook Page
+            </label>
           </div>
 
           {/* Save Button */}
@@ -345,7 +492,7 @@ export default function EventForm() {
             type="submit" 
             className="btn btn-primary" 
             style={{ width: '100%', padding: '16px', gap: '10px', marginTop: '16px' }}
-            disabled={loading}
+            disabled={loading || uploading}
           >
             <Save size={20} /> {loading ? 'Saving Activity...' : 'Save and Publish'}
           </button>

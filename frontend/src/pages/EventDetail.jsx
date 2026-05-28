@@ -202,7 +202,7 @@ ${event.description || ''}
           </div>
         </div>
 
-        {/* Facebook Review Sharing Helper (Premium Wife Assistant Tool) */}
+        {/* Facebook Review Sharing Helper (Admin Assistant Tool) */}
         <div style={{ 
           backgroundColor: 'hsl(198, 93%, 98%)', 
           borderRadius: 'var(--radius-lg)', 
@@ -216,7 +216,7 @@ ${event.description || ''}
             </div>
             <div>
               <h3 style={{ fontWeight: 900, color: 'var(--text-dark)' }}>Admin Sharing Assistant</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Generate and copy a perfectly-formatted post to she's Little Locals Facebook page!</p>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Generate and copy a perfectly-formatted post to the Little Locals Facebook page!</p>
             </div>
           </div>
 

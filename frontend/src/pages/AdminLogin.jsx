@@ -21,7 +21,7 @@ export default function AdminLogin() {
   const handleLogin = async (e) => {
     e.preventDefault();
     if (!email || !password) {
-      setError('Please enter both she\'s email and password.');
+      setError('Please enter both your email and password.');
       return;
     }
 
@@ -98,7 +98,7 @@ export default function AdminLogin() {
               <input 
                 type="email" 
                 id="email"
-                placeholder="she@example.com" 
+                placeholder="admin@example.com" 
                 className="form-control"
                 style={{ paddingLeft: '48px' }}
                 value={email}
@@ -115,7 +115,7 @@ export default function AdminLogin() {
               <input 
                 type="password" 
                 id="password"
-                placeholder="Enter she's password" 
+                placeholder="Enter your password" 
                 className="form-control"
                 style={{ paddingLeft: '48px' }}
                 value={password}

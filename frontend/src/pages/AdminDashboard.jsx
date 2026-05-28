@@ -152,7 +152,7 @@ export default function AdminDashboard() {
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '20px', borderBottom: '1px solid var(--border-soft)', paddingBottom: '24px', marginBottom: '32px' }}>
         <div>
           <h1 style={{ fontWeight: 900, fontSize: '2rem', margin: 0 }}>
-            Welcome back, <span className="text-gradient">Wife Admin</span>!
+            Welcome back, <span className="text-gradient">Admin</span>!
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem' }}>
             Promote free Central Coast events and write helpful family guides.
@@ -409,7 +409,7 @@ export default function AdminDashboard() {
           <div style={{ textAlign: 'left', marginBottom: '24px', backgroundColor: 'hsl(168, 76%, 98%)', padding: '20px', borderRadius: 'var(--radius-md)', border: '1px solid hsl(168, 76%, 90%)' }}>
             <h4 style={{ fontWeight: 800, color: 'var(--teal)' }}>Collate & Approve Scraped Facebook Events</h4>
             <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginTop: '4px' }}>
-              These are free family activities identified on local Central Coast pages. Review the event parameters and click Approve to push them live to she's website!
+              These are free family activities identified on local Central Coast pages. Review the event parameters and click Approve to push them live to the website!
             </p>
           </div>
 

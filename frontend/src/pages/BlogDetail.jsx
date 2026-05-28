@@ -165,7 +165,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
         </div>
       </article>
 
-      {/* Facebook Blog Sharing Helper (Premium Wife Assistant Tool) */}
+      {/* Facebook Blog Sharing Helper (Admin Assistant Tool) */}
       <div style={{ 
         backgroundColor: 'hsl(14, 95%, 98%)', 
         borderRadius: 'var(--radius-lg)', 

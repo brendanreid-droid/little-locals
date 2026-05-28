@@ -152,7 +152,7 @@ export default function EventList() {
           <Smile size={48} style={{ color: 'var(--primary)', marginBottom: '16px' }} />
           <h3 style={{ fontWeight: 800, fontSize: '1.4rem', marginBottom: '8px' }}>No free activities found</h3>
           <p style={{ color: 'var(--text-muted)', marginBottom: '24px', maxWidth: '400px', margin: '0 auto 24px' }}>
-            We couldn't find any activities matching your filters. Know of a free local kids event? She can update this site when submitted!
+            We couldn't find any activities matching your filters. Know of a free local kids event? Let us know and we'll update this site once reviewed!
           </p>
           <button className="btn btn-outline" onClick={() => { setSearchTerm(''); setSelectedCategory('All'); setSelectedAge('All'); }}>
             Reset Filters
