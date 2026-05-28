@@ -1,11 +1,14 @@
 import { BrowserRouter as Router, Routes, Route, NavLink, Link } from 'react-router-dom';
-import { Sparkles, Calendar as CalendarIcon, Grid, Lock, Heart } from 'lucide-react';
+import { Sparkles, Calendar as CalendarIcon, Grid, Lock, Heart, BookOpen } from 'lucide-react';
 import EventList from './pages/EventList';
 import EventCalendar from './pages/EventCalendar';
 import EventDetail from './pages/EventDetail';
+import BlogList from './pages/BlogList';
+import BlogDetail from './pages/BlogDetail';
 import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import EventForm from './pages/EventForm';
+import BlogForm from './pages/BlogForm';
 import './App.css';
 
 function App() {
@@ -34,6 +37,11 @@ function App() {
                 <CalendarIcon size={16} /> Calendar Grid
               </span>
             </NavLink>
+            <NavLink to="/blog" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                <BookOpen size={16} /> Reviews & Guides
+              </span>
+            </NavLink>
             <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <Lock size={16} /> Admin Portal
@@ -48,10 +56,14 @@ function App() {
             <Route path="/" element={<EventList />} />
             <Route path="/calendar" element={<EventCalendar />} />
             <Route path="/events/:id" element={<EventDetail />} />
+            <Route path="/blog" element={<BlogList />} />
+            <Route path="/blog/:id" element={<BlogDetail />} />
             <Route path="/admin/login" element={<AdminLogin />} />
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/events/new" element={<EventForm />} />
             <Route path="/admin/events/:id/edit" element={<EventForm />} />
+            <Route path="/admin/blog/new" element={<BlogForm />} />
+            <Route path="/admin/blog/:id/edit" element={<BlogForm />} />
           </Routes>
         </main>
 
