@@ -95,79 +95,149 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
   };
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: '840px', margin: '0 auto' }}>
+    <div style={{ 
+      padding: '48px 24px', 
+      maxWidth: '900px', 
+      margin: '0 auto',
+      backgroundColor: 'var(--bg-cream)',
+      minHeight: '100vh'
+    }}>
       
       {/* Back Navigation */}
-      <Link to="/blog" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '24px' }}>
+      <Link 
+        to="/blog" 
+        style={{ 
+          display: 'inline-flex', 
+          alignItems: 'center', 
+          gap: '10px', 
+          color: 'var(--primary)', 
+          fontWeight: '800', 
+          marginBottom: '32px',
+          textTransform: 'uppercase',
+          fontSize: '0.85rem',
+          letterSpacing: '0.05em',
+          padding: '8px 18px',
+          border: '3.5px solid var(--text-dark)',
+          borderRadius: '50px',
+          backgroundColor: 'var(--bg-white)',
+          boxShadow: '3px 3px 0px 0px var(--text-dark)',
+          transition: 'var(--transition-bouncy)'
+        }}
+        className="back-btn"
+      >
         <ArrowLeft size={16} /> Back to Blog
       </Link>
 
-      <article style={{ 
-        backgroundColor: 'var(--bg-white)', 
-        borderRadius: 'var(--radius-lg)', 
-        border: '1px solid var(--border-soft)',
-        overflow: 'hidden',
-        boxShadow: 'var(--shadow-light)',
-        marginBottom: '32px'
-      }}>
+      <article 
+        className="sticker-shadow"
+        style={{ 
+          backgroundColor: 'var(--bg-white)', 
+          borderRadius: '24px', 
+          border: '3.5px solid var(--text-dark)',
+          overflow: 'hidden',
+          boxShadow: '8px 8px 0px 0px var(--text-dark)',
+          marginBottom: '48px',
+          animation: 'slideUp 0.5s ease'
+        }}
+      >
         {/* Cover image */}
-        <div style={{ height: '340px', width: '100%', position: 'relative' }}>
+        <div style={{ 
+          height: '400px', 
+          width: '100%', 
+          position: 'relative',
+          borderBottom: '3.5px solid var(--text-dark)'
+        }}>
           <img 
             src={post.image_url || 'https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=1000&q=80'} 
             alt={post.title} 
             style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
           />
-          <div style={{ position: 'absolute', top: '20px', left: '20px', backgroundColor: 'var(--secondary)', color: 'white', padding: '6px 16px', borderRadius: '50px', fontWeight: '900', fontSize: '0.8rem', boxShadow: '0 4px 10px rgba(0,0,0,0.1)' }}>
-            {post.category || 'Review'}
+          
+          {/* Category Chip Badge */}
+          <div style={{ position: 'absolute', top: '24px', left: '24px' }}>
+            <span style={{ 
+              backgroundColor: 'var(--secondary)', 
+              color: 'white', 
+              padding: '8px 20px', 
+              borderRadius: '50px', 
+              fontWeight: '900', 
+              fontSize: '0.85rem', 
+              border: '2.5px solid var(--text-dark)',
+              boxShadow: '3px 3px 0px 0px var(--text-dark)',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}>
+              {post.category || 'Review'}
+            </span>
           </div>
         </div>
 
-        <div style={{ padding: '40px 50px' }}>
+        <div style={{ padding: '40px 48px' }} className="article-body-padding">
           
           {/* Metadata bar */}
-          <div style={{ display: 'flex', gap: '20px', fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '16px', fontWeight: '600' }}>
+          <div style={{ 
+            display: 'flex', 
+            gap: '24px', 
+            fontSize: '0.85rem', 
+            color: 'var(--text-muted)', 
+            marginBottom: '28px', 
+            fontWeight: '700',
+            flexWrap: 'wrap',
+            borderBottom: '2px dashed var(--border-soft)',
+            paddingBottom: '20px'
+          }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Calendar size={14} /> {post.date ? new Date(post.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Flexible'}
+              <Calendar size={15} style={{ color: 'var(--secondary)' }} /> {post.date ? new Date(post.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Flexible'}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Clock size={14} /> {readTime} min read
+              <Clock size={15} style={{ color: 'var(--secondary)' }} /> {readTime} min read
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Bookmark size={14} /> Written by Little Locals
+              <Bookmark size={15} style={{ color: 'var(--secondary)' }} /> Written by Little Locals
             </span>
           </div>
 
-          <h1 style={{ fontWeight: 900, fontSize: '2.4rem', marginBottom: '28px', textAlign: 'left', lineHeight: 1.2, color: 'var(--text-dark)' }}>
+          <h1 style={{ 
+            fontFamily: 'var(--font-display)',
+            fontWeight: 900, 
+            fontSize: '2.8rem', 
+            marginBottom: '28px', 
+            textAlign: 'left', 
+            lineHeight: 1.15, 
+            color: 'var(--primary)',
+            letterSpacing: '-0.02em'
+          }}>
             {post.title}
           </h1>
 
           {/* Excerpt panel */}
           {post.excerpt && (
             <div style={{ 
-              padding: '20px 24px', 
-              backgroundColor: 'var(--bg-cream)', 
-              borderRadius: 'var(--radius-md)', 
-              borderLeft: '4px solid var(--primary)', 
-              fontSize: '1.05rem', 
-              fontWeight: '600', 
-              color: 'var(--text-dark)', 
-              marginBottom: '32px',
+              padding: '24px 30px', 
+              backgroundColor: 'var(--primary-soft)', 
+              borderRadius: '16px', 
+              border: '3.5px solid var(--text-dark)',
+              boxShadow: '4px 4px 0px 0px var(--text-dark)',
+              fontSize: '1.1rem', 
+              fontWeight: '700', 
+              color: 'var(--primary)', 
+              marginBottom: '40px',
               textAlign: 'left',
-              lineHeight: 1.5
+              lineHeight: 1.6
             }}>
-              {post.excerpt}
+              "{post.excerpt}"
             </div>
           )}
 
           {/* Content Body */}
           <div style={{ 
             textAlign: 'left', 
-            fontSize: '1.1rem', 
+            fontSize: '1.12rem', 
             color: 'var(--text-dark)', 
-            lineHeight: '1.8', 
+            lineHeight: '1.85', 
             whiteSpace: 'pre-line',
-            marginBottom: '40px' 
-          }}>
+            fontFamily: 'var(--font-sans)'
+          }} className="blog-content-paragraphs">
             {post.content}
           </div>
 
@@ -177,46 +247,85 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
       {/* Facebook Blog Sharing Helper (Admin Assistant Tool) */}
       {isAdmin && (
         <div style={{ 
-          backgroundColor: 'var(--primary-soft)', 
-          borderRadius: 'var(--radius-lg)', 
-          border: '1px dashed var(--primary)',
-          padding: '32px',
+          backgroundColor: 'var(--bg-white)', 
+          borderRadius: '24px', 
+          border: '3.5px solid var(--text-dark)',
+          boxShadow: '6px 6px 0px 0px var(--text-dark)',
+          padding: '36px',
           textAlign: 'left',
-          marginBottom: '20px',
-          marginTop: '40px'
+          marginBottom: '32px',
+          marginTop: '48px',
+          animation: 'slideUp 0.6s ease'
         }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-            <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
+            <div style={{ 
+              width: '48px', 
+              height: '48px', 
+              borderRadius: '50%', 
+              backgroundColor: 'var(--primary)', 
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              color: 'white',
+              border: '2px solid var(--text-dark)',
+              boxShadow: '2.5px 2.5px 0px 0px var(--text-dark)'
+            }}>
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
             </div>
             <div>
-              <h3 style={{ fontWeight: 900, color: 'var(--text-dark)' }}>Admin Blog Sharing Assistant</h3>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Copy a preformatted article review post and share directly to the Little Locals Facebook page!</p>
+              <h3 style={{ 
+                fontFamily: 'var(--font-display)',
+                fontWeight: 900, 
+                color: 'var(--primary)',
+                fontSize: '1.25rem',
+                margin: 0
+              }}>
+                Admin Blog Sharing Assistant
+              </h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '4px 0 0 0', fontWeight: '600' }}>
+                Copy a preformatted article review post and share directly to the Little Locals Facebook page!
+              </p>
             </div>
           </div>
 
           <div style={{ 
-            backgroundColor: 'var(--bg-white)', 
-            padding: '20px', 
-            borderRadius: 'var(--radius-md)', 
-            border: '1px solid var(--border-soft)',
+            backgroundColor: 'var(--bg-cream)', 
+            padding: '24px', 
+            borderRadius: '16px', 
+            border: '2px solid var(--text-dark)',
             fontFamily: 'monospace',
-            fontSize: '0.85rem',
+            fontSize: '0.88rem',
             lineHeight: '1.5',
             whiteSpace: 'pre-wrap',
-            maxHeight: '200px',
+            maxHeight: '220px',
             overflowY: 'auto',
-            marginBottom: '20px',
+            marginBottom: '24px',
             color: 'var(--text-dark)'
           }}>
             {getFormattedFacebookPost()}
           </div>
 
-          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
             <button 
-              className={`btn ${copied ? 'btn-secondary' : 'btn-primary'}`} 
               onClick={handleCopyToClipboard}
-              style={{ minWidth: '240px' }}
+              style={{ 
+                minWidth: '260px',
+                padding: '14px 28px',
+                borderRadius: '50px',
+                border: '3px solid var(--text-dark)',
+                backgroundColor: copied ? 'var(--primary)' : 'var(--secondary)',
+                color: 'white',
+                fontWeight: '800',
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px',
+                transition: 'var(--transition-bouncy)'
+              }}
+              className="copy-caption-btn"
             >
               {copied ? (
                 <>
@@ -232,13 +341,52 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
               href="https://www.facebook.com" 
               target="_blank" 
               rel="noopener noreferrer" 
-              className="btn btn-outline"
+              style={{ 
+                padding: '14px 28px',
+                borderRadius: '50px',
+                border: '3px solid var(--text-dark)',
+                backgroundColor: 'var(--bg-white)',
+                color: 'var(--text-dark)',
+                fontWeight: '800',
+                fontSize: '0.95rem',
+                cursor: 'pointer',
+                boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                transition: 'var(--transition-bouncy)'
+              }}
+              className="open-facebook-btn"
             >
               Open Facebook
             </a>
           </div>
         </div>
       )}
+
+      {/* Retro styles */}
+      <style>{`
+        .back-btn:hover {
+          transform: translate(-3px, -3px);
+          box-shadow: 6px 6px 0px 0px var(--text-dark) !important;
+          background-color: var(--primary-soft) !important;
+        }
+        .copy-caption-btn:hover, .open-facebook-btn:hover {
+          transform: translate(-3px, -3px);
+          box-shadow: 6px 6px 0px 0px var(--text-dark) !important;
+        }
+        .blog-content-paragraphs p {
+          margin-bottom: 24px;
+        }
+        @media (max-width: 768px) {
+          .article-body-padding {
+            padding: 24px 20px !important;
+          }
+          h1 {
+            font-size: 2rem !important;
+          }
+        }
+      `}</style>
 
     </div>
   );

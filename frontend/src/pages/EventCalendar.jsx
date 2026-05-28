@@ -102,11 +102,15 @@ export default function EventCalendar() {
       
       {/* Header section */}
       <div style={{ textAlign: 'center', marginBottom: '40px' }}>
-        <h1 style={{ fontWeight: 900, marginBottom: '8px' }}>
-          Interactive <span className="text-gradient">Activity Calendar</span>
+        <div className="inline-flex items-center gap-2 bg-primary-soft px-4 py-1.5 rounded-full mb-4 border border-outline-variant">
+          <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>calendar_month</span>
+          <span className="text-primary font-bold uppercase tracking-wider text-xs font-display">Community Calendar</span>
+        </div>
+        <h1 style={{ fontWeight: 800, marginBottom: '8px' }}>
+          The <span style={{ color: 'var(--secondary)' }}>Grid of Joy</span>: {monthName}
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem' }}>
-          Explore 100% free kids events by month or tap specific days with dot indicators to narrow down your search!
+          Explore 100% free kids events by month or tap specific days with interactive indicators to discover local fun!
         </p>
       </div>
 
@@ -132,12 +136,12 @@ export default function EventCalendar() {
         }}>
           
           {/* Column 1: Calendar Grid (Tighter & Smaller) */}
-          <div className="calendar-view" style={{ padding: '24px', marginTop: 0 }}>
+          <div className="calendar-view sticker-shadow" style={{ padding: '24px', marginTop: 0, border: '1px solid var(--border-soft)' }}>
             <div className="calendar-header" style={{ marginBottom: '20px' }}>
               <button className="btn btn-outline btn-icon-only" style={{ width: '40px', height: '40px' }} onClick={handlePrevMonth}>
                 <ChevronLeft size={18} />
               </button>
-              <h2 className="calendar-title" style={{ margin: 0, fontSize: '1.35rem' }}>{monthName}</h2>
+              <h2 className="calendar-title" style={{ margin: 0, fontSize: '1.35rem' }}>{currentDate.toLocaleDateString('en-AU', { month: 'long' })}</h2>
               <button className="btn btn-outline btn-icon-only" style={{ width: '40px', height: '40px' }} onClick={handleNextMonth}>
                 <ChevronRight size={18} />
               </button>
@@ -150,7 +154,7 @@ export default function EventCalendar() {
               
               {calendarDays.map((day) => {
                 if (day.type === 'empty') {
-                  return <div key={day.id} className="calendar-day empty-day"></div>;
+                  return <div key={day.id} className="calendar-grid-item bg-surface-container/20 rounded-lg opacity-25 border border-border-soft"></div>;
                 }
 
                 const dayEvents = getEventsForDate(day.dateString);
@@ -163,38 +167,79 @@ export default function EventCalendar() {
                                 today.getMonth() === month && 
                                 today.getFullYear() === year;
 
+                // Color variables for specific categories
+                let cellStyle = { 
+                  padding: '8px', 
+                  borderRadius: 'var(--radius-md)', 
+                  minHeight: '80px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  justifyContent: 'space-between',
+                  border: isSelected ? '2px solid var(--secondary)' : '1px solid var(--border-soft)',
+                  backgroundColor: isToday ? 'var(--secondary-soft)' : 'var(--bg-white)',
+                  transition: 'var(--transition-bouncy)'
+                };
+
+                const firstEvent = dayEvents[0];
+                if (hasEvents && firstEvent) {
+                  const cat = firstEvent.category?.toLowerCase() || '';
+                  if (cat.includes('playground')) {
+                    cellStyle.backgroundColor = 'var(--secondary-soft)';
+                    cellStyle.border = isSelected ? '2px solid var(--secondary)' : '2px solid var(--yellow)';
+                  } else if (cat.includes('library')) {
+                    cellStyle.backgroundColor = 'var(--primary-soft)';
+                    cellStyle.border = isSelected ? '2px solid var(--secondary)' : '2px solid var(--primary)';
+                  } else {
+                    cellStyle.backgroundColor = 'var(--teal-soft)';
+                    cellStyle.border = isSelected ? '2px solid var(--secondary)' : '2px solid var(--teal)';
+                  }
+                }
+
                 return (
                   <div 
                     key={day.id} 
-                    className={`calendar-day ${isToday ? 'calendar-day-today' : ''} ${isSelected ? 'calendar-day-selected' : ''}`}
+                    className="calendar-grid-item hover:scale-[1.03] cursor-pointer group"
                     onClick={() => handleSelectDay(day)}
-                    style={{ 
-                      padding: '8px', 
-                      borderRadius: 'var(--radius-md)', 
-                      minHeight: '52px'
-                    }}
+                    style={cellStyle}
                   >
-                    <span className="calendar-day-number" style={{ fontSize: '0.9rem', fontWeight: '800' }}>{day.dayNumber}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', width: '100%' }}>
+                      <span className="calendar-day-number" style={{ 
+                        fontSize: '1rem', 
+                        fontWeight: '800',
+                        color: hasEvents ? 'var(--text-dark)' : 'var(--text-muted)'
+                      }}>{day.dayNumber}</span>
+                      {hasEvents && (
+                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--secondary)' }} />
+                      )}
+                    </div>
                     
-                    {hasEvents && (
-                      <div className="calendar-events-indicator" style={{ marginTop: '2px', gap: '3px' }}>
-                        {dayEvents.slice(0, 3).map((e, index) => (
-                          <div 
-                            key={e.id || index} 
-                            className="calendar-dot"
-                            style={{ 
-                              width: '6px',
-                              height: '6px',
-                              backgroundColor: e.category === 'Playground' ? 'var(--teal)' : 
-                                              e.category === 'Library' ? 'var(--secondary)' : 
-                                              'var(--primary)' 
-                            }}
-                            title={e.title}
-                          />
-                        ))}
-                        {dayEvents.length > 3 && (
-                          <span className="calendar-dot-multiple" style={{ fontSize: '0.6rem' }}>+{dayEvents.length - 3}</span>
-                        )}
+                    {hasEvents && firstEvent && (
+                      <div style={{ textAlign: 'left', marginTop: '4px' }}>
+                        <span style={{ 
+                          fontSize: '8px', 
+                          fontWeight: '900', 
+                          textTransform: 'uppercase', 
+                          padding: '1px 4px', 
+                          borderRadius: '4px',
+                          backgroundColor: firstEvent.category?.toLowerCase().includes('playground') ? 'var(--secondary)' :
+                                           firstEvent.category?.toLowerCase().includes('library') ? 'var(--primary)' : 'var(--teal)',
+                          color: 'white'
+                        }}>
+                          {firstEvent.category || 'Event'}
+                        </span>
+                        <p style={{ 
+                          fontSize: '10px', 
+                          fontWeight: '800', 
+                          lineHeight: '1.2', 
+                          marginTop: '2px',
+                          color: 'var(--text-dark)',
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden'
+                        }}>
+                          {firstEvent.title}
+                        </p>
                       </div>
                     )}
                   </div>
@@ -204,18 +249,7 @@ export default function EventCalendar() {
           </div>
 
           {/* Column 2: Chronological Monthly / Selected Day Event Panel */}
-          <div style={{
-            backgroundColor: 'var(--bg-white)',
-            borderRadius: 'var(--radius-lg)',
-            border: '1px solid var(--border-soft)',
-            padding: '24px',
-            boxShadow: 'var(--shadow-light)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: '20px',
-            alignSelf: 'stretch',
-            minHeight: '380px'
-          }}>
+          <div className="bg-surface-container-low rounded-3xl p-6 border border-outline-variant flex flex-col gap-6" style={{ minHeight: '520px' }}>
             
             {/* Side Panel Header */}
             <div style={{ 
@@ -223,11 +257,11 @@ export default function EventCalendar() {
               alignItems: 'center', 
               justifyContent: 'space-between', 
               borderBottom: '1px solid var(--border-soft)', 
-              paddingBottom: '12px',
+              paddingBottom: '16px',
               textAlign: 'left'
             }}>
               <div>
-                <h3 style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--text-dark)', margin: 0 }}>
+                <h3 style={{ fontWeight: 800, fontSize: '1.25rem', color: 'var(--text-dark)', margin: 0 }}>
                   {sidePanelTitle}
                 </h3>
                 {hasSelectedDay && (
@@ -236,7 +270,7 @@ export default function EventCalendar() {
                     style={{
                       background: 'none',
                       border: 'none',
-                      color: 'var(--primary)',
+                      color: 'var(--secondary)',
                       fontWeight: '800',
                       fontSize: '0.75rem',
                       cursor: 'pointer',
@@ -248,19 +282,17 @@ export default function EventCalendar() {
                   </button>
                 )}
               </div>
-              <span className="badge badge-coral" style={{ flexShrink: 0 }}>
-                {displayEvents.length} {displayEvents.length === 1 ? 'Activity' : 'Activities'}
+              <span className="bg-primary text-on-primary text-xs font-bold px-3 py-1 rounded-full">
+                {displayEvents.length} {displayEvents.length === 1 ? 'Event' : 'Events'}
               </span>
             </div>
 
             {/* List panel */}
-            <div style={{ 
+            <div className="custom-scrollbar pr-2 space-y-6" style={{ 
               display: 'flex', 
               flexDirection: 'column', 
-              gap: '12px', 
               overflowY: 'auto', 
-              maxHeight: '480px', 
-              paddingRight: '4px' 
+              maxHeight: '480px'
             }}>
               {displayEvents.length === 0 ? (
                 <div style={{ textAlign: 'center', padding: '60px 0', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', flexGrow: 1 }}>
@@ -271,62 +303,96 @@ export default function EventCalendar() {
                   </p>
                 </div>
               ) : (
-                displayEvents.map(event => {
+                displayEvents.map((event, idx) => {
                   const eventDate = new Date(event.date);
                   const dayName = eventDate.toLocaleDateString('en-AU', { weekday: 'short' });
                   const dayNumber = eventDate.toLocaleDateString('en-AU', { day: 'numeric' });
                   
+                  // Rotate angles for sticker effect
+                  const rotateDegs = idx % 3 === 0 ? '-1.5deg' : idx % 3 === 1 ? '1deg' : '-0.5deg';
+                  
+                  // Category color theme
+                  let borderCol = 'var(--teal)';
+                  let badgeCol = 'var(--teal)';
+                  let textCol = 'var(--teal)';
+                  const cat = event.category?.toLowerCase() || '';
+                  if (cat.includes('playground')) {
+                    borderCol = 'var(--yellow)';
+                    badgeCol = 'var(--secondary)';
+                    textCol = 'var(--secondary)';
+                  } else if (cat.includes('library')) {
+                    borderCol = 'var(--primary)';
+                    badgeCol = 'var(--primary)';
+                    textCol = 'var(--primary)';
+                  }
+
                   return (
                     <div 
                       key={event.id}
+                      className="tilted-card bg-surface-container-lowest p-4 rounded-xl sticker-shadow relative cursor-pointer"
                       style={{
-                        display: 'flex',
-                        gap: '12px',
-                        backgroundColor: 'var(--bg-cream)',
-                        padding: '12px 14px',
-                        borderRadius: 'var(--radius-md)',
-                        border: '1px solid var(--border-soft)',
-                        alignItems: 'center',
-                        transition: 'var(--transition-smooth)'
+                        transform: `rotate(${rotateDegs})`,
+                        border: `2px solid ${borderCol}`
                       }}
-                      className="chronological-card"
                     >
-                      {/* Left: Date badge */}
-                      <div style={{
-                        display: 'flex',
-                        flexDirection: 'column',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        width: '46px',
-                        height: '46px',
-                        borderRadius: 'var(--radius-sm)',
-                        backgroundColor: 'var(--primary-soft)',
-                        color: 'var(--primary)',
-                        flexShrink: 0
-                      }}>
-                        <span style={{ fontSize: '0.6rem', fontWeight: '800', textTransform: 'uppercase', lineHeight: 1 }}>{dayName}</span>
-                        <span style={{ fontSize: '1.05rem', fontWeight: '900', lineHeight: 1, marginTop: '2px' }}>{dayNumber}</span>
-                      </div>
-
-                      {/* Middle: Content */}
-                      <div style={{ flexGrow: 1, minWidth: 0, textAlign: 'left' }}>
-                        <span className="badge badge-free" style={{ fontSize: '0.6rem', padding: '2px 6px', marginBottom: '4px', display: 'inline-flex' }}>
-                          {event.category || 'General'}
-                        </span>
-                        <h4 style={{ fontWeight: '800', fontSize: '0.88rem', color: 'var(--text-dark)', margin: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }} title={event.title}>
-                          {event.title}
-                        </h4>
-                        <div style={{ display: 'flex', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                          <span>{event.time || 'Flexible'}</span>
-                          <span>•</span>
-                          <span>{event.location?.split(',')[0]}</span>
+                      <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+                        {/* Left: Date badge */}
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '54px',
+                          height: '54px',
+                          borderRadius: 'var(--radius-md)',
+                          backgroundColor: `${badgeCol}15`,
+                          color: textCol,
+                          border: `1px solid ${borderCol}30`,
+                          flexShrink: 0
+                        }}>
+                          <span style={{ fontSize: '0.65rem', fontWeight: '800', textTransform: 'uppercase', lineHeight: 1 }}>{dayName}</span>
+                          <span style={{ fontSize: '1.2rem', fontWeight: '900', lineHeight: 1, marginTop: '2px' }}>{dayNumber}</span>
                         </div>
-                      </div>
 
-                      {/* Right: Action */}
-                      <Link to={`/events/${event.id}`} className="btn btn-outline btn-icon-only" style={{ width: '32px', height: '32px', border: '1px solid var(--border-soft)', flexShrink: 0, padding: 0 }}>
-                        <ArrowRight size={14} style={{ color: 'var(--primary)' }} />
-                      </Link>
+                        {/* Middle: Content */}
+                        <div style={{ flexGrow: 1, minWidth: 0, textAlign: 'left' }}>
+                          <span style={{ 
+                            fontSize: '9px', 
+                            fontWeight: '900', 
+                            textTransform: 'uppercase', 
+                            letterSpacing: '0.05em',
+                            color: textCol,
+                            display: 'inline-block' 
+                          }}>
+                            {event.category || 'General'}
+                          </span>
+                          <h4 style={{ 
+                            fontWeight: '800', 
+                            fontSize: '1rem', 
+                            color: 'var(--text-dark)', 
+                            margin: '2px 0 0 0', 
+                            overflow: 'hidden', 
+                            textOverflow: 'ellipsis', 
+                            whiteSpace: 'nowrap' 
+                          }} title={event.title}>
+                            {event.title}
+                          </h4>
+                          <div style={{ display: 'flex', gap: '6px', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                              <Clock size={12} /> {event.time || 'Flexible'}
+                            </span>
+                            <span>•</span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '2px' }}>
+                              <MapPin size={12} /> {event.location?.split(',')[0]}
+                            </span>
+                          </div>
+                        </div>
+
+                        {/* Right: Action */}
+                        <Link to={`/events/${event.id}`} className="btn btn-outline btn-icon-only" style={{ width: '36px', height: '36px', border: '1px solid var(--border-soft)', flexShrink: 0, padding: 0 }}>
+                          <ArrowRight size={16} style={{ color: badgeCol }} />
+                        </Link>
+                      </div>
                     </div>
                   );
                 })
@@ -342,11 +408,6 @@ export default function EventCalendar() {
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
-        }
-        .chronological-card:hover {
-          transform: translateY(-2px);
-          box-shadow: 0 4px 12px rgba(45, 20, 80, 0.04);
-          border-color: var(--primary) !important;
         }
       `}</style>
 
