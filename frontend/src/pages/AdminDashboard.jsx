@@ -300,98 +300,226 @@ export default function AdminDashboard() {
         </div>
       </div>
 
-      {/* Tabs Menu */}
-      <div style={{ 
-        display: 'flex', 
-        marginBottom: '36px', 
-        gap: '16px', 
-        flexWrap: 'wrap',
-        justifyContent: 'center'
-      }}>
-        <button 
-          onClick={() => { setActiveTab('events'); setSearchTerm(''); }} 
+      {/* 2. Analytics Bento Grid */}
+      <section 
+        className="analytics-grid animate-slide-up" 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(4, 1fr)', 
+          gap: '24px', 
+          marginBottom: '48px',
+          textAlign: 'left'
+        }}
+      >
+        {/* Card 1: Active Families (Spans 2 columns) */}
+        <div 
+          className="sticker-shadow stats-card-green"
           style={{ 
-            padding: '12px 28px', 
-            fontWeight: '800', 
-            fontSize: '0.95rem',
-            cursor: 'pointer',
-            border: '3px solid var(--text-dark)',
-            borderRadius: '50px',
-            backgroundColor: activeTab === 'events' ? 'var(--primary)' : 'var(--bg-white)',
-            color: activeTab === 'events' ? 'white' : 'var(--text-dark)',
-            boxShadow: activeTab === 'events' ? '3px 3px 0px 0px var(--text-dark)' : 'none',
-            transform: activeTab === 'events' ? 'translateY(-2px)' : 'none',
-            transition: 'var(--transition-bouncy)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em'
+            gridColumn: 'span 2 / span 2',
+            backgroundColor: 'var(--primary)',
+            color: 'white',
+            padding: '24px',
+            borderRadius: '24px',
+            border: '3.5px solid var(--text-dark)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '180px',
+            boxShadow: '6px 6px 0px 0px var(--text-dark)'
           }}
-          className="admin-tab-btn"
         >
-          Live Events ({events.length})
-        </button>
-
-        <button 
-          onClick={() => { setActiveTab('posts'); setSearchTerm(''); }} 
-          style={{ 
-            padding: '12px 28px', 
-            fontWeight: '800', 
-            fontSize: '0.95rem',
-            cursor: 'pointer',
-            border: '3px solid var(--text-dark)',
-            borderRadius: '50px',
-            backgroundColor: activeTab === 'posts' ? 'var(--primary)' : 'var(--bg-white)',
-            color: activeTab === 'posts' ? 'white' : 'var(--text-dark)',
-            boxShadow: activeTab === 'posts' ? '3px 3px 0px 0px var(--text-dark)' : 'none',
-            transform: activeTab === 'posts' ? 'translateY(-2px)' : 'none',
-            transition: 'var(--transition-bouncy)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em'
-          }}
-          className="admin-tab-btn"
-        >
-          Blog Posts ({posts.length})
-        </button>
-        
-        <button 
-          onClick={() => { setActiveTab('suggestions'); setSearchTerm(''); }} 
-          style={{ 
-            padding: '12px 28px', 
-            fontWeight: '800', 
-            fontSize: '0.95rem',
-            cursor: 'pointer',
-            border: '3px solid var(--text-dark)',
-            borderRadius: '50px',
-            backgroundColor: activeTab === 'suggestions' ? 'var(--primary)' : 'var(--bg-white)',
-            color: activeTab === 'suggestions' ? 'white' : 'var(--text-dark)',
-            boxShadow: activeTab === 'suggestions' ? '3px 3px 0px 0px var(--text-dark)' : 'none',
-            transform: activeTab === 'suggestions' ? 'translateY(-2px)' : 'none',
-            transition: 'var(--transition-bouncy)',
-            textTransform: 'uppercase',
-            letterSpacing: '0.05em'
-          }}
-          className="admin-tab-btn"
-        >
-          Suggested Scrapes ({suggestions.length})
-        </button>
-      </div>
-
-      {loading ? (
-        <div style={{ textAlign: 'center', padding: '80px 0' }}>
-          <div style={{ 
-            width: '60px', 
-            height: '60px', 
-            border: '6px solid var(--primary-soft)', 
-            borderTopColor: 'var(--primary)', 
-            borderRadius: '50%', 
-            animation: 'spin 1s linear infinite',
-            margin: '0 auto 24px'
-          }} />
-          <p style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1.1rem' }}>Loading dashboard...</p>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '40px', fontVariationSettings: "'FILL' 1", color: 'var(--primary-soft)' }}>trending_up</span>
+            <span style={{ 
+              backgroundColor: 'rgba(255, 255, 255, 0.15)', 
+              color: 'var(--primary-soft)', 
+              padding: '4px 12px', 
+              borderRadius: '50px', 
+              fontSize: '0.75rem', 
+              fontWeight: '900',
+              textTransform: 'uppercase',
+              border: '1.5px solid var(--primary-soft)'
+            }}>
+              +12% this week
+            </span>
+          </div>
+          <div>
+            <h3 style={{ fontSize: '2.5rem', fontWeight: '900', margin: 0, color: 'white', lineHeight: '1.1' }}>4,821</h3>
+            <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
+              Active Families Browsing
+            </p>
+          </div>
         </div>
-      ) : activeTab === 'events' ? (
-        
-        /* Tab: Live Events List */
-        <div>
+
+        {/* Card 2: Events Scheduled (Spans 1 column) */}
+        <div 
+          className="sticker-shadow"
+          style={{ 
+            gridColumn: 'span 1 / span 1',
+            backgroundColor: 'var(--yellow-soft)',
+            color: 'var(--text-dark)',
+            padding: '24px',
+            borderRadius: '24px',
+            border: '3.5px solid var(--text-dark)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '180px',
+            boxShadow: '6px 6px 0px 0px var(--text-dark)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--secondary)' }}>calendar_month</span>
+          </div>
+          <div>
+            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{events.length}</h3>
+            <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
+              Events Scheduled
+            </p>
+          </div>
+        </div>
+
+        {/* Card 3: New Reviews (Spans 1 column) */}
+        <div 
+          className="sticker-shadow"
+          style={{ 
+            gridColumn: 'span 1 / span 1',
+            backgroundColor: 'var(--secondary-soft)',
+            color: 'var(--text-dark)',
+            padding: '24px',
+            borderRadius: '24px',
+            border: '3.5px solid var(--text-dark)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '180px',
+            boxShadow: '6px 6px 0px 0px var(--text-dark)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--secondary)' }}>star_rate</span>
+          </div>
+          <div>
+            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>156</h3>
+            <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
+              New Reviews
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* 3. Main Dashboard Workspace Layout */}
+      <div 
+        style={{ 
+          display: 'grid', 
+          gridTemplateColumns: 'repeat(12, 1fr)', 
+          gap: '32px',
+          alignItems: 'start'
+        }}
+        className="admin-workspace-grid"
+      >
+        {/* Left Column: Content Pipeline (Spans 8 columns) */}
+        <div style={{ gridColumn: 'span 8 / span 8' }} className="admin-content-col">
+          
+          <div style={{ 
+            display: 'flex', 
+            justifyContent: 'space-between', 
+            alignItems: 'center', 
+            marginBottom: '32px',
+            flexWrap: 'wrap',
+            gap: '16px'
+          }}>
+            <h2 style={{ fontFamily: 'var(--font-display)', fontSize: '1.8rem', fontWeight: '900', color: 'var(--primary)', margin: 0 }}>
+              Content Pipeline
+            </h2>
+            
+            {/* Tabs selector */}
+            <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+              <button 
+                onClick={() => { setActiveTab('events'); setSearchTerm(''); }} 
+                style={{ 
+                  padding: '8px 16px', 
+                  fontWeight: '900', 
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  border: '2px solid var(--text-dark)',
+                  borderRadius: '50px',
+                  backgroundColor: activeTab === 'events' ? 'var(--primary)' : 'var(--bg-white)',
+                  color: activeTab === 'events' ? 'white' : 'var(--text-dark)',
+                  boxShadow: activeTab === 'events' ? '2px 2px 0px 0px var(--text-dark)' : 'none',
+                  transform: activeTab === 'events' ? 'translateY(-2px)' : 'none',
+                  transition: 'var(--transition-bouncy)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                className="admin-tab-btn"
+              >
+                Events ({events.length})
+              </button>
+
+              <button 
+                onClick={() => { setActiveTab('posts'); setSearchTerm(''); }} 
+                style={{ 
+                  padding: '8px 16px', 
+                  fontWeight: '900', 
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  border: '2px solid var(--text-dark)',
+                  borderRadius: '50px',
+                  backgroundColor: activeTab === 'posts' ? 'var(--primary)' : 'var(--bg-white)',
+                  color: activeTab === 'posts' ? 'white' : 'var(--text-dark)',
+                  boxShadow: activeTab === 'posts' ? '2px 2px 0px 0px var(--text-dark)' : 'none',
+                  transform: activeTab === 'posts' ? 'translateY(-2px)' : 'none',
+                  transition: 'var(--transition-bouncy)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                className="admin-tab-btn"
+              >
+                Blogs ({posts.length})
+              </button>
+              
+              <button 
+                onClick={() => { setActiveTab('suggestions'); setSearchTerm(''); }} 
+                style={{ 
+                  padding: '8px 16px', 
+                  fontWeight: '900', 
+                  fontSize: '0.78rem',
+                  cursor: 'pointer',
+                  border: '2px solid var(--text-dark)',
+                  borderRadius: '50px',
+                  backgroundColor: activeTab === 'suggestions' ? 'var(--primary)' : 'var(--bg-white)',
+                  color: activeTab === 'suggestions' ? 'white' : 'var(--text-dark)',
+                  boxShadow: activeTab === 'suggestions' ? '2px 2px 0px 0px var(--text-dark)' : 'none',
+                  transform: activeTab === 'suggestions' ? 'translateY(-2px)' : 'none',
+                  transition: 'var(--transition-bouncy)',
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.05em'
+                }}
+                className="admin-tab-btn"
+              >
+                Suggested ({suggestions.length})
+              </button>
+            </div>
+          </div>
+
+          {loading ? (
+            <div style={{ textAlign: 'center', padding: '80px 0' }}>
+              <div style={{ 
+                width: '60px', 
+                height: '60px', 
+                border: '6px solid var(--primary-soft)', 
+                borderTopColor: 'var(--primary)', 
+                borderRadius: '50%', 
+                animation: 'spin 1s linear infinite',
+                margin: '0 auto 24px'
+              }} />
+              <p style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '1.1rem' }}>Loading dashboard...</p>
+            </div>
+          ) : activeTab === 'events' ? (
+            
+            /* Tab: Live Events List */
+            <div>
           {/* Search Events box */}
           <div style={{ position: 'relative', maxWidth: '440px', marginBottom: '32px' }}>
             <Search style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
@@ -925,16 +1053,230 @@ export default function AdminDashboard() {
           )}
         </div>
       )}
+      </div>
+        
+        {/* Right Column: Sidebar (Spans 4 columns) */}
+        <div 
+          className="admin-sidebar-col"
+          style={{ 
+            gridColumn: 'span 4 / span 4', 
+            display: 'flex', 
+            flexDirection: 'column', 
+            gap: '24px'
+          }}
+        >
+          {/* Quick Launch Panel */}
+          <div 
+            style={{ 
+              backgroundColor: 'var(--bg-white)', 
+              borderRadius: '24px', 
+              border: '3px solid var(--text-dark)', 
+              padding: '24px',
+              boxShadow: '6px 6px 0px 0px var(--text-dark)',
+              textAlign: 'left'
+            }}
+            className="sticker-shadow"
+          >
+            <h3 style={{ fontFamily: 'var(--font-display)', fontSize: '1.25rem', fontWeight: '900', color: 'var(--primary)', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 20px 0' }}>
+              <span className="material-symbols-outlined" style={{ color: 'var(--secondary)' }}>bolt</span>
+              Quick Launch
+            </h3>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+              <Link 
+                to="/admin/events/new"
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  padding: '16px 8px', 
+                  backgroundColor: 'var(--bg-cream)', 
+                  borderRadius: '16px', 
+                  border: '2px solid var(--text-dark)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-bouncy)'
+                }}
+                className="quick-launch-btn hover-bg-secondary"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '28px', marginBottom: '4px' }}>event</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add Event</span>
+              </Link>
+              
+              <Link 
+                to="/admin/blog/new"
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  padding: '16px 8px', 
+                  backgroundColor: 'var(--bg-cream)', 
+                  borderRadius: '16px', 
+                  border: '2px solid var(--text-dark)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-bouncy)'
+                }}
+                className="quick-launch-btn hover-bg-tertiary"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '28px', marginBottom: '4px' }}>edit_note</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>New Post</span>
+              </Link>
+
+              <button 
+                onClick={() => alert("Contests feature coming soon!")}
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  padding: '16px 8px', 
+                  backgroundColor: 'var(--bg-cream)', 
+                  borderRadius: '16px', 
+                  border: '2px solid var(--text-dark)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-bouncy)',
+                  color: 'var(--text-dark)'
+                }}
+                className="quick-launch-btn hover-bg-yellow"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '28px', marginBottom: '4px' }}>trophy</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Contest</span>
+              </button>
+
+              <button 
+                onClick={() => alert("Email Blasts feature coming soon!")}
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  padding: '16px 8px', 
+                  backgroundColor: 'var(--bg-cream)', 
+                  borderRadius: '16px', 
+                  border: '2px solid var(--text-dark)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-bouncy)',
+                  color: 'var(--text-dark)'
+                }}
+                className="quick-launch-btn hover-bg-primary"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '28px', marginBottom: '4px' }}>group</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Blast</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Top Contributor Panel */}
+          <div 
+            style={{ 
+              backgroundColor: 'var(--primary)', 
+              color: 'white', 
+              borderRadius: '24px', 
+              border: '3px solid var(--text-dark)', 
+              padding: '24px',
+              boxShadow: '6px 6px 0px 0px var(--text-dark)',
+              textAlign: 'left'
+            }}
+            className="sticker-shadow"
+          >
+            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+              <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '2px solid white', overflow: 'hidden' }}>
+                <img 
+                  alt="Community Manager Profile" 
+                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDetSlOpI8UPVLlYDpEU7kokBv2dol66k5I0i0K0Cs3jcls3TuO-vGQSD1XLw_0VVj0QerwR0ufYTGmw07hGRvz3wFZ9coeSQUXH6hgwiAIfassFYPlN36pUT8s0PfAlinYSh4qb8KsD0V0C5md73wcobcEF0-RljHkIVyIP-zpqix5Uws21dP9gOL2wzPz0eMQGe8zRoNMQx24M_Zvb02OphxKbN8G5SXrA-8DlA3nquCIfYif_WSb5V_XPQYLr8Bq6_X7Sj7islE" 
+                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                />
+              </div>
+              <div>
+                <p style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary-soft)', margin: 0 }}>
+                  Top Contributor
+                </p>
+                <h4 style={{ fontSize: '1.15rem', fontWeight: '900', color: 'white', margin: 0 }}>
+                  Sarah Jenkins
+                </h4>
+              </div>
+            </div>
+            <p style={{ fontSize: '0.88rem', lineHeight: '1.5', opacity: 0.9, margin: '0 0 20px 0', fontStyle: 'italic' }}>
+              "Just added 5 new reviews for the Woy Woy playground. The locals are loving the new splash pad!"
+            </p>
+            <button 
+              onClick={() => alert("Sarah Jenkins has been awarded 100 points!")}
+              style={{ 
+                width: '100%', 
+                backgroundColor: 'white', 
+                color: 'var(--primary)', 
+                border: '2px solid var(--text-dark)', 
+                padding: '12px', 
+                borderRadius: '12px', 
+                fontSize: '0.85rem', 
+                fontWeight: '900', 
+                cursor: 'pointer',
+                boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                transition: 'var(--transition-bouncy)',
+                textAlign: 'center'
+              }}
+              className="reward-btn"
+            >
+              Reward Contributor
+            </button>
+          </div>
+        </div>
+
+      </div>
 
       {/* Admin specific styles */}
       <style>{`
-        .admin-action-btn:hover, .admin-tab-btn:hover, .admin-list-btn:hover, .scraper-btn-glow:hover {
+        .admin-action-btn:hover, .admin-tab-btn:hover, .admin-list-btn:hover, .scraper-btn-glow:hover, .reward-btn:hover {
           transform: translate(-3px, -3px) !important;
           box-shadow: 6px 6px 0px 0px var(--text-dark) !important;
         }
+        
+        .quick-launch-btn {
+          color: var(--text-dark) !important;
+        }
+
+        .quick-launch-btn:hover {
+          transform: translateY(-2px) scale(1.02);
+          box-shadow: 3px 3px 0px 0px var(--text-dark);
+        }
+        
+        .hover-bg-secondary:hover {
+          background-color: var(--secondary-soft) !important;
+        }
+        
+        .hover-bg-tertiary:hover {
+          background-color: var(--primary-soft) !important;
+        }
+        
+        .hover-bg-yellow:hover {
+          background-color: var(--yellow-soft) !important;
+        }
+        
+        .hover-bg-primary:hover {
+          background-color: var(--secondary-soft) !important;
+        }
+        
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+
+        @media (max-width: 1024px) {
+          .analytics-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .analytics-grid > div {
+            grid-column: span 12 / span 12 !important;
+          }
+          .admin-workspace-grid {
+            grid-template-columns: 1fr !important;
+          }
+          .admin-content-col {
+            grid-column: span 12 / span 12 !important;
+          }
+          .admin-sidebar-col {
+            grid-column: span 12 / span 12 !important;
+          }
         }
       `}</style>
  
