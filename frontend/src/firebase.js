@@ -1,4 +1,4 @@
-// Initialised Firebase Client SDK configurations for Little Locals
+// Initialised Firebase Client SDK configurations for Little Locals Central Coast
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
