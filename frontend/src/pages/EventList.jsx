@@ -437,7 +437,7 @@ export default function EventList() {
 
                 <div style={{ display: 'flex', gap: '16px', color: 'var(--text-muted)', fontSize: '0.9rem', fontWeight: '700', marginBottom: '16px' }}>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                    <CalendarIcon size={16} style={{ color: 'var(--secondary)' }} /> {mainFeaturedEvent.date ? new Date(mainFeaturedEvent.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Flexible'}
+                    <CalendarIcon size={16} style={{ color: 'var(--secondary)' }} /> {mainFeaturedEvent.date && !isNaN(new Date(mainFeaturedEvent.date).getTime()) ? new Date(mainFeaturedEvent.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Flexible'}
                   </span>
                   <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                     <Award size={16} style={{ color: 'var(--secondary)' }} /> {mainFeaturedEvent.age_group || 'All Ages'}
@@ -548,7 +548,7 @@ export default function EventList() {
                       lineHeight: '1.2'
                     }}>{secondaryEvent1.title}</h4>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '700', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <CalendarIcon size={12} /> {secondaryEvent1.date ? new Date(secondaryEvent1.date).toLocaleDateString('en-AU') : 'Flexible'}
+                      <CalendarIcon size={12} /> {secondaryEvent1.date && !isNaN(new Date(secondaryEvent1.date).getTime()) ? new Date(secondaryEvent1.date).toLocaleDateString('en-AU') : 'Flexible'}
                     </p>
                   </div>
                 </Link>
@@ -616,7 +616,7 @@ export default function EventList() {
                       lineHeight: '1.2'
                     }}>{secondaryEvent2.title}</h4>
                     <p style={{ color: 'var(--text-muted)', fontSize: '0.8rem', fontWeight: '700', marginTop: '6px', display: 'flex', alignItems: 'center', gap: '4px' }}>
-                      <CalendarIcon size={12} /> {secondaryEvent2.date ? new Date(secondaryEvent2.date).toLocaleDateString('en-AU') : 'Flexible'}
+                      <CalendarIcon size={12} /> {secondaryEvent2.date && !isNaN(new Date(secondaryEvent2.date).getTime()) ? new Date(secondaryEvent2.date).toLocaleDateString('en-AU') : 'Flexible'}
                     </p>
                   </div>
                 </Link>
@@ -880,7 +880,7 @@ export default function EventList() {
                         fontWeight: '700'
                       }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <CalendarIcon size={12} /> {event.date ? new Date(event.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Flexible'}
+                          <CalendarIcon size={12} /> {event.date && !isNaN(new Date(event.date).getTime()) ? new Date(event.date).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' }) : 'Flexible'}
                         </span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <Award size={12} /> {event.age_group || 'All Ages'}

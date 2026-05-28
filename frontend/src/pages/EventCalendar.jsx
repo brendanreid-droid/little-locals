@@ -93,7 +93,7 @@ export default function EventCalendar() {
   // Determine active view events
   const hasSelectedDay = !!selectedDateStr;
   const displayEvents = hasSelectedDay ? selectedDayEvents : currentMonthEvents;
-  const sidePanelTitle = hasSelectedDay 
+  const sidePanelTitle = hasSelectedDay && !isNaN(new Date(selectedDateStr).getTime())
     ? `Activities on ${new Date(selectedDateStr).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })}`
     : `Activities in ${currentDate.toLocaleDateString('en-AU', { month: 'long', year: 'numeric' })}`;
 
@@ -436,7 +436,9 @@ export default function EventCalendar() {
                   {featuredEvent?.title || "The Entrance Music Fest"}
                 </h3>
                 <p style={{ opacity: 0.85, fontSize: '0.85rem', marginTop: '4px' }}>
-                  {featuredEvent ? `${new Date(featuredEvent.date).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'short' })} • ${featuredEvent.time}` : "Saturday, June 20th • All Ages Welcome"}
+                  {featuredEvent && featuredEvent.date && !isNaN(new Date(featuredEvent.date).getTime())
+                    ? `${new Date(featuredEvent.date).toLocaleDateString('en-AU', { weekday: 'long', day: 'numeric', month: 'short' })} • ${featuredEvent.time}`
+                    : "Saturday, June 20th • All Ages Welcome"}
                 </p>
               </div>
             </div>
@@ -515,9 +517,10 @@ export default function EventCalendar() {
                   </div>
                 ) : (
                   displayEvents.map((event, idx) => {
-                    const eventDate = new Date(event.date);
-                    const dayName = eventDate.toLocaleDateString('en-AU', { weekday: 'short' });
-                    const dayNumber = eventDate.toLocaleDateString('en-AU', { day: 'numeric' });
+                    const eventDate = new Date(event.date || '');
+                    const isDateValid = !isNaN(eventDate.getTime());
+                    const dayName = isDateValid ? eventDate.toLocaleDateString('en-AU', { weekday: 'short' }) : 'Flexible';
+                    const dayNumber = isDateValid ? eventDate.toLocaleDateString('en-AU', { day: 'numeric' }) : '';
                     const rotateDegs = idx % 3 === 0 ? '-1.5deg' : idx % 3 === 1 ? '1deg' : '-0.5deg';
                     
                     let borderCol = 'var(--text-dark)';

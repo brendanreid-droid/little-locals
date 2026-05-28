@@ -604,7 +604,7 @@ export default function AdminDashboard() {
                       
                       <div style={{ display: 'flex', gap: '16px', fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '700' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Calendar size={13} style={{ color: 'var(--secondary)' }} /> {event.date ? new Date(event.date).toLocaleDateString('en-AU') : 'Flexible'}
+                          <Calendar size={13} style={{ color: 'var(--secondary)' }} /> {event.date && !isNaN(new Date(event.date).getTime()) ? new Date(event.date).toLocaleDateString('en-AU') : 'Flexible'}
                         </span>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                           <MapPin size={13} style={{ color: 'var(--secondary)' }} /> {event.location?.split(',')[0]}
@@ -775,7 +775,7 @@ export default function AdminDashboard() {
                       
                       <div style={{ display: 'flex', gap: '16px', fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '700' }}>
                         <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                          <Calendar size={13} style={{ color: 'var(--secondary)' }} /> {post.date ? new Date(post.date).toLocaleDateString('en-AU') : 'Flexible'}
+                          <Calendar size={13} style={{ color: 'var(--secondary)' }} /> {post.date && !isNaN(new Date(post.date).getTime()) ? new Date(post.date).toLocaleDateString('en-AU') : 'Flexible'}
                         </span>
                       </div>
                     </div>

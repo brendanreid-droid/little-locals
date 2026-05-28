@@ -187,7 +187,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
             paddingBottom: '20px'
           }}>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-              <Calendar size={15} style={{ color: 'var(--secondary)' }} /> {post.date ? new Date(post.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Flexible'}
+              <Calendar size={15} style={{ color: 'var(--secondary)' }} /> {post.date && !isNaN(new Date(post.date).getTime()) ? new Date(post.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'long', year: 'numeric' }) : 'Flexible'}
             </span>
             <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
               <Clock size={15} style={{ color: 'var(--secondary)' }} /> {readTime} min read

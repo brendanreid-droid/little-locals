@@ -445,7 +445,7 @@ export default function BlogList() {
                       fontWeight: '700'
                     }}>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                        <Calendar size={12} /> {post.date ? new Date(post.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Flexible'}
+                        <Calendar size={12} /> {post.date && !isNaN(new Date(post.date).getTime()) ? new Date(post.date).toLocaleDateString('en-AU', { day: 'numeric', month: 'short' }) : 'Flexible'}
                       </span>
                       <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                         <Clock size={12} /> {readTime} min read
