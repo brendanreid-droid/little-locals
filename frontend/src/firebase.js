@@ -1,3 +1,4 @@
+// Initialised Firebase Client SDK configurations for Little Locals
 import { initializeApp } from "firebase/app";
 import { getAuth } from "firebase/auth";
 import { getFirestore } from "firebase/firestore";
