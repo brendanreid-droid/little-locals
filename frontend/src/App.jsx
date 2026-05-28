@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Link } from 'react-router-dom';
 import { Sparkles, Calendar as CalendarIcon, Grid, Lock, Heart, BookOpen } from 'lucide-react';
 import EventList from './pages/EventList';
@@ -12,37 +13,50 @@ import BlogForm from './pages/BlogForm';
 import './App.css';
 
 function App() {
+  const [menuOpen, setMenuOpen] = useState(false);
+
   return (
     <Router>
       <div className="app-container">
         
         {/* Beautiful Dynamic Header */}
-        <header className="header">
-          <Link to="/" className="logo-container">
+        <header className="header" style={{ position: 'relative' }}>
+          <Link to="/" className="logo-container" onClick={() => setMenuOpen(false)}>
             <div className="logo-icon">
               <Sparkles size={20} fill="white" />
             </div>
             <span>Little Locals</span>
           </Link>
 
+          {/* Hamburger Menu Toggle Button (Visible on mobile only) */}
+          <button 
+            className={`hamburger-toggle ${menuOpen ? 'open' : ''}`}
+            onClick={() => setMenuOpen(!menuOpen)}
+            aria-label="Toggle menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
           {/* Navigation Links */}
-          <nav className="nav-links">
-            <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} end>
+          <nav className={`nav-links ${menuOpen ? 'mobile-open' : ''}`}>
+            <NavLink to="/" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMenuOpen(false)} end>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <Grid size={16} /> Directory
               </span>
             </NavLink>
-            <NavLink to="/calendar" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/calendar" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <CalendarIcon size={16} /> Calendar Grid
               </span>
             </NavLink>
-            <NavLink to="/blog" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/blog" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <BookOpen size={16} /> Reviews & Guides
               </span>
             </NavLink>
-            <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`}>
+            <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>
               <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
                 <Lock size={16} /> Admin Portal
               </span>
