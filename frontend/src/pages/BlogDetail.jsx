@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '../firebase';
+import { db, auth } from '../firebase';
+import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowLeft, Clock, Calendar, Bookmark, Share2, ClipboardCheck, Smile } from 'lucide-react';
 
 export default function BlogDetail() {
@@ -9,6 +10,14 @@ export default function BlogDetail() {
   const [post, setPost] = useState(null);
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAdmin(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   useEffect(() => {
     async function fetchPost() {
@@ -166,67 +175,70 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
       </article>
 
       {/* Facebook Blog Sharing Helper (Admin Assistant Tool) */}
-      <div style={{ 
-        backgroundColor: 'var(--primary-soft)', 
-        borderRadius: 'var(--radius-lg)', 
-        border: '1px dashed var(--primary)',
-        padding: '32px',
-        textAlign: 'left',
-        marginBottom: '20px'
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-          <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
-          </div>
-          <div>
-            <h3 style={{ fontWeight: 900, color: 'var(--text-dark)' }}>Admin Blog Sharing Assistant</h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Copy a preformatted article review post and share directly to the Little Locals Facebook page!</p>
-          </div>
-        </div>
-
+      {isAdmin && (
         <div style={{ 
-          backgroundColor: 'var(--bg-white)', 
-          padding: '20px', 
-          borderRadius: 'var(--radius-md)', 
-          border: '1px solid var(--border-soft)',
-          fontFamily: 'monospace',
-          fontSize: '0.85rem',
-          lineHeight: '1.5',
-          whiteSpace: 'pre-wrap',
-          maxHeight: '200px',
-          overflowY: 'auto',
+          backgroundColor: 'var(--primary-soft)', 
+          borderRadius: 'var(--radius-lg)', 
+          border: '1px dashed var(--primary)',
+          padding: '32px',
+          textAlign: 'left',
           marginBottom: '20px',
-          color: 'var(--text-dark)'
+          marginTop: '40px'
         }}>
-          {getFormattedFacebookPost()}
-        </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
+            <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: 'var(--primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
+            </div>
+            <div>
+              <h3 style={{ fontWeight: 900, color: 'var(--text-dark)' }}>Admin Blog Sharing Assistant</h3>
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Copy a preformatted article review post and share directly to the Little Locals Facebook page!</p>
+            </div>
+          </div>
 
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-          <button 
-            className={`btn ${copied ? 'btn-secondary' : 'btn-primary'}`} 
-            onClick={handleCopyToClipboard}
-            style={{ minWidth: '240px' }}
-          >
-            {copied ? (
-              <>
-                <ClipboardCheck size={18} /> Caption Copied!
-              </>
-            ) : (
-              <>
-                <Share2 size={18} /> Copy Facebook Caption
-              </>
-            )}
-          </button>
-          <a 
-            href="https://www.facebook.com" 
-            target="_blank" 
-            rel="noopener noreferrer" 
-            className="btn btn-outline"
-          >
-            Open Facebook
-          </a>
+          <div style={{ 
+            backgroundColor: 'var(--bg-white)', 
+            padding: '20px', 
+            borderRadius: 'var(--radius-md)', 
+            border: '1px solid var(--border-soft)',
+            fontFamily: 'monospace',
+            fontSize: '0.85rem',
+            lineHeight: '1.5',
+            whiteSpace: 'pre-wrap',
+            maxHeight: '200px',
+            overflowY: 'auto',
+            marginBottom: '20px',
+            color: 'var(--text-dark)'
+          }}>
+            {getFormattedFacebookPost()}
+          </div>
+
+          <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+            <button 
+              className={`btn ${copied ? 'btn-secondary' : 'btn-primary'}`} 
+              onClick={handleCopyToClipboard}
+              style={{ minWidth: '240px' }}
+            >
+              {copied ? (
+                <>
+                  <ClipboardCheck size={18} /> Caption Copied!
+                </>
+              ) : (
+                <>
+                  <Share2 size={18} /> Copy Facebook Caption
+                </>
+              )}
+            </button>
+            <a 
+              href="https://www.facebook.com" 
+              target="_blank" 
+              rel="noopener noreferrer" 
+              className="btn btn-outline"
+            >
+              Open Facebook
+            </a>
+          </div>
         </div>
-      </div>
+      )}
 
     </div>
   );
