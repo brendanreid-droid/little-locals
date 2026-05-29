@@ -8,6 +8,7 @@ export default function EventCalendar() {
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
+  const [viewMode, setViewMode] = useState('grid'); // 'grid' or 'list'
   const [selectedDayEvents, setSelectedDayEvents] = useState([]);
   const [selectedDateStr, setSelectedDateStr] = useState('');
 
@@ -210,6 +211,52 @@ export default function EventCalendar() {
         </div>
         
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          
+          {/* Grid/List View Toggle */}
+          <div style={{ 
+            display: 'inline-flex', 
+            backgroundColor: 'var(--bg-cream)', 
+            borderRadius: '50px', 
+            border: '2.5px solid var(--text-dark)', 
+            padding: '3px',
+            boxShadow: '2px 2px 0px 0px var(--text-dark)'
+          }}>
+            <button
+              type="button"
+              onClick={() => setViewMode('grid')}
+              style={{
+                padding: '6px 16px',
+                fontSize: '0.8rem',
+                fontWeight: '800',
+                borderRadius: '50px',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: viewMode === 'grid' ? 'var(--primary)' : 'transparent',
+                color: viewMode === 'grid' ? 'white' : 'var(--text-dark)',
+                transition: 'var(--transition-smooth)'
+              }}
+            >
+              Grid
+            </button>
+            <button
+              type="button"
+              onClick={() => setViewMode('list')}
+              style={{
+                padding: '6px 16px',
+                fontSize: '0.8rem',
+                fontWeight: '800',
+                borderRadius: '50px',
+                border: 'none',
+                cursor: 'pointer',
+                backgroundColor: viewMode === 'list' ? 'var(--primary)' : 'transparent',
+                color: viewMode === 'list' ? 'white' : 'var(--text-dark)',
+                transition: 'var(--transition-smooth)'
+              }}
+            >
+              List
+            </button>
+          </div>
+
           <button
             onClick={() => setShowSuggestModal(true)}
             style={{
@@ -316,141 +363,290 @@ export default function EventCalendar() {
           className="calendar-main-grid"
         >
           
-          {/* Column 1: Calendar Grid (8 columns span on lg) */}
+          {/* Column 1: Calendar Grid / List View (8 columns span on lg) */}
           <div 
             className="calendar-col sticker-shadow" 
             style={{ 
               gridColumn: 'span 8 / span 8',
               backgroundColor: 'var(--bg-white)',
               borderRadius: '24px',
-              border: '3px solid var(--text-dark)',
-              padding: '24px'
+              border: '3px solid var(--text-dark)'
             }}
           >
-            <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: '8px' }}>
-              {weekdays.map(day => (
-                <div 
-                  key={day} 
-                  className="calendar-weekday" 
-                  style={{ 
-                    textAlign: 'center',
-                    fontWeight: '900',
-                    color: 'var(--primary)',
-                    opacity: 0.5,
-                    fontSize: '0.75rem',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.1em',
-                    paddingBottom: '12px'
-                  }}
-                >
-                  {day}
-                </div>
-              ))}
-              
-              {calendarDays.map((day) => {
-                if (day.type === 'empty') {
+            {viewMode === 'grid' ? (
+              <div className="calendar-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: 'var(--calendar-gap, 8px)' }}>
+                {weekdays.map(day => (
+                  <div 
+                    key={day} 
+                    className="calendar-weekday" 
+                    style={{ 
+                      textAlign: 'center',
+                      fontWeight: '900',
+                      color: 'var(--primary)',
+                      opacity: 0.5,
+                      textTransform: 'uppercase'
+                    }}
+                  >
+                    {day}
+                  </div>
+                ))}
+                
+                {calendarDays.map((day) => {
+                  if (day.type === 'empty') {
+                    return (
+                      <div 
+                        key={day.id} 
+                        className="calendar-grid-item"
+                        style={{
+                          backgroundColor: 'var(--bg-cream)',
+                          opacity: 0.25,
+                          borderRadius: '12px',
+                          border: '1px dashed var(--text-dark)'
+                        }}
+                      />
+                    );
+                  }
+
+                  const dayEvents = getEventsForDate(day.dateString);
+                  const hasEvents = dayEvents.length > 0;
+                  const isSelected = selectedDateStr === day.dateString;
+                  
+                  // Check if today
+                  const today = new Date();
+                  const isToday = today.getDate() === day.dayNumber && 
+                                  today.getMonth() === month && 
+                                  today.getFullYear() === year;
+
+                  // Stitch category color alignment
+                  let cellStyle = { 
+                    borderRadius: '12px', 
+                    display: 'flex',
+                    flexDirection: 'column',
+                    justifyContent: 'space-between',
+                    border: isSelected ? '3px solid var(--secondary)' : '2.5px solid var(--border-soft)',
+                    backgroundColor: isToday ? 'var(--secondary-soft)' : 'var(--bg-white)',
+                    transition: 'var(--transition-bouncy)',
+                    boxShadow: isSelected ? '0 0 12px rgba(142, 78, 0, 0.2)' : 'none'
+                  };
+
+                  const firstEvent = dayEvents[0];
+                  if (hasEvents && firstEvent) {
+                    const cat = firstEvent.category?.toLowerCase() || '';
+                    if (cat.includes('playground')) {
+                      cellStyle.backgroundColor = 'var(--secondary-soft)';
+                      cellStyle.border = isSelected ? '3px solid var(--secondary)' : '2.5px solid var(--yellow)';
+                    } else if (cat.includes('library')) {
+                      cellStyle.backgroundColor = 'var(--primary-soft)';
+                      cellStyle.border = isSelected ? '3px solid var(--secondary)' : '2.5px solid var(--primary)';
+                    } else {
+                      cellStyle.backgroundColor = 'var(--yellow-soft)';
+                      cellStyle.border = isSelected ? '3px solid var(--secondary)' : '2.5px solid var(--teal-soft)';
+                    }
+                  }
+
                   return (
                     <div 
                       key={day.id} 
-                      className="calendar-grid-item"
-                      style={{
-                        backgroundColor: 'var(--bg-cream)',
-                        opacity: 0.25,
-                        borderRadius: '12px',
-                        border: '1px dashed var(--text-dark)'
-                      }}
-                    />
-                  );
-                }
-
-                const dayEvents = getEventsForDate(day.dateString);
-                const hasEvents = dayEvents.length > 0;
-                const isSelected = selectedDateStr === day.dateString;
-                
-                // Check if today
-                const today = new Date();
-                const isToday = today.getDate() === day.dayNumber && 
-                                today.getMonth() === month && 
-                                today.getFullYear() === year;
-
-                // Stitch category color alignment
-                let cellStyle = { 
-                  borderRadius: '12px', 
-                  display: 'flex',
-                  flexDirection: 'column',
-                  justifyContent: 'space-between',
-                  border: isSelected ? '3px solid var(--secondary)' : '2.5px solid var(--border-soft)',
-                  backgroundColor: isToday ? 'var(--secondary-soft)' : 'var(--bg-white)',
-                  transition: 'var(--transition-bouncy)',
-                  boxShadow: isSelected ? '0 0 12px rgba(142, 78, 0, 0.2)' : 'none'
-                };
-
-                const firstEvent = dayEvents[0];
-                if (hasEvents && firstEvent) {
-                  const cat = firstEvent.category?.toLowerCase() || '';
-                  if (cat.includes('playground')) {
-                    cellStyle.backgroundColor = 'var(--secondary-soft)';
-                    cellStyle.border = isSelected ? '3px solid var(--secondary)' : '2.5px solid var(--yellow)';
-                  } else if (cat.includes('library')) {
-                    cellStyle.backgroundColor = 'var(--primary-soft)';
-                    cellStyle.border = isSelected ? '3px solid var(--secondary)' : '2.5px solid var(--primary)';
-                  } else {
-                    cellStyle.backgroundColor = 'var(--yellow-soft)';
-                    cellStyle.border = isSelected ? '3px solid var(--secondary)' : '2.5px solid var(--teal-soft)';
-                  }
-                }
-
-                return (
-                  <div 
-                    key={day.id} 
-                    className="calendar-grid-item hover:scale-[1.03] cursor-pointer group"
-                    onClick={() => handleSelectDay(day)}
-                    style={cellStyle}
-                  >
-                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', width: '100%' }}>
-                      <span className="calendar-day-number" style={{ 
-                        fontSize: '1.1rem', 
-                        fontWeight: '900',
-                        fontFamily: 'var(--font-display)',
-                        color: hasEvents ? 'var(--text-dark)' : 'var(--text-muted)'
-                      }}>{day.dayNumber}</span>
-                      {hasEvents && (
-                        <div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--secondary)' }} />
+                      className="calendar-grid-item hover:scale-[1.03] cursor-pointer group"
+                      onClick={() => handleSelectDay(day)}
+                      style={cellStyle}
+                    >
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'start', width: '100%' }}>
+                        <span className="calendar-day-number" style={{ 
+                          fontSize: '1.1rem', 
+                          fontWeight: '900',
+                          fontFamily: 'var(--font-display)',
+                          color: hasEvents ? 'var(--text-dark)' : 'var(--text-muted)'
+                        }}>{day.dayNumber}</span>
+                        {hasEvents && (
+                          <div className="calendar-dot-marker" style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: 'var(--secondary)' }} />
+                        )}
+                      </div>
+                      
+                      {hasEvents && firstEvent && (
+                        <div className="calendar-day-details" style={{ textAlign: 'left', marginTop: '4px' }}>
+                          <span style={{ 
+                            fontSize: '8px', 
+                            fontWeight: '900', 
+                            textTransform: 'uppercase', 
+                            padding: '1px 5px', 
+                            borderRadius: '4px',
+                            backgroundColor: 'var(--text-dark)',
+                            color: 'white'
+                          }}>
+                            {firstEvent.category || 'Event'}
+                          </span>
+                          <p style={{ 
+                            fontSize: '10px', 
+                            fontWeight: '900', 
+                            lineHeight: '1.2', 
+                            marginTop: '2px',
+                            color: 'var(--text-dark)',
+                            display: '-webkit-box',
+                            WebkitLineClamp: 2,
+                            WebkitBoxOrient: 'vertical',
+                            overflow: 'hidden'
+                          }}>
+                            {firstEvent.title}
+                          </p>
+                        </div>
                       )}
                     </div>
-                    
-                    {hasEvents && firstEvent && (
-                      <div className="calendar-day-details" style={{ textAlign: 'left', marginTop: '4px' }}>
-                        <span style={{ 
-                          fontSize: '8px', 
-                          fontWeight: '900', 
-                          textTransform: 'uppercase', 
-                          padding: '1px 5px', 
-                          borderRadius: '4px',
-                          backgroundColor: 'var(--text-dark)',
-                          color: 'white'
-                        }}>
-                          {firstEvent.category || 'Event'}
-                        </span>
-                        <p style={{ 
-                          fontSize: '10px', 
-                          fontWeight: '900', 
-                          lineHeight: '1.2', 
-                          marginTop: '2px',
-                          color: 'var(--text-dark)',
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden'
-                        }}>
-                          {firstEvent.title}
-                        </p>
-                      </div>
-                    )}
+                  );
+                })}
+              </div>
+            ) : (
+              /* Gorgeous Chronological List View */
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {currentMonthEvents.length === 0 ? (
+                  <div style={{ textAlign: 'center', padding: '48px 24px' }}>
+                    <Smile size={36} style={{ color: 'var(--text-muted)', marginBottom: '12px' }} />
+                    <p style={{ fontWeight: '800', color: 'var(--text-dark)', fontSize: '1.05rem', margin: 0 }}>No activities scheduled</p>
+                    <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', marginTop: '4px' }}>There are no events listed for {monthName} yet.</p>
                   </div>
-                );
-              })}
-            </div>
+                ) : (
+                  currentMonthEvents.map((event, idx) => {
+                    const eventDate = new Date(event.date || '');
+                    const isDateValid = !isNaN(eventDate.getTime());
+                    const dayName = isDateValid ? eventDate.toLocaleDateString('en-AU', { weekday: 'long' }) : 'Flexible';
+                    
+                    let badgeCol = 'var(--primary)';
+                    let textCol = 'var(--primary)';
+                    const cat = event.category?.toLowerCase() || '';
+                    if (cat.includes('playground')) {
+                      badgeCol = 'var(--secondary-soft)';
+                      textCol = 'var(--secondary)';
+                    } else if (cat.includes('library')) {
+                      badgeCol = 'var(--primary-soft)';
+                      textCol = 'var(--primary)';
+                    } else {
+                      badgeCol = 'var(--yellow-soft)';
+                      textCol = 'var(--secondary)';
+                    }
+
+                    const rotateDegs = idx % 2 === 0 ? '-0.5deg' : '0.5deg';
+
+                    return (
+                      <div 
+                        key={event.id}
+                        className="tilted-card sticker-shadow"
+                        style={{
+                          transform: `rotate(${rotateDegs})`,
+                          border: '3px solid var(--text-dark)',
+                          borderRadius: '24px',
+                          padding: '24px',
+                          backgroundColor: 'var(--bg-white)',
+                          display: 'flex',
+                          flexDirection: 'row',
+                          gap: '24px',
+                          alignItems: 'center',
+                          flexWrap: 'wrap',
+                          textAlign: 'left'
+                        }}
+                      >
+                        {/* Left Date Block */}
+                        <div style={{
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          width: '74px',
+                          height: '74px',
+                          borderRadius: '16px',
+                          backgroundColor: badgeCol,
+                          color: 'var(--text-dark)',
+                          border: '2.5px solid var(--text-dark)',
+                          flexShrink: 0
+                        }}>
+                          <span style={{ fontSize: '0.7rem', fontWeight: '900', textTransform: 'uppercase', lineHeight: 1 }}>{dayName.slice(0, 3)}</span>
+                          <span style={{ fontSize: '1.5rem', fontWeight: '900', lineHeight: 1, marginTop: '4px' }}>{eventDate.getDate()}</span>
+                        </div>
+
+                        {/* Center content block */}
+                        <div style={{ flex: '1 1 280px' }}>
+                          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+                            <span style={{ 
+                              fontSize: '9px', 
+                              fontWeight: '900', 
+                              textTransform: 'uppercase', 
+                              letterSpacing: '0.05em',
+                              color: textCol,
+                              backgroundColor: badgeCol,
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              border: '1.5px solid var(--text-dark)'
+                            }}>
+                              {event.category || 'General'}
+                            </span>
+                            <span style={{ 
+                              fontSize: '9px', 
+                              fontWeight: '900', 
+                              textTransform: 'uppercase', 
+                              letterSpacing: '0.05em',
+                              color: 'white',
+                              backgroundColor: 'var(--primary)',
+                              padding: '2px 8px',
+                              borderRadius: '4px',
+                              border: '1.5px solid var(--text-dark)'
+                            }}>
+                              {event.age_group || 'All Ages'}
+                            </span>
+                          </div>
+                          
+                          <h3 style={{ 
+                            fontWeight: '900', 
+                            fontSize: '1.25rem', 
+                            color: 'var(--text-dark)', 
+                            margin: '8px 0 4px 0',
+                            fontFamily: 'var(--font-display)'
+                          }}>
+                            {event.title}
+                          </h3>
+
+                          <p style={{ fontSize: '0.82rem', color: 'var(--text-muted)', display: 'flex', gap: '12px', flexWrap: 'wrap', margin: '4px 0 12px 0', fontWeight: '600' }}>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <Clock size={13} /> {event.time || 'Flexible'}
+                            </span>
+                            <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                              <MapPin size={13} /> {event.location?.split(',')[0]}
+                            </span>
+                          </p>
+
+                          <p style={{ fontSize: '0.92rem', color: 'var(--text-dark)', lineHeight: '1.5', margin: 0, opacity: 0.9 }}>
+                            {event.description}
+                          </p>
+                        </div>
+
+                        {/* Right Action Link */}
+                        <div style={{ flexShrink: 0 }}>
+                          <Link 
+                            to={`/events/${event.id}`} 
+                            style={{ 
+                              backgroundColor: 'var(--primary)', 
+                              color: 'white', 
+                              padding: '10px 20px', 
+                              fontSize: '0.8rem',
+                              fontWeight: '800',
+                              borderRadius: '50px',
+                              border: '2.5px solid var(--text-dark)',
+                              boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '6px',
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.05em'
+                            }}
+                            className="btn"
+                          >
+                            Details <ArrowRight size={13} />
+                          </Link>
+                        </div>
+                      </div>
+                    );
+                  })
+                )}
+              </div>
+            )}
           </div>
 
           {/* Column 2: Sidebar (4 columns span on lg) */}

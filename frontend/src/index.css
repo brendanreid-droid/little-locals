@@ -68,6 +68,10 @@
   min-height: 90px;
 }
 
+.calendar-col {
+  padding: 24px;
+}
+
 .custom-scrollbar::-webkit-scrollbar {
   width: 6px;
 }
@@ -678,8 +682,11 @@ textarea.form-control {
   .calendar-view {
     padding: 16px;
   }
+  .calendar-col {
+    padding: 12px !important;
+  }
   .calendar-grid {
-    gap: 6px;
+    gap: 4px !important;
   }
   .calendar-grid-item {
     padding: 4px !important;
