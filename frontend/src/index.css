@@ -532,7 +532,7 @@ textarea.form-control {
 }
 
 .logo-img {
-  height: 53px;
+  height: 64px;
   width: auto;
   display: block;
 }
@@ -640,7 +640,7 @@ textarea.form-control {
     padding: 8px 16px;
   }
   .logo-img {
-    height: 44px;
+    height: 53px;
   }
   .hamburger-toggle {
     display: flex;
