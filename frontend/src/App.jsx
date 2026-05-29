@@ -1,6 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Link } from 'react-router-dom';
 import { Calendar as CalendarIcon, Grid, Lock, Heart, BookOpen } from 'lucide-react';
+import { onAuthStateChanged } from 'firebase/auth';
+import { auth } from './firebase';
 import EventList from './pages/EventList';
 import EventCalendar from './pages/EventCalendar';
 import EventDetail from './pages/EventDetail';
@@ -15,6 +17,14 @@ import './App.css';
 
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      setIsAdmin(!!user);
+    });
+    return () => unsubscribe();
+  }, []);
 
   return (
     <Router>
@@ -54,11 +64,13 @@ function App() {
                 <BookOpen size={16} /> Reviews & Guides
               </span>
             </NavLink>
-            <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>
-              <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
-                <Lock size={16} /> Admin Portal
-              </span>
-            </NavLink>
+            {isAdmin && (
+              <NavLink to="/admin/dashboard" className={({ isActive }) => `nav-link ${isActive ? 'active' : ''}`} onClick={() => setMenuOpen(false)}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '6px' }}>
+                  <Lock size={16} /> Admin Portal
+                </span>
+              </NavLink>
+            )}
           </nav>
         </header>
 

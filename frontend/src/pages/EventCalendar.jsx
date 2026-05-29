@@ -1,8 +1,8 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, addDoc } from 'firebase/firestore';
 import { db } from '../firebase';
-import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Smile, Award, Clock, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Calendar as CalendarIcon, MapPin, Smile, Award, Clock, ArrowRight, X } from 'lucide-react';
 
 export default function EventCalendar() {
   const [events, setEvents] = useState([]);
@@ -10,6 +10,65 @@ export default function EventCalendar() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDayEvents, setSelectedDayEvents] = useState([]);
   const [selectedDateStr, setSelectedDateStr] = useState('');
+
+  // Event suggestion state
+  const [showSuggestModal, setShowSuggestModal] = useState(false);
+  const [suggestTitle, setSuggestTitle] = useState('');
+  const [suggestDate, setSuggestDate] = useState('');
+  const [suggestTime, setSuggestTime] = useState('');
+  const [suggestLocation, setSuggestLocation] = useState('');
+  const [suggestCategory, setSuggestCategory] = useState('Playground');
+  const [suggestAge, setSuggestAge] = useState('All Ages');
+  const [suggestDescription, setSuggestDescription] = useState('');
+  const [suggestLink, setSuggestLink] = useState('');
+  const [suggestImageUrl, setSuggestImageUrl] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+
+  const handleSuggestSubmit = async (e) => {
+    e.preventDefault();
+    if (!suggestTitle || !suggestDate || !suggestLocation || !suggestCategory || !suggestAge || !suggestDescription) {
+      alert("Please fill in all required fields.");
+      return;
+    }
+    
+    setSubmitting(true);
+    try {
+      const suggestionsCol = collection(db, 'suggestions');
+      await addDoc(suggestionsCol, {
+        title: suggestTitle,
+        date: suggestDate,
+        time: suggestTime || 'Flexible',
+        location: suggestLocation,
+        category: suggestCategory,
+        age_group: suggestAge,
+        description: suggestDescription,
+        link: suggestLink || '',
+        image_url: suggestImageUrl || '',
+        source: 'User Suggestion',
+        created_at: new Date().toISOString()
+      });
+      
+      alert("Thank you! Your event suggestion has been submitted successfully and is now in our admin review queue.");
+      
+      // Reset form
+      setSuggestTitle('');
+      setSuggestDate('');
+      setSuggestTime('');
+      setSuggestLocation('');
+      setSuggestCategory('Playground');
+      setSuggestAge('All Ages');
+      setSuggestDescription('');
+      setSuggestLink('');
+      setSuggestImageUrl('');
+      
+      setShowSuggestModal(false);
+    } catch (error) {
+      console.error("Error submitting suggestion:", error);
+      alert("Failed to submit suggestion: " + error.message);
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
@@ -150,18 +209,42 @@ export default function EventCalendar() {
           </p>
         </div>
         
-        <div 
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '16px', 
-            backgroundColor: 'var(--bg-white)', 
-            padding: '8px', 
-            borderRadius: '16px', 
-            border: '3px solid var(--text-dark)',
-            boxShadow: '4px 4px 0px 0px var(--text-dark)'
-          }}
-        >
+        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', flexWrap: 'wrap' }}>
+          <button
+            onClick={() => setShowSuggestModal(true)}
+            style={{
+              padding: '12px 24px',
+              backgroundColor: 'var(--secondary)',
+              color: 'white',
+              borderRadius: '50px',
+              border: '3px solid var(--text-dark)',
+              fontWeight: '800',
+              fontSize: '0.85rem',
+              boxShadow: '3px 3px 0px 0px var(--text-dark)',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              textTransform: 'uppercase',
+              letterSpacing: '0.05em'
+            }}
+            className="suggest-btn-hover"
+          >
+            <Smile size={16} /> Suggest an Event
+          </button>
+
+          <div 
+            style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '16px', 
+              backgroundColor: 'var(--bg-white)', 
+              padding: '8px', 
+              borderRadius: '16px', 
+              border: '3px solid var(--text-dark)',
+              boxShadow: '4px 4px 0px 0px var(--text-dark)'
+            }}
+          >
           <button 
             onClick={handlePrevMonth}
             style={{ 
@@ -207,6 +290,7 @@ export default function EventCalendar() {
           </button>
         </div>
       </div>
+    </div>
 
       {loading ? (
         <div style={{ textAlign: 'center', padding: '80px 0' }}>
@@ -291,9 +375,7 @@ export default function EventCalendar() {
 
                 // Stitch category color alignment
                 let cellStyle = { 
-                  padding: '10px', 
                   borderRadius: '12px', 
-                  minHeight: '90px',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
@@ -338,7 +420,7 @@ export default function EventCalendar() {
                     </div>
                     
                     {hasEvents && firstEvent && (
-                      <div style={{ textAlign: 'left', marginTop: '4px' }}>
+                      <div className="calendar-day-details" style={{ textAlign: 'left', marginTop: '4px' }}>
                         <span style={{ 
                           fontSize: '8px', 
                           fontWeight: '900', 
@@ -647,8 +729,8 @@ export default function EventCalendar() {
                 <p style={{ fontWeight: '900', fontSize: '1.05rem', color: 'var(--text-dark)', lineHeight: '1.2', margin: 0 }}>
                   Got a local event to share?
                 </p>
-                <Link 
-                  to="/admin" 
+                <button 
+                  onClick={() => setShowSuggestModal(true)}
                   className="btn" 
                   style={{ 
                     marginTop: '12px', 
@@ -661,11 +743,12 @@ export default function EventCalendar() {
                     border: '2px solid var(--text-dark)',
                     boxShadow: '3px 3px 0px 0px var(--text-dark)',
                     textTransform: 'uppercase',
-                    letterSpacing: '0.05em'
+                    letterSpacing: '0.05em',
+                    cursor: 'pointer'
                   }}
                 >
-                  Submit for FREE
-                </Link>
+                  Suggest for FREE
+                </button>
               </div>
 
             </div>
@@ -701,6 +784,255 @@ export default function EventCalendar() {
           }
         }
       `}</style>
+      {/* Event Suggestion Popup Modal */}
+      {showSuggestModal && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(3, 63, 29, 0.4)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 10000,
+          padding: '20px',
+          animation: 'fadeIn 0.25s ease'
+        }}>
+          <div 
+            className="sticker-shadow"
+            style={{
+              backgroundColor: 'var(--bg-cream)',
+              borderRadius: '24px',
+              border: '3.5px solid var(--text-dark)',
+              width: '100%',
+              maxWidth: '650px',
+              maxHeight: '90vh',
+              overflowY: 'auto',
+              position: 'relative',
+              padding: '32px',
+              boxShadow: '8px 8px 0px 0px var(--text-dark)',
+              textAlign: 'left'
+            }}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowSuggestModal(false)}
+              style={{
+                position: 'absolute',
+                top: '20px',
+                right: '20px',
+                background: 'var(--bg-white)',
+                border: '2.5px solid var(--text-dark)',
+                borderRadius: '50%',
+                width: '36px',
+                height: '36px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                boxShadow: '2px 2px 0px 0px var(--text-dark)',
+                transition: 'var(--transition-smooth)'
+              }}
+              className="modal-close-btn"
+            >
+              <X size={18} />
+            </button>
+
+            <div style={{ marginBottom: '24px' }}>
+              <span style={{ 
+                backgroundColor: 'var(--primary-soft)', 
+                color: 'var(--primary)', 
+                padding: '4px 12px', 
+                borderRadius: '6px',
+                border: '2px solid var(--text-dark)',
+                fontWeight: '800',
+                fontSize: '0.75rem',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em',
+                display: 'inline-block',
+                marginBottom: '8px'
+              }}>
+                Suggest an Event
+              </span>
+              <h2 style={{ 
+                fontFamily: 'var(--font-display)', 
+                fontWeight: 900, 
+                fontSize: '1.8rem', 
+                color: 'var(--primary)',
+                margin: 0
+              }}>Suggest a Free Event</h2>
+              <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '500' }}>
+                Know of a free local family activity or community group? Share it with the community!
+              </p>
+            </div>
+
+            <form onSubmit={handleSuggestSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="modal-grid-cols">
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Event Title *</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-control"
+                    placeholder="e.g., Kibble Park Music Circle"
+                    style={{ border: '2.5px solid var(--text-dark)', height: '48px', padding: '0 16px' }}
+                    value={suggestTitle}
+                    onChange={(e) => setSuggestTitle(e.target.value)}
+                  />
+                </div>
+                
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Date *</label>
+                  <input
+                    type="date"
+                    required
+                    className="form-control"
+                    style={{ border: '2.5px solid var(--text-dark)', height: '48px', padding: '0 16px' }}
+                    value={suggestDate}
+                    onChange={(e) => setSuggestDate(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="modal-grid-cols">
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Time / Duration *</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-control"
+                    placeholder="e.g., 10:00 AM - 11:30 AM"
+                    style={{ border: '2.5px solid var(--text-dark)', height: '48px', padding: '0 16px' }}
+                    value={suggestTime}
+                    onChange={(e) => setSuggestTime(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Location Address *</label>
+                  <input
+                    type="text"
+                    required
+                    className="form-control"
+                    placeholder="e.g., Kibble Park, Gosford NSW 2250"
+                    style={{ border: '2.5px solid var(--text-dark)', height: '48px', padding: '0 16px' }}
+                    value={suggestLocation}
+                    onChange={(e) => setSuggestLocation(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="modal-grid-cols">
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Category *</label>
+                  <select
+                    className="form-control"
+                    style={{ border: '2.5px solid var(--text-dark)', height: '48px', padding: '0 16px', borderRadius: '50px' }}
+                    value={suggestCategory}
+                    onChange={(e) => setSuggestCategory(e.target.value)}
+                  >
+                    <option value="Playground">Playground</option>
+                    <option value="Library">Library</option>
+                    <option value="Art & Craft">Art & Craft</option>
+                    <option value="Outdoors">Outdoors</option>
+                    <option value="Sports">Sports</option>
+                    <option value="Music & Storytime">Music & Storytime</option>
+                    <option value="General">General</option>
+                  </select>
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Age Suitability *</label>
+                  <select
+                    className="form-control"
+                    style={{ border: '2.5px solid var(--text-dark)', height: '48px', padding: '0 16px', borderRadius: '50px' }}
+                    value={suggestAge}
+                    onChange={(e) => setSuggestAge(e.target.value)}
+                  >
+                    <option value="All Ages">All Ages</option>
+                    <option value="0-5 years">0-5 years</option>
+                    <option value="6-12 years">6-12 years</option>
+                    <option value="Teens">Teens</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }} className="modal-grid-cols">
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Website / Social Link (Optional)</label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    placeholder="https://example.com/event"
+                    style={{ border: '2.5px solid var(--text-dark)', height: '48px', padding: '0 16px' }}
+                    value={suggestLink}
+                    onChange={(e) => setSuggestLink(e.target.value)}
+                  />
+                </div>
+
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label">Image URL (Optional)</label>
+                  <input
+                    type="url"
+                    className="form-control"
+                    placeholder="https://example.com/image.jpg"
+                    style={{ border: '2.5px solid var(--text-dark)', height: '48px', padding: '0 16px' }}
+                    value={suggestImageUrl}
+                    onChange={(e) => setSuggestImageUrl(e.target.value)}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label">Description & Parent Information *</label>
+                <textarea
+                  required
+                  className="form-control"
+                  placeholder="Describe the activity. E.g., is there shade, toilets nearby, parking, or fully fenced playgrounds?"
+                  style={{ border: '2.5px solid var(--text-dark)', borderRadius: '16px', minHeight: '80px', padding: '12px 16px' }}
+                  value={suggestDescription}
+                  onChange={(e) => setSuggestDescription(e.target.value)}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowSuggestModal(false)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '50px',
+                    border: '2.5px solid var(--text-dark)',
+                    backgroundColor: 'var(--bg-white)',
+                    color: 'var(--text-dark)',
+                    fontWeight: '800',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  style={{
+                    padding: '12px 28px',
+                    borderRadius: '50px',
+                    border: '2.5px solid var(--text-dark)',
+                    backgroundColor: 'var(--primary)',
+                    color: 'white',
+                    fontWeight: '800',
+                    boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                    cursor: 'pointer',
+                    opacity: submitting ? 0.7 : 1
+                  }}
+                >
+                  {submitting ? 'Submitting...' : 'Submit Suggestion'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

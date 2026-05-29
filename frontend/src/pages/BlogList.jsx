@@ -78,7 +78,7 @@ export default function BlogList() {
         </div>
         <h1 style={{ 
           fontWeight: 900, 
-          fontSize: '3rem',
+          fontSize: 'clamp(2rem, 5.5vw, 3rem)',
           lineHeight: '1.1',
           marginBottom: '20px', 
           color: 'var(--primary)',

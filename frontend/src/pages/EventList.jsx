@@ -122,7 +122,7 @@ export default function EventList() {
             {/* Sora Geometric Display Header */}
             <h1 style={{ 
               fontFamily: 'var(--font-display)',
-              fontSize: '3.8rem', 
+              fontSize: 'clamp(2.2rem, 6vw, 3.8rem)', 
               fontWeight: '900',
               lineHeight: '1.05',
               marginBottom: '24px', 

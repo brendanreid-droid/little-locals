@@ -64,6 +64,8 @@
 
 .calendar-grid-item {
   aspect-ratio: 1 / 1.1;
+  padding: 10px;
+  min-height: 90px;
 }
 
 .custom-scrollbar::-webkit-scrollbar {
@@ -238,7 +240,7 @@ button, input, select, textarea {
 /* Cards Grid */
 .event-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
   gap: 28px;
   padding: 20px 0;
 }
@@ -679,15 +681,35 @@ textarea.form-control {
   .calendar-grid {
     gap: 6px;
   }
-  .calendar-day {
-    padding: 4px;
+  .calendar-grid-item {
+    padding: 4px !important;
+    min-height: 44px !important;
+    aspect-ratio: 1 !important;
+  }
+  .calendar-day-details {
+    display: none !important;
+  }
+  .calendar-weekday {
+    font-size: 0.65rem !important;
+    padding-bottom: 6px !important;
   }
   .calendar-day-number {
-    font-size: 0.85rem;
+    font-size: 0.78rem !important;
   }
-  .calendar-dot {
-    width: 6px;
-    height: 6px;
+  .calendar-dot-marker {
+    width: 5px !important;
+    height: 5px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  .event-grid {
+    grid-template-columns: 1fr !important;
+    gap: 16px !important;
+  }
+  .modal-grid-cols {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
   }
 }
 

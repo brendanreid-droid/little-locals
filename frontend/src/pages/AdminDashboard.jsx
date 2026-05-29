@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { collection, getDocs, doc, deleteDoc, addDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, addDoc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth } from '../firebase';
 import { Plus, Edit2, Trash2, LogOut, Search, Calendar, MapPin, Smile, CheckCircle, XCircle, BookOpen, Cpu, RefreshCw } from 'lucide-react';
@@ -13,6 +13,7 @@ export default function AdminDashboard() {
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState('events'); // 'events', 'suggestions', or 'posts'
   const [searchTerm, setSearchTerm] = useState('');
+  const [editingSuggestion, setEditingSuggestion] = useState(null);
   const navigate = useNavigate();
 
   // Authentication check
@@ -125,7 +126,7 @@ export default function AdminDashboard() {
   };
 
   const handleRejectSuggestion = async (id) => {
-    if (!window.confirm("Dismiss this scraped event suggestion?")) return;
+    if (!window.confirm("Dismiss this recommended lead?")) return;
     
     try {
       await deleteDoc(doc(db, 'suggestions', id));
@@ -862,7 +863,7 @@ export default function AdminDashboard() {
                 fontSize: '1.4rem',
                 margin: 0
               }}>
-                Collate & Approve Scraped Facebook Events
+                Collate & Approve Recommended Event Leads
               </h4>
               <p style={{ fontSize: '0.92rem', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '600', lineHeight: 1.5 }}>
                 These are free family activities identified on local Central Coast pages. Review the event parameters and click Approve to push them live to the website!
@@ -936,8 +937,8 @@ export default function AdminDashboard() {
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px' }}>
                     <div>
                       <span style={{ 
-                        backgroundColor: 'var(--yellow-soft)', 
-                        color: 'hsl(14, 90%, 30%)', 
+                        backgroundColor: s.source === 'User Suggestion' ? 'var(--primary-soft)' : 'var(--yellow-soft)', 
+                        color: s.source === 'User Suggestion' ? 'var(--primary)' : 'hsl(14, 90%, 30%)', 
                         padding: '4px 14px', 
                         borderRadius: '6px',
                         border: '2px solid var(--text-dark)',
@@ -948,7 +949,7 @@ export default function AdminDashboard() {
                         display: 'inline-block',
                         marginBottom: '10px'
                       }}>
-                        Scraped Facebook Lead
+                        {s.source === 'User Suggestion' ? 'User Submitted Suggestion' : 'Recommended Lead'}
                       </span>
                       <h3 style={{ 
                         fontFamily: 'var(--font-display)',
@@ -959,8 +960,8 @@ export default function AdminDashboard() {
                       }}>{s.title}</h3>
                     </div>
                     
-                    {/* Approve/Dismiss Actions */}
-                    <div style={{ display: 'flex', gap: '12px' }}>
+                    {/* Approve/Edit/Dismiss Actions */}
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
                       <button 
                         onClick={() => handleApproveSuggestion(s)} 
                         style={{ 
@@ -981,6 +982,27 @@ export default function AdminDashboard() {
                         className="admin-list-btn"
                       >
                         <CheckCircle size={16} /> Approve
+                      </button>
+                      <button 
+                        onClick={() => setEditingSuggestion(s)} 
+                        style={{ 
+                          padding: '10px 20px', 
+                          fontSize: '0.85rem', 
+                          fontWeight: '800',
+                          backgroundColor: 'var(--bg-white)',
+                          color: 'var(--primary)',
+                          border: '3.5px solid var(--text-dark)',
+                          borderRadius: '50px',
+                          display: 'inline-flex',
+                          alignItems: 'center',
+                          gap: '6px',
+                          cursor: 'pointer',
+                          boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                          transition: 'var(--transition-bouncy)'
+                        }}
+                        className="admin-list-btn"
+                      >
+                        <Edit2 size={16} /> Edit
                       </button>
                       <button 
                         onClick={() => handleRejectSuggestion(s.id)} 
@@ -1006,7 +1028,7 @@ export default function AdminDashboard() {
                     </div>
                   </div>
  
-                  {/* Scraped Parameters summary */}
+                  {/* Lead parameters summary */}
                   <div style={{ 
                     display: 'grid', 
                     gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
@@ -1043,7 +1065,7 @@ export default function AdminDashboard() {
                         alignSelf: 'flex-start'
                       }}
                     >
-                      View original Facebook lead source
+                      View original source link
                     </a>
                   )}
  
@@ -1223,6 +1245,198 @@ export default function AdminDashboard() {
         </div>
 
       </div>
+
+      {/* Editing Suggestion Modal */}
+      {editingSuggestion && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(27, 19, 44, 0.65)',
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          zIndex: 9999,
+          padding: '20px',
+          backdropFilter: 'blur(8px)'
+        }}>
+          <div style={{
+            backgroundColor: 'var(--bg-white)',
+            border: '4px solid var(--text-dark)',
+            borderRadius: '24px',
+            padding: '32px',
+            width: '100%',
+            maxWidth: '600px',
+            maxHeight: '90vh',
+            overflowY: 'auto',
+            boxShadow: '8px 8px 0px 0px var(--text-dark)',
+            animation: 'slideUp 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275)'
+          }}>
+            <h3 style={{ fontWeight: '900', fontSize: '1.6rem', color: 'var(--primary)', marginBottom: '20px', textAlign: 'left' }}>
+              Edit Event Suggestion
+            </h3>
+            
+            <form onSubmit={async (e) => {
+              e.preventDefault();
+              try {
+                // Update Firestore
+                const docRef = doc(db, 'suggestions', editingSuggestion.id);
+                await updateDoc(docRef, {
+                  title: editingSuggestion.title,
+                  date: editingSuggestion.date || '',
+                  time: editingSuggestion.time || '',
+                  location: editingSuggestion.location || '',
+                  category: editingSuggestion.category || 'General',
+                  age_group: editingSuggestion.age_group || 'All Ages',
+                  description: editingSuggestion.description || '',
+                  link: editingSuggestion.link || '',
+                  image_url: editingSuggestion.image_url || ''
+                });
+                
+                // Update local state
+                setSuggestions(prev => prev.map(s => s.id === editingSuggestion.id ? editingSuggestion : s));
+                
+                alert("Suggestion updated successfully!");
+                setEditingSuggestion(null);
+              } catch (err) {
+                console.error("Error updating suggestion:", err);
+                alert("Failed to update suggestion: " + err.message);
+              }
+            }} style={{ display: 'flex', flexDirection: 'column', gap: '16px', textAlign: 'left' }}>
+              
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: '800' }}>Activity Title *</label>
+                <input 
+                  type="text" 
+                  className="form-control"
+                  style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
+                  value={editingSuggestion.title}
+                  onChange={(e) => setEditingSuggestion(prev => ({ ...prev, title: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: '800' }}>Date</label>
+                  <input 
+                    type="date" 
+                    className="form-control"
+                    style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
+                    value={editingSuggestion.date || ''}
+                    onChange={(e) => setEditingSuggestion(prev => ({ ...prev, date: e.target.value }))}
+                  />
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: '800' }}>Time</label>
+                  <input 
+                    type="text" 
+                    placeholder="e.g. 10:00 AM - 12:00 PM"
+                    className="form-control"
+                    style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
+                    value={editingSuggestion.time || ''}
+                    onChange={(e) => setEditingSuggestion(prev => ({ ...prev, time: e.target.value }))}
+                  />
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: '800' }}>Location *</label>
+                <input 
+                  type="text" 
+                  className="form-control"
+                  style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
+                  value={editingSuggestion.location}
+                  onChange={(e) => setEditingSuggestion(prev => ({ ...prev, location: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px' }}>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: '800' }}>Category</label>
+                  <select 
+                    className="form-control"
+                    style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px', height: '48px' }}
+                    value={editingSuggestion.category || 'Playground'}
+                    onChange={(e) => setEditingSuggestion(prev => ({ ...prev, category: e.target.value }))}
+                  >
+                    {['Playground', 'Library', 'Art & Craft', 'Outdoors', 'Sports', 'Music & Storytime', 'General'].map(cat => (
+                      <option key={cat} value={cat}>{cat}</option>
+                    ))}
+                  </select>
+                </div>
+                <div className="form-group" style={{ marginBottom: 0 }}>
+                  <label className="form-label" style={{ fontWeight: '800' }}>Age Suitability</label>
+                  <select 
+                    className="form-control"
+                    style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px', height: '48px' }}
+                    value={editingSuggestion.age_group || 'All Ages'}
+                    onChange={(e) => setEditingSuggestion(prev => ({ ...prev, age_group: e.target.value }))}
+                  >
+                    {['0-5 years', '6-12 years', 'Teens', 'All Ages'].map(age => (
+                      <option key={age} value={age}>{age}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: '800' }}>Image URL</label>
+                <input 
+                  type="url" 
+                  className="form-control"
+                  style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
+                  value={editingSuggestion.image_url || ''}
+                  onChange={(e) => setEditingSuggestion(prev => ({ ...prev, image_url: e.target.value }))}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: '800' }}>Website / Social Link</label>
+                <input 
+                  type="url" 
+                  className="form-control"
+                  style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
+                  value={editingSuggestion.link || ''}
+                  onChange={(e) => setEditingSuggestion(prev => ({ ...prev, link: e.target.value }))}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: 0 }}>
+                <label className="form-label" style={{ fontWeight: '800' }}>Description / Details *</label>
+                <textarea 
+                  className="form-control"
+                  style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px', minHeight: '80px' }}
+                  value={editingSuggestion.description}
+                  onChange={(e) => setEditingSuggestion(prev => ({ ...prev, description: e.target.value }))}
+                  required
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px', justifyContent: 'flex-end' }}>
+                <button 
+                  type="button" 
+                  className="btn btn-outline" 
+                  style={{ padding: '10px 20px', border: '2px solid var(--text-dark)', borderRadius: '50px' }}
+                  onClick={() => setEditingSuggestion(null)}
+                >
+                  Cancel
+                </button>
+                <button 
+                  type="submit" 
+                  className="btn btn-primary"
+                  style={{ padding: '10px 24px', backgroundColor: 'var(--primary)', color: 'white', border: '2px solid var(--text-dark)', borderRadius: '50px' }}
+                >
+                  Save Changes
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Admin specific styles */}
       <style>{`

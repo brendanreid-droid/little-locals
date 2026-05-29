@@ -18,7 +18,7 @@ export default async function handler(req, res) {
       location: "Umina Beach Playground, Sydney Ave, Umina Beach NSW 2257",
       age_group: "0-5 years",
       time: "09:30 AM - 11:00 AM",
-      description: "Scraped Facebook Lead: Join local mums and dads for an outdoor toddler sensory play session right next to the fully fenced Umina Beach active zone. Shaded areas, baby swings, and sand play. Perfect morning coffee spot.",
+      description: "Join local mums and dads for an outdoor toddler sensory play session right next to the fully fenced Umina Beach active zone. Shaded areas, baby swings, and sand play. Perfect morning coffee spot.",
       image_url: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/334455667/",
       daysOffset: 3
@@ -29,7 +29,7 @@ export default async function handler(req, res) {
       location: "Gosford Library, Erina St, Gosford NSW 2250",
       age_group: "6-12 years",
       time: "03:30 PM - 05:00 PM",
-      description: "Scraped Facebook Lead: Free after-school LEGO building challenge for school-aged kids (6-12 years). Build creative models, showcase your designs in the library cabinets, and meet new friends. Bookings not required.",
+      description: "Free after-school LEGO building challenge for school-aged kids (6-12 years). Build creative models, showcase your designs in the library cabinets, and meet new friends. Bookings not required.",
       image_url: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/112233445/",
       daysOffset: 5
@@ -40,7 +40,7 @@ export default async function handler(req, res) {
       location: "The Entrance Water Park, The Entrance Rd, The Entrance NSW 2261",
       age_group: "All Ages",
       time: "11:00 AM - 03:00 PM",
-      description: "Scraped Facebook Lead: Free community picnic and splash day out for families. Pack a rug and lunch, enjoy the water fountains, fully fenced play equipment, and feeding of the pelicans at 3:30 PM nearby!",
+      description: "Free community picnic and splash day out for families. Pack a rug and lunch, enjoy the water fountains, fully fenced play equipment, and feeding of the pelicans at 3:30 PM nearby!",
       image_url: "https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/556677889/",
       daysOffset: 7
@@ -51,7 +51,7 @@ export default async function handler(req, res) {
       location: "Avoca Beach Rockpools, Avoca Beach NSW 2251",
       age_group: "6-12 years",
       time: "01:00 PM - 02:30 PM",
-      description: "Scraped Facebook Lead: Free guided marine exploration for school holidays. Kids can learn about local anemones, crabs, and sea snails in the shallow rockpools. Shaded parent seating and clean amenities nearby.",
+      description: "Free guided marine exploration for school holidays. Kids can learn about local anemones, crabs, and sea snails in the shallow rockpools. Shaded parent seating and clean amenities nearby.",
       image_url: "https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/778899001/",
       daysOffset: 9
@@ -62,7 +62,7 @@ export default async function handler(req, res) {
       location: "Erina Library, Erina Fair, Terrigal Dr, Erina NSW 2250",
       age_group: "0-5 years",
       time: "10:00 AM - 10:45 AM",
-      description: "Scraped Facebook Lead: Free interactive story and music program for toddlers and preschoolers. Features classic kids' songs, puppet play, and picture book readings. Parents must stay. Level access and stroller parking inside Erina Fair.",
+      description: "Free interactive story and music program for toddlers and preschoolers. Features classic kids' songs, puppet play, and picture book readings. Parents must stay. Level access and stroller parking inside Erina Fair.",
       image_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/445566778/",
       daysOffset: 11
@@ -124,7 +124,7 @@ INSTRUCTIONS:
    - date: A string in YYYY-MM-DD format. The date MUST be in the future (relative to today ${todayStr}).
    - time: Event times, e.g. "10:00 AM - 12:00 PM".
    - age_group: One of "All Ages", "0-5 years", "6-12 years", or "Teens".
-   - description: Describe the activity, what to bring, shade options, playground fences, and parking. Must start with "Scraped Facebook Lead: " or "Scraped Lead: ".
+   - description: Describe the activity, what to bring, shade options, playground fences, and parking. Provide highly readable, parent-friendly copy directly (do not prepend any labels, hashtags, or scraper prefixes).
    - image_url: A high-quality Unsplash search URL suited to the activity category.
    - link: A URL referencing the event (e.g., a mock Facebook event link like "https://www.facebook.com/events/12345/").
 
@@ -180,7 +180,7 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
               ...ev,
               // Fallback default image URLs matching categories if Unsplash fails or is invalid
               image_url: ev.image_url || mockTemplates[i % mockTemplates.length].image_url,
-              link: ev.link || `https://www.facebook.com/events/scraped_${Date.now()}_${i}/`
+              link: ev.link || `https://www.facebook.com/events/recommendation_${Date.now()}_${i}/`
             }))
           });
         }
