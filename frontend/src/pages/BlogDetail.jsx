@@ -95,8 +95,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
   };
 
   return (
-    <div style={{ 
-      padding: '48px 24px', 
+    <div className="detail-page-container" style={{ 
       maxWidth: '900px', 
       margin: '0 auto',
       backgroundColor: 'var(--bg-cream)',
@@ -128,23 +127,9 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
         <ArrowLeft size={16} /> Back to Blog
       </Link>
 
-      <article 
-        className="sticker-shadow"
-        style={{ 
-          backgroundColor: 'var(--bg-white)', 
-          borderRadius: '24px', 
-          border: '3.5px solid var(--text-dark)',
-          overflow: 'hidden',
-          boxShadow: '8px 8px 0px 0px var(--text-dark)',
-          marginBottom: '48px',
-          animation: 'slideUp 0.5s ease'
-        }}
-      >
+      <article className="article-card">
         {/* Cover image */}
-        <div style={{ 
-          height: '400px', 
-          width: '100%', 
-          position: 'relative',
+        <div className="detail-cover-image" style={{ 
           borderBottom: '3.5px solid var(--text-dark)'
         }}>
           <img 
@@ -172,7 +157,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
           </div>
         </div>
 
-        <div style={{ padding: '40px 48px' }} className="article-body-padding">
+        <div className="article-body-padding">
           
           {/* Metadata bar */}
           <div style={{ 
@@ -200,7 +185,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
           <h1 style={{ 
             fontFamily: 'var(--font-display)',
             fontWeight: 900, 
-            fontSize: '2.8rem', 
+            fontSize: 'clamp(1.8rem, 5.5vw, 2.8rem)', 
             marginBottom: '28px', 
             textAlign: 'left', 
             lineHeight: 1.15, 
@@ -212,19 +197,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
 
           {/* Excerpt panel */}
           {post.excerpt && (
-            <div style={{ 
-              padding: '24px 30px', 
-              backgroundColor: 'var(--primary-soft)', 
-              borderRadius: '16px', 
-              border: '3.5px solid var(--text-dark)',
-              boxShadow: '4px 4px 0px 0px var(--text-dark)',
-              fontSize: '1.1rem', 
-              fontWeight: '700', 
-              color: 'var(--primary)', 
-              marginBottom: '40px',
-              textAlign: 'left',
-              lineHeight: 1.6
-            }}>
+            <div className="blog-excerpt">
               "{post.excerpt}"
             </div>
           )}
@@ -246,17 +219,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
 
       {/* Facebook Blog Sharing Helper (Admin Assistant Tool) */}
       {isAdmin && (
-        <div style={{ 
-          backgroundColor: 'var(--bg-white)', 
-          borderRadius: '24px', 
-          border: '3.5px solid var(--text-dark)',
-          boxShadow: '6px 6px 0px 0px var(--text-dark)',
-          padding: '36px',
-          textAlign: 'left',
-          marginBottom: '32px',
-          marginTop: '48px',
-          animation: 'slideUp 0.6s ease'
-        }}>
+        <div className="admin-sharing-helper article-card" style={{ marginTop: '48px', marginBottom: '32px' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '24px' }}>
             <div style={{ 
               width: '48px', 
@@ -309,7 +272,6 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
             <button 
               onClick={handleCopyToClipboard}
               style={{ 
-                minWidth: '260px',
                 padding: '14px 28px',
                 borderRadius: '50px',
                 border: '3px solid var(--text-dark)',
@@ -325,7 +287,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
                 gap: '8px',
                 transition: 'var(--transition-bouncy)'
               }}
-              className="copy-caption-btn"
+              className="copy-caption-btn copy-btn"
             >
               {copied ? (
                 <>

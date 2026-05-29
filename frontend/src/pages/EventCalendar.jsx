@@ -160,7 +160,7 @@ export default function EventCalendar() {
   const featuredEvent = events.find(e => e.is_featured) || events[0];
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: '1280px', margin: '0 auto' }}>
+    <div className="calendar-view" style={{ maxWidth: '1280px', margin: '0 auto' }}>
       
       {/* Header section */}
       <div 
@@ -1191,7 +1191,7 @@ export default function EventCalendar() {
                 />
               </div>
 
-              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '12px', marginTop: '12px' }}>
+              <div className="modal-actions">
                 <button
                   type="button"
                   onClick={() => setShowSuggestModal(false)}

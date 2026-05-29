@@ -99,7 +99,7 @@ ${event.description || ''}
   };
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: '1000px', margin: '0 auto' }}>
+    <div className="detail-page-container" style={{ maxWidth: '1000px', margin: '0 auto' }}>
       
       {/* Back Navigation */}
       <Link to="/" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '24px' }}>
@@ -117,7 +117,7 @@ ${event.description || ''}
           boxShadow: 'var(--shadow-light)'
         }}>
           {/* Cover image */}
-          <div style={{ height: '380px', width: '100%', position: 'relative' }}>
+          <div className="detail-cover-image">
             <img 
               src={event.image_url || 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=1000&q=80'} 
               alt={event.title} 
@@ -128,7 +128,7 @@ ${event.description || ''}
             </div>
           </div>
 
-          <div style={{ padding: '40px' }}>
+          <div className="detail-card-content">
             
             {/* Header info */}
             <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap', marginBottom: '16px' }}>
@@ -136,20 +136,12 @@ ${event.description || ''}
               <span className="badge badge-blue">{event.age_group || 'All Ages'}</span>
             </div>
             
-            <h1 style={{ fontWeight: 900, fontSize: '2.2rem', marginBottom: '24px', textAlign: 'left', lineHeight: 1.25 }}>
+            <h1 style={{ fontWeight: 900, fontSize: 'clamp(1.6rem, 5vw, 2.2rem)', marginBottom: '24px', textAlign: 'left', lineHeight: 1.25 }}>
               {event.title}
             </h1>
 
             {/* Quick Metrics Bar */}
-            <div style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-              gap: '20px', 
-              padding: '24px', 
-              backgroundColor: 'var(--bg-cream)', 
-              borderRadius: 'var(--radius-md)', 
-              marginBottom: '32px' 
-            }}>
+            <div className="detail-metrics-bar">
               <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
                 <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--primary-soft)', display: 'flex', alignItems: 'center', justifySelf: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
                   <CalendarIcon size={20} />
@@ -213,14 +205,7 @@ ${event.description || ''}
 
         {/* Facebook Review Sharing Helper (Admin Assistant Tool) */}
         {isAdmin && (
-          <div style={{ 
-            backgroundColor: 'var(--secondary-soft)', 
-            borderRadius: 'var(--radius-lg)', 
-            border: '1px dashed var(--secondary)',
-            padding: '32px',
-            textAlign: 'left',
-            marginTop: '40px'
-          }}>
+          <div className="admin-sharing-helper">
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
               <div style={{ width: '44px', height: '44px', borderRadius: '50%', backgroundColor: 'var(--secondary)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
                 <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
@@ -250,9 +235,8 @@ ${event.description || ''}
 
             <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
               <button 
-                className={`btn ${copied ? 'btn-secondary' : 'btn-primary'}`} 
+                className={`btn ${copied ? 'btn-secondary' : 'btn-primary'} copy-btn`} 
                 onClick={handleCopyToClipboard}
-                style={{ minWidth: '240px' }}
               >
                 {copied ? (
                   <>
