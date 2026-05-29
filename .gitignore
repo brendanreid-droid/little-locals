@@ -29,3 +29,6 @@ active-params.js
 # OS files
 .DS_Store
 Thumbs.db
+
+# Design tool imports
+stitch_imports/
