@@ -517,7 +517,7 @@ textarea.form-control {
 
 /* Mobile-first bottom nav & desktop header layout */
 .header {
-  padding: 24px 40px;
+  padding: 12px 40px;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -528,10 +528,13 @@ textarea.form-control {
 .logo-container {
   display: flex;
   align-items: center;
-  gap: 10px;
-  font-weight: 900;
-  font-size: 1.5rem;
   color: var(--text-dark);
+}
+
+.logo-img {
+  height: 38px;
+  width: auto;
+  display: block;
 }
 
 .logo-icon {
@@ -634,7 +637,10 @@ textarea.form-control {
 /* Responsive queries */
 @media (max-width: 768px) {
   .header {
-    padding: 16px 20px;
+    padding: 8px 16px;
+  }
+  .logo-img {
+    height: 32px;
   }
   .hamburger-toggle {
     display: flex;

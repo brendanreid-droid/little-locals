@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { BrowserRouter as Router, Routes, Route, NavLink, Link } from 'react-router-dom';
-import { Sparkles, Calendar as CalendarIcon, Grid, Lock, Heart, BookOpen } from 'lucide-react';
+import { Calendar as CalendarIcon, Grid, Lock, Heart, BookOpen } from 'lucide-react';
 import EventList from './pages/EventList';
 import EventCalendar from './pages/EventCalendar';
 import EventDetail from './pages/EventDetail';
@@ -10,6 +10,7 @@ import AdminLogin from './pages/AdminLogin';
 import AdminDashboard from './pages/AdminDashboard';
 import EventForm from './pages/EventForm';
 import BlogForm from './pages/BlogForm';
+import logoHorizontal from './assets/logo-horizontal.png';
 import './App.css';
 
 function App() {
@@ -22,10 +23,7 @@ function App() {
         {/* Beautiful Dynamic Header */}
         <header className="header" style={{ position: 'relative' }}>
           <Link to="/" className="logo-container" onClick={() => setMenuOpen(false)}>
-            <div className="logo-icon">
-              <Sparkles size={20} fill="white" />
-            </div>
-            <span>Little Locals</span>
+            <img src={logoHorizontal} alt="Little Locals Logo" className="logo-img" />
           </Link>
 
           {/* Hamburger Menu Toggle Button (Visible on mobile only) */}
