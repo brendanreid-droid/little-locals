@@ -203,15 +203,21 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
           )}
 
           {/* Content Body */}
-          <div style={{ 
+          <div className="blog-content-paragraphs" style={{ 
             textAlign: 'left', 
             fontSize: '1.12rem', 
             color: 'var(--text-dark)', 
             lineHeight: '1.85', 
-            whiteSpace: 'pre-line',
             fontFamily: 'var(--font-sans)'
-          }} className="blog-content-paragraphs">
-            {post.content}
+          }}>
+            {post.content?.split('\n').map((para, i) => {
+              if (!para.trim()) return <div key={i} style={{ height: '14px' }} />;
+              return (
+                <p key={i} style={{ marginBottom: '20px' }}>
+                  {para}
+                </p>
+              );
+            })}
           </div>
 
         </div>
@@ -263,7 +269,9 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
             maxHeight: '220px',
             overflowY: 'auto',
             marginBottom: '24px',
-            color: 'var(--text-dark)'
+            color: 'var(--text-dark)',
+            wordBreak: 'break-all',
+            overflowWrap: 'anywhere'
           }}>
             {getFormattedFacebookPost()}
           </div>

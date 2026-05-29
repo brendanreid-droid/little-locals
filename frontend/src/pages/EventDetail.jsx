@@ -177,8 +177,15 @@ ${event.description || ''}
             {/* Event Description */}
             <div style={{ textAlign: 'left', marginBottom: '40px' }}>
               <h3 style={{ fontWeight: 800, marginBottom: '12px', fontSize: '1.3rem' }}>About this Activity</h3>
-              <div className="detail-body-text" style={{ fontSize: '1.05rem', color: 'var(--text-dark)', lineHeight: '1.7', whiteSpace: 'pre-line' }}>
-                {event.description}
+              <div className="detail-body-text" style={{ fontSize: '1.05rem', color: 'var(--text-dark)', lineHeight: '1.7' }}>
+                {event.description?.split('\n').map((para, i) => {
+                  if (!para.trim()) return <div key={i} style={{ height: '12px' }} />;
+                  return (
+                    <p key={i} style={{ marginBottom: '16px' }}>
+                      {para}
+                    </p>
+                  );
+                })}
               </div>
             </div>
 
@@ -227,7 +234,9 @@ ${event.description || ''}
               maxHeight: '220px',
               overflowY: 'auto',
               marginBottom: '20px',
-              color: 'var(--text-dark)'
+              color: 'var(--text-dark)',
+              wordBreak: 'break-all',
+              overflowWrap: 'anywhere'
             }}>
               {getFormattedFacebookPost()}
             </div>
