@@ -899,8 +899,10 @@ textarea.form-control {
 
 @media (max-width: 768px) {
   /* Prevent horizontal flex-grid blowouts in details layout */
-  .detail-page-container {
+  .detail-page-container,
+  .app-container {
     max-width: 100% !important;
+    width: 100% !important;
     overflow-x: hidden !important;
   }
   
