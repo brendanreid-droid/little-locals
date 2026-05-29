@@ -786,6 +786,12 @@ textarea.form-control {
   box-shadow: 8px 8px 0px 0px var(--text-dark);
   margin-bottom: 48px;
   animation: slideUp 0.5s ease;
+  max-width: 100% !important;
+}
+
+.detail-card {
+  max-width: 100% !important;
+  overflow: hidden !important;
 }
 
 .blog-excerpt {
@@ -879,9 +885,16 @@ textarea.form-control {
 .detail-page-container h4,
 .detail-page-container h5,
 .detail-page-container h6 {
-  overflow-wrap: break-word !important;
+  overflow-wrap: anywhere !important;
   word-wrap: break-word !important;
   word-break: break-word !important;
+  max-width: 100% !important;
+}
+
+.detail-body-text,
+.blog-content-paragraphs {
+  white-space: pre-line !important;
+  display: block !important;
 }
 
 @media (max-width: 768px) {

@@ -109,11 +109,10 @@ ${event.description || ''}
       <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '32px' }}>
         
         {/* Main Details Panel */}
-        <div style={{ 
+        <div className="detail-card" style={{ 
           backgroundColor: 'var(--bg-white)', 
           borderRadius: 'var(--radius-lg)', 
           border: '1px solid var(--border-soft)',
-          overflow: 'hidden',
           boxShadow: 'var(--shadow-light)'
         }}>
           {/* Cover image */}
@@ -164,13 +163,13 @@ ${event.description || ''}
                 </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
-                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--teal-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--teal)' }}>
+              <div style={{ display: 'flex', gap: '12px', alignItems: 'center', minWidth: 0 }}>
+                <div style={{ width: '40px', height: '40px', borderRadius: '50%', backgroundColor: 'var(--teal-soft)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--teal)', flexShrink: 0 }}>
                   <MapPin size={20} />
                 </div>
-                <div>
+                <div style={{ minWidth: 0, overflowWrap: 'anywhere', wordBreak: 'break-word' }}>
                   <div style={{ fontSize: '0.75rem', fontWeight: '800', color: 'var(--text-muted)', textTransform: 'uppercase' }}>Location</div>
-                  <div style={{ fontWeight: '700', fontSize: '0.95rem' }}>{event.location}</div>
+                  <div style={{ fontWeight: '700', fontSize: '0.95rem', overflowWrap: 'anywhere', wordBreak: 'break-word' }}>{event.location}</div>
                 </div>
               </div>
             </div>
