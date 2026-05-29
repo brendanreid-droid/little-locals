@@ -116,7 +116,7 @@ export default function EventList() {
               fontSize: '0.85rem'
             }} className="floating-sticker">
               <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-              100% FREE FAMILY FUN
+              100% Family Fun
             </div>
 
             {/* Sora Geometric Display Header */}
@@ -139,7 +139,7 @@ export default function EventList() {
               opacity: 0.95,
               lineHeight: '1.7'
             }}>
-              No paid ads, no hidden costs. Just centralized free events, activities, and playground reviews to keep your little locals happy.
+              No paid ads, no hidden costs. Just centralised free events, activities, and playground reviews to keep your little locals happy.
             </p>
 
             <button 

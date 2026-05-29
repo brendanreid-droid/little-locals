@@ -866,4 +866,36 @@ textarea.form-control {
   }
 }
 
+/* Strict Mobile text wrapping safeguards */
+.detail-body-text,
+.blog-content-paragraphs,
+.blog-content-paragraphs p,
+.blog-excerpt,
+.blog-excerpt p,
+.detail-page-container p,
+.detail-page-container h1,
+.detail-page-container h2,
+.detail-page-container h3,
+.detail-page-container h4,
+.detail-page-container h5,
+.detail-page-container h6 {
+  overflow-wrap: break-word !important;
+  word-wrap: break-word !important;
+  word-break: break-word !important;
+}
+
+@media (max-width: 768px) {
+  /* Prevent horizontal flex-grid blowouts in details layout */
+  .detail-page-container {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+  
+  .detail-body-text, 
+  .blog-content-paragraphs {
+    font-size: 1rem !important;
+    line-height: 1.6 !important;
+  }
+}
+
 
