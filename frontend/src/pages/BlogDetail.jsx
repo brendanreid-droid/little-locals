@@ -11,6 +11,7 @@ export default function BlogDetail() {
   const [loading, setLoading] = useState(true);
   const [copied, setCopied] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [activeImage, setActiveImage] = useState(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -220,6 +221,79 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
             })}
           </div>
 
+          {/* Adventure Photos Gallery */}
+          {post.image_urls && post.image_urls.length > 0 && (
+            <div className="adventure-gallery-section" style={{ marginTop: '40px', paddingTop: '32px', borderTop: '2px dashed var(--border-soft)' }}>
+              <h3 style={{ 
+                fontFamily: 'var(--font-display)', 
+                fontWeight: 900, 
+                color: 'var(--primary)', 
+                fontSize: '1.4rem', 
+                marginBottom: '20px',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '8px'
+              }}>
+                📸 Adventure Photo Gallery
+              </h3>
+              <div style={{ 
+                display: 'grid', 
+                gridTemplateColumns: 'repeat(auto-fill, minmax(180px, 1fr))', 
+                gap: '20px' 
+              }}>
+                {post.image_urls.map((url, idx) => (
+                  <div 
+                    key={idx} 
+                    onClick={() => setActiveImage(url)}
+                    className="gallery-thumbnail-card"
+                    style={{ 
+                      position: 'relative',
+                      borderRadius: '16px', 
+                      border: '3px solid var(--text-dark)', 
+                      overflow: 'hidden',
+                      aspectRatio: '1 / 1',
+                      boxShadow: '4px 4px 0px 0px var(--text-dark)',
+                      cursor: 'pointer',
+                      backgroundColor: 'var(--bg-white)',
+                      transition: 'var(--transition-bouncy)'
+                    }}
+                  >
+                    <img 
+                      src={url} 
+                      alt={`Gallery view ${idx + 1}`} 
+                      style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} 
+                    />
+                    <div className="gallery-thumbnail-overlay" style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      bottom: 0,
+                      backgroundColor: 'rgba(3, 63, 29, 0.15)',
+                      opacity: 0,
+                      transition: 'opacity 0.25s ease',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <span style={{ 
+                        color: 'white', 
+                        fontWeight: '900', 
+                        backgroundColor: 'var(--text-dark)', 
+                        padding: '6px 12px', 
+                        borderRadius: '50px',
+                        fontSize: '0.75rem',
+                        border: '2px solid white'
+                      }}>
+                        VIEW PHOTO
+                      </span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
         </div>
       </article>
 
@@ -334,6 +408,72 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
         </div>
       )}
 
+      {/* Lightbox / Photo Viewer Modal */}
+      {activeImage && (
+        <div 
+          onClick={() => setActiveImage(null)}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(28, 27, 27, 0.95)',
+            zIndex: 99999,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            padding: '24px',
+            cursor: 'zoom-out',
+            animation: 'fadeIn 0.2s ease'
+          }}
+        >
+          {/* Close button */}
+          <button 
+            onClick={() => setActiveImage(null)}
+            style={{
+              position: 'absolute',
+              top: '24px',
+              right: '24px',
+              background: 'var(--bg-white)',
+              border: '3px solid var(--text-dark)',
+              color: 'var(--text-dark)',
+              width: '44px',
+              height: '44px',
+              borderRadius: '50%',
+              fontSize: '20px',
+              fontWeight: '900',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              boxShadow: '3px 3px 0px 0px var(--text-dark)',
+              zIndex: 100000,
+              transition: 'var(--transition-bouncy)'
+            }}
+            className="lightbox-close"
+          >
+            ✕
+          </button>
+          
+          <img 
+            src={activeImage} 
+            alt="Enlarged gallery view" 
+            onClick={(e) => e.stopPropagation()} 
+            style={{ 
+              maxWidth: '100%', 
+              maxHeight: '90vh', 
+              objectFit: 'contain', 
+              borderRadius: '16px', 
+              border: '4px solid var(--text-dark)',
+              boxShadow: '8px 8px 0px 0px var(--text-dark)',
+              backgroundColor: 'var(--bg-white)',
+              cursor: 'default'
+            }} 
+          />
+        </div>
+      )}
+
       {/* Retro styles */}
       <style>{`
         .back-btn:hover {
@@ -347,6 +487,20 @@ Read the full review and guide here: https://littlelocals.au/blog/${post.id}`;
         }
         .blog-content-paragraphs p {
           margin-bottom: 24px;
+        }
+        .gallery-thumbnail-card:hover {
+          transform: translate(-4px, -4px);
+          box-shadow: 8px 8px 0px 0px var(--text-dark) !important;
+        }
+        .gallery-thumbnail-card:hover .gallery-thumbnail-overlay {
+          opacity: 1 !important;
+        }
+        .lightbox-close:hover {
+          transform: scale(1.1);
+        }
+        @keyframes fadeIn {
+          from { opacity: 0; }
+          to { opacity: 1; }
         }
         @media (max-width: 768px) {
           .article-body-padding {

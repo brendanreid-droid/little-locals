@@ -16,6 +16,7 @@ export default function BlogForm() {
     excerpt: '',
     category: 'Review',
     image_url: '',
+    image_urls: [], // multiple photos array
     content: '',
     date: new Date().toISOString().split('T')[0], // default to today
     is_published: true
@@ -26,6 +27,8 @@ export default function BlogForm() {
   const [fetching, setFetching] = useState(isEditMode);
   const [uploading, setUploading] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [uploadingFiles, setUploadingFiles] = useState([]); // track multiple file upload progress!
+  const [manualImageUrl, setManualImageUrl] = useState('');
   const [error, setError] = useState('');
 
   const categories = ['Review', 'Parenting Guide', 'School Holidays', 'Tips & Hacks'];
@@ -55,6 +58,7 @@ export default function BlogForm() {
             excerpt: data.excerpt || '',
             category: data.category || 'Review',
             image_url: data.image_url || '',
+            image_urls: data.image_urls || [],
             content: data.content || '',
             date: data.date || new Date().toISOString().split('T')[0],
             is_published: data.is_published !== undefined ? data.is_published : true
@@ -80,43 +84,103 @@ export default function BlogForm() {
     }));
   };
 
-  const handleFileUpload = (e) => {
-    const file = e.target.files[0];
-    if (!file) return;
+  const handleMultipleFilesUpload = async (e) => {
+    const files = Array.from(e.target.files);
+    if (files.length === 0) return;
 
     setUploading(true);
-    setUploadProgress(0);
     setError('');
 
-    const storageRef = ref(storage, `blog_images/${Date.now()}_${file.name}`);
-    const uploadTask = uploadBytesResumable(storageRef, file);
+    const newUploads = files.map(file => ({
+      name: file.name,
+      progress: 0,
+      status: 'pending'
+    }));
+    setUploadingFiles(newUploads);
 
-    uploadTask.on(
-      'state_changed',
-      (snapshot) => {
-        const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
-        setUploadProgress(progress);
-      },
-      (err) => {
-        console.error("Storage upload error:", err);
-        setUploading(false);
-        if (err.code === 'storage/unauthorized') {
-          setError('Failed to upload image: Permission denied. Ensure Cloud Storage is set up in your Firebase Console.');
-        } else {
-          setError(`Failed to upload image: ${err.message}. Please activate Storage in your console.`);
-        }
-      },
-      async () => {
-        try {
-          const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
-          setForm((prev) => ({ ...prev, image_url: downloadUrl }));
-        } catch (err) {
-          setError('Error getting download URL: ' + err.message);
-        } finally {
-          setUploading(false);
-        }
-      }
-    );
+    const uploadPromises = files.map((file, index) => {
+      return new Promise((resolve, reject) => {
+        const storageRef = ref(storage, `blog_images/${Date.now()}_${file.name}`);
+        const uploadTask = uploadBytesResumable(storageRef, file);
+
+        uploadTask.on(
+          'state_changed',
+          (snapshot) => {
+            const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+            setUploadingFiles(prev => {
+              const updated = [...prev];
+              if (updated[index]) {
+                updated[index].progress = progress;
+                updated[index].status = 'uploading';
+              }
+              return updated;
+            });
+          },
+          (err) => {
+            console.error("File upload error:", err);
+            setUploadingFiles(prev => {
+              const updated = [...prev];
+              if (updated[index]) {
+                updated[index].status = 'error';
+              }
+              return updated;
+            });
+            reject(err);
+          },
+          async () => {
+            try {
+              const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+              setUploadingFiles(prev => {
+                const updated = [...prev];
+                if (updated[index]) {
+                  updated[index].progress = 100;
+                  updated[index].status = 'completed';
+                }
+                return updated;
+              });
+              resolve(downloadUrl);
+            } catch (urlErr) {
+              reject(urlErr);
+            }
+          }
+        );
+      });
+    });
+
+    try {
+      const urls = await Promise.all(uploadPromises);
+      setForm(prev => {
+        const currentUrls = prev.image_urls || [];
+        const updatedUrls = [...currentUrls, ...urls];
+        const featured = prev.image_url ? prev.image_url : urls[0];
+        return {
+          ...prev,
+          image_url: featured,
+          image_urls: updatedUrls
+        };
+      });
+    } catch (err) {
+      console.error("Multiple upload error:", err);
+      setError(`Some files failed to upload. If this keeps showing 0%, please verify that "Storage" is activated/enabled in your Firebase Console.`);
+    } finally {
+      setUploading(false);
+      setTimeout(() => setUploadingFiles([]), 4000);
+    }
+  };
+
+  const handleAddManualImage = () => {
+    if (!manualImageUrl) return;
+    setForm(prev => {
+      const currentUrls = prev.image_urls || [];
+      const updatedUrls = currentUrls.includes(manualImageUrl) ? currentUrls : [...currentUrls, manualImageUrl];
+      const featured = prev.image_url ? prev.image_url : manualImageUrl;
+      return {
+        ...prev,
+        image_url: featured,
+        image_urls: updatedUrls
+      };
+    });
+    setManualImageUrl('');
   };
 
   const handleSuggestImage = () => {
@@ -127,7 +191,16 @@ export default function BlogForm() {
       'Tips & Hacks': 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80'
     };
 
-    setForm(prev => ({ ...prev, image_url: assets[form.category] || assets['Review'] }));
+    const suggestedUrl = assets[form.category] || assets['Review'];
+    setForm(prev => {
+      const currentUrls = prev.image_urls || [];
+      const updatedUrls = currentUrls.includes(suggestedUrl) ? currentUrls : [...currentUrls, suggestedUrl];
+      return {
+        ...prev,
+        image_url: prev.image_url ? prev.image_url : suggestedUrl,
+        image_urls: updatedUrls
+      };
+    });
   };
 
   // Generate Facebook share text
@@ -302,33 +375,44 @@ Read the full review and guide here: https://littlelocals.au/blog/${postId}`;
 
           {/* Featured Image Uploader */}
           <div className="form-group" style={{ marginBottom: 0 }}>
-            <label className="form-label">Featured Image / Photo</label>
+            <label className="form-label">Upload Photos / Images</label>
             
             {/* File Upload Box */}
             <div style={{ marginBottom: '12px', padding: '16px', border: '2px dashed var(--border-soft)', borderRadius: 'var(--radius-md)', backgroundColor: 'var(--bg-cream)', display: 'flex', flexDirection: 'column', gap: '10px' }}>
-              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-dark)' }}>Upload Image from Device</span>
+              <span style={{ fontSize: '0.85rem', fontWeight: '700', color: 'var(--text-dark)' }}>Upload Photos from Device (Select multiple)</span>
               <input 
                 type="file" 
+                multiple
                 accept="image/*" 
-                onChange={handleFileUpload} 
+                onChange={handleMultipleFilesUpload} 
                 disabled={loading || uploading} 
                 style={{ fontSize: '0.9rem' }}
               />
-              {uploading && (
-                <div style={{ marginTop: '6px' }}>
-                  <div style={{ height: '8px', width: '100%', backgroundColor: 'var(--border-soft)', borderRadius: '50px', overflow: 'hidden' }}>
-                    <div style={{ height: '100%', width: `${uploadProgress}%`, backgroundColor: 'var(--teal)', transition: 'width 0.2s ease' }} />
-                  </div>
-                  <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                    Uploading to Firebase Storage... {uploadProgress}%
-                  </span>
+              {uploading && uploadingFiles.length > 0 && (
+                <div style={{ marginTop: '12px', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                  {uploadingFiles.map((file, idx) => (
+                    <div key={idx} style={{ fontSize: '0.75rem' }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '2px', fontWeight: '700' }}>
+                        <span style={{ textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '70%' }}>{file.name}</span>
+                        <span>{file.progress}%</span>
+                      </div>
+                      <div style={{ height: '6px', width: '100%', backgroundColor: 'var(--border-soft)', borderRadius: '50px', overflow: 'hidden' }}>
+                        <div style={{ 
+                          height: '100%', 
+                          width: `${file.progress}%`, 
+                          backgroundColor: file.status === 'error' ? '#ff6b6b' : 'var(--teal)', 
+                          transition: 'width 0.2s ease' 
+                        }} />
+                      </div>
+                    </div>
+                  ))}
                 </div>
               )}
             </div>
 
             <div style={{ display: 'flex', gap: '12px', alignItems: 'center', margin: '8px 0', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>
               <div style={{ height: '1px', flexGrow: 1, backgroundColor: 'var(--border-soft)' }} />
-              <span>OR USE IMAGE URL</span>
+              <span>OR ENTER IMAGE URL</span>
               <div style={{ height: '1px', flexGrow: 1, backgroundColor: 'var(--border-soft)' }} />
             </div>
 
@@ -338,16 +422,23 @@ Read the full review and guide here: https://littlelocals.au/blog/${postId}`;
                 <Image style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
                 <input 
                   type="url" 
-                  id="image_url" 
-                  name="image_url"
-                  placeholder="https://images.unsplash.com/..." 
+                  placeholder="Paste Image URL (https://...) and press add" 
                   className="form-control"
                   style={{ paddingLeft: '48px' }}
-                  value={form.image_url}
-                  onChange={handleChange}
+                  value={manualImageUrl}
+                  onChange={(e) => setManualImageUrl(e.target.value)}
                   disabled={loading || uploading}
                 />
               </div>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                style={{ padding: '0 20px', gap: '6px', whiteSpace: 'nowrap' }} 
+                onClick={handleAddManualImage}
+                disabled={loading || uploading || !manualImageUrl}
+              >
+                Add Photo
+              </button>
               <button 
                 type="button" 
                 className="btn btn-outline" 
@@ -359,14 +450,79 @@ Read the full review and guide here: https://littlelocals.au/blog/${postId}`;
               </button>
             </div>
             
-            {form.image_url && (
-              <div style={{ marginTop: '12px' }}>
-                <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '6px' }}>Image Preview:</span>
-                <img 
-                  src={form.image_url} 
-                  alt="Preview" 
-                  style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: 'var(--radius-sm)', border: '1px solid var(--border-soft)' }} 
-                />
+            {/* Gallery of Uploaded Photos */}
+            {form.image_urls && form.image_urls.length > 0 && (
+              <div style={{ marginTop: '16px', border: '2.5px solid var(--text-dark)', borderRadius: '16px', padding: '16px', backgroundColor: 'var(--bg-white)', boxShadow: '4px 4px 0px 0px var(--text-dark)' }}>
+                <span style={{ fontSize: '0.85rem', fontWeight: '900', color: 'var(--primary)', textTransform: 'uppercase', display: 'block', marginBottom: '12px' }}>
+                  Blog Post Photos Gallery ({form.image_urls.length})
+                </span>
+                
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))', gap: '16px' }}>
+                  {form.image_urls.map((url, idx) => {
+                    const isFeatured = form.image_url === url;
+                    return (
+                      <div key={idx} style={{ 
+                        position: 'relative', 
+                        borderRadius: '12px', 
+                        border: isFeatured ? '3px solid var(--primary)' : '2px solid var(--text-dark)', 
+                        overflow: 'hidden',
+                        height: '110px',
+                        boxShadow: isFeatured ? '0 0 10px rgba(3, 63, 29, 0.2)' : 'none'
+                      }}>
+                        <img src={url} alt={`Gallery ${idx}`} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                        
+                        {/* Featured Badge */}
+                        {isFeatured && (
+                          <div style={{ position: 'absolute', top: '4px', left: '4px', backgroundColor: 'var(--primary)', color: 'white', padding: '1px 6px', fontSize: '8px', fontWeight: '900', borderRadius: '4px', textTransform: 'uppercase' }}>
+                            Featured
+                          </div>
+                        )}
+
+                        {/* Actions overlay */}
+                        <div style={{ 
+                          position: 'absolute', 
+                          bottom: 0, 
+                          left: 0, 
+                          right: 0, 
+                          backgroundColor: 'rgba(28, 27, 27, 0.85)', 
+                          display: 'flex', 
+                          justifyContent: 'space-around', 
+                          padding: '4px 0' 
+                        }}>
+                          <button
+                            type="button"
+                            onClick={() => setForm(prev => ({ ...prev, image_url: url }))}
+                            title="Set as Featured Image"
+                            style={{ background: 'none', border: 'none', color: isFeatured ? 'var(--yellow-soft)' : 'white', cursor: 'pointer', fontSize: '11px', display: 'flex', alignItems: 'center' }}
+                          >
+                            ★
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setForm(prev => {
+                                const updatedUrls = prev.image_urls.filter(u => u !== url);
+                                let featured = prev.image_url;
+                                if (featured === url) {
+                                  featured = updatedUrls.length > 0 ? updatedUrls[0] : '';
+                                }
+                                return {
+                                  ...prev,
+                                  image_url: featured,
+                                  image_urls: updatedUrls
+                                };
+                              });
+                            }}
+                            title="Delete Image"
+                            style={{ background: 'none', border: 'none', color: '#ff6b6b', cursor: 'pointer', fontSize: '11px', fontWeight: 'bold' }}
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
               </div>
             )}
           </div>
