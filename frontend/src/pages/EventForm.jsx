@@ -224,21 +224,14 @@ ${form.description || ''}
   }
 
   return (
-    <div style={{ padding: '40px 20px', maxWidth: '800px', margin: '0 auto' }}>
+    <div className="form-page-container">
       
       {/* Navigation */}
       <Link to="/admin/dashboard" style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', color: 'var(--text-muted)', fontWeight: '700', marginBottom: '24px' }}>
         <ArrowLeft size={16} /> Back to Dashboard
       </Link>
 
-      <div style={{ 
-        backgroundColor: 'var(--bg-white)', 
-        borderRadius: 'var(--radius-lg)', 
-        padding: '40px', 
-        border: '1px solid var(--border-soft)',
-        boxShadow: 'var(--shadow-light)',
-        textAlign: 'left'
-      }}>
+      <div className="form-card">
         
         <h2 style={{ fontWeight: 900, marginBottom: '8px' }}>
           {isEditMode ? 'Edit Activity Details' : 'Create Free Local Activity'}
@@ -395,7 +388,7 @@ ${form.description || ''}
             </div>
 
             {/* Input URL */}
-            <div style={{ display: 'flex', gap: '12px' }}>
+            <div className="manual-image-row">
               <div style={{ position: 'relative', flexGrow: 1 }}>
                 <Image style={{ position: 'absolute', left: '16px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={18} />
                 <input 
