@@ -22,6 +22,59 @@ export default function AdminDashboard() {
   const [topPostThisMonth, setTopPostThisMonth] = useState(null);
   const navigate = useNavigate();
 
+  const timeOptions = [
+    'Flexible',
+    '12:00 AM', '12:30 AM', '1:00 AM', '1:30 AM', '2:00 AM', '2:30 AM', '3:00 AM', '3:30 AM', '4:00 AM', '4:30 AM', '5:00 AM', '5:30 AM',
+    '6:00 AM', '6:30 AM', '7:00 AM', '7:30 AM', '8:00 AM', '8:30 AM', '9:00 AM', '9:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM',
+    '12:00 PM', '12:30 PM', '1:00 PM', '1:30 PM', '2:00 PM', '2:30 PM', '3:00 PM', '3:30 PM', '4:00 PM', '4:30 PM', '5:00 PM', '5:30 PM',
+    '6:00 PM', '6:30 PM', '7:00 PM', '7:30 PM', '8:00 PM', '8:30 PM', '9:00 PM', '9:30 PM', '10:00 PM', '10:30 PM', '11:00 PM', '11:30 PM'
+  ];
+
+  const getParsedSuggestionTimes = () => {
+    let start = 'Flexible';
+    let end = 'Flexible';
+    const timeVal = editingSuggestion?.time || '';
+    if (timeVal) {
+      if (timeVal.includes(' - ')) {
+        const parts = timeVal.split(' - ');
+        start = parts[0];
+        end = parts[1];
+      } else {
+        start = timeVal;
+        end = 'Flexible';
+      }
+    }
+    return { start, end };
+  };
+
+  const getSuggestionSelectOptions = (val) => {
+    if (val && !timeOptions.includes(val)) {
+      return [val, ...timeOptions];
+    }
+    return timeOptions;
+  };
+
+  const handleSuggestionTimeChange = (type, val) => {
+    const { start, end } = getParsedSuggestionTimes();
+    let newStart = type === 'start' ? val : start;
+    let newEnd = type === 'end' ? val : end;
+
+    let combined = '';
+    if (newStart === 'Flexible' && newEnd === 'Flexible') {
+      combined = 'Flexible';
+    } else if (newEnd && newEnd !== 'Flexible') {
+      combined = `${newStart} - ${newEnd}`;
+    } else {
+      combined = newStart;
+    }
+
+    setEditingSuggestion(prev => ({ ...prev, time: combined }));
+  };
+
+  const { start: sugStartTime, end: sugEndTime } = getParsedSuggestionTimes();
+  const sugStartOptions = getSuggestionSelectOptions(sugStartTime);
+  const sugEndOptions = getSuggestionSelectOptions(sugEndTime);
+
   // Authentication check
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -1475,15 +1528,35 @@ export default function AdminDashboard() {
                   />
                 </div>
                 <div className="form-group" style={{ marginBottom: 0 }}>
-                  <label className="form-label" style={{ fontWeight: '800' }}>Time</label>
-                  <input 
-                    type="text" 
-                    placeholder="e.g. 10:00 AM - 12:00 PM"
-                    className="form-control"
-                    style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
-                    value={editingSuggestion.time || ''}
-                    onChange={(e) => setEditingSuggestion(prev => ({ ...prev, time: e.target.value }))}
-                  />
+                  <label className="form-label" style={{ fontWeight: '800' }}>Time Slot</label>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Start Time</label>
+                      <select 
+                        className="form-control"
+                        style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', height: '48px', padding: '0 12px' }}
+                        value={sugStartTime}
+                        onChange={(e) => handleSuggestionTimeChange('start', e.target.value)}
+                      >
+                        {sugStartOptions.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="form-label" style={{ fontSize: '0.75rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>End Time</label>
+                      <select 
+                        className="form-control"
+                        style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', height: '48px', padding: '0 12px' }}
+                        value={sugEndTime}
+                        onChange={(e) => handleSuggestionTimeChange('end', e.target.value)}
+                      >
+                        {sugEndOptions.map(opt => (
+                          <option key={opt} value={opt}>{opt}</option>
+                        ))}
+                      </select>
+                    </div>
+                  </div>
                 </div>
               </div>
 
