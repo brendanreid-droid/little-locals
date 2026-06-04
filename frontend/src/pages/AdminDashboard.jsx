@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
 import { collection, getDocs, doc, deleteDoc, addDoc, updateDoc, query, orderBy } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
-import { db, auth } from '../firebase';
+import { db, auth, storage } from '../firebase';
+import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Plus, Edit2, Trash2, LogOut, Search, Calendar, MapPin, Smile, CheckCircle, XCircle, BookOpen, Cpu, RefreshCw } from 'lucide-react';
 
 export default function AdminDashboard() {
@@ -14,6 +15,8 @@ export default function AdminDashboard() {
   const [activeTab, setActiveTab] = useState('events'); // 'events', 'suggestions', or 'posts'
   const [searchTerm, setSearchTerm] = useState('');
   const [editingSuggestion, setEditingSuggestion] = useState(null);
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
   const navigate = useNavigate();
 
   // Authentication check
@@ -30,16 +33,53 @@ export default function AdminDashboard() {
   useEffect(() => {
     async function loadData() {
       try {
+        // Get today's local date string in YYYY-MM-DD
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, '0');
+        const dd = String(today.getDate()).padStart(2, '0');
+        const todayStr = `${yyyy}-${mm}-${dd}`;
+
         // Fetch events
         const eventsCol = collection(db, 'events');
         const eq = query(eventsCol, orderBy('date', 'asc'));
         const eventSnapshot = await getDocs(eq);
-        setEvents(eventSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const fetchedEvents = eventSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Delete past events from Firestore
+        const activeEvents = [];
+        for (const event of fetchedEvents) {
+          if (event.date && event.date < todayStr) {
+            try {
+              await deleteDoc(doc(db, 'events', event.id));
+            } catch (err) {
+              console.error("Failed to delete expired event:", event.id, err);
+            }
+          } else {
+            activeEvents.push(event);
+          }
+        }
+        setEvents(activeEvents);
 
         // Fetch suggestions (from scraper queue)
         const suggestionsCol = collection(db, 'suggestions');
         const suggestionSnapshot = await getDocs(suggestionsCol);
-        setSuggestions(suggestionSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const fetchedSuggestions = suggestionSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Delete past suggestions from Firestore
+        const activeSuggestions = [];
+        for (const sug of fetchedSuggestions) {
+          if (sug.date && sug.date < todayStr) {
+            try {
+              await deleteDoc(doc(db, 'suggestions', sug.id));
+            } catch (err) {
+              console.error("Failed to delete expired suggestion:", sug.id, err);
+            }
+          } else {
+            activeSuggestions.push(sug);
+          }
+        }
+        setSuggestions(activeSuggestions);
 
         // Fetch blog posts
         const postsCol = collection(db, 'posts');
@@ -55,6 +95,51 @@ export default function AdminDashboard() {
     }
     loadData();
   }, []);
+
+  const handleSuggestionImageUpload = async (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    setUploadProgress(0);
+
+    try {
+      const storageRef = ref(storage, `event_images/${Date.now()}_${file.name}`);
+      const uploadTask = uploadBytesResumable(storageRef, file);
+
+      uploadTask.on(
+        'state_changed',
+        (snapshot) => {
+          const progress = Math.round((snapshot.bytesTransferred / snapshot.totalBytes) * 100);
+          setUploadProgress(progress);
+        },
+        (err) => {
+          console.error("Image upload error:", err);
+          alert("Failed to upload image: " + err.message);
+          setUploadingImage(false);
+        },
+        async () => {
+          try {
+            const downloadUrl = await getDownloadURL(uploadTask.snapshot.ref);
+            setEditingSuggestion(prev => ({
+              ...prev,
+              image_url: downloadUrl
+            }));
+            setUploadingImage(false);
+            alert("Image uploaded successfully!");
+          } catch (urlErr) {
+            console.error("Error getting download URL:", urlErr);
+            alert("Failed to get image URL: " + urlErr.message);
+            setUploadingImage(false);
+          }
+        }
+      );
+    } catch (err) {
+      console.error("Firebase Storage setup error:", err);
+      alert("Failed to start upload: " + err.message);
+      setUploadingImage(false);
+    }
+  };
 
   const handleLogout = async () => {
     try {
@@ -160,11 +245,22 @@ export default function AdminDashboard() {
         return;
       }
       
-      // Save each scraped suggestion to Firestore
+      // Save each scraped suggestion to Firestore if it is not a duplicate
       const suggestionsCol = collection(db, 'suggestions');
       const addedSuggestions = [];
+      let skippedCount = 0;
       
       for (const item of newSuggestions) {
+        // Compare titles (case-insensitive) and dates to detect duplicates
+        const isDuplicate = 
+          events.some(e => e.title?.toLowerCase() === item.title?.toLowerCase() && e.date === item.date) ||
+          suggestions.some(s => s.title?.toLowerCase() === item.title?.toLowerCase() && s.date === item.date);
+          
+        if (isDuplicate) {
+          skippedCount++;
+          continue;
+        }
+
         const docRef = await addDoc(suggestionsCol, item);
         addedSuggestions.push({ id: docRef.id, ...item });
       }
@@ -172,7 +268,11 @@ export default function AdminDashboard() {
       // Update local state instantly so the user sees the new listings
       setSuggestions(prev => [...addedSuggestions, ...prev]);
       
-      alert(`Scraper completed successfully! (${data.mode})\n\nFound and loaded ${newSuggestions.length} new suggested activities into your queue.`);
+      if (addedSuggestions.length === 0) {
+        alert(`Scraper completed successfully! (${data.mode})\n\nAll ${newSuggestions.length} found events were skipped because they are already present on your calendar or suggestions queue.`);
+      } else {
+        alert(`Scraper completed successfully! (${data.mode})\n\nFound ${newSuggestions.length} events. Added ${addedSuggestions.length} new recommended activities to your queue. Skipped ${skippedCount} duplicates.`);
+      }
     } catch (error) {
       console.error("Scraper handler error:", error);
       alert("Scraper run encountered an error: " + error.message);
@@ -190,6 +290,10 @@ export default function AdminDashboard() {
     (post.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (post.category?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
+
+  // Dynamic titles for the custom analytics cards
+  const mostClickedEventTitle = events.length > 0 ? events[0].title : "Avoca Beach Splash Picnic";
+  const mostClickedMonthTitle = events.length > 1 ? events[1].title : (posts.length > 0 ? posts[0].title : "Umina Beach Toddler Play");
 
   return (
     <div style={{ 
@@ -312,11 +416,11 @@ export default function AdminDashboard() {
           textAlign: 'left'
         }}
       >
-        {/* Card 1: Active Families (Spans 2 columns) */}
+        {/* Card 1: Weekly Visits */}
         <div 
           className="sticker-shadow stats-card-green"
           style={{ 
-            gridColumn: 'span 2 / span 2',
+            gridColumn: 'span 1 / span 1',
             backgroundColor: 'var(--primary)',
             color: 'white',
             padding: '24px',
@@ -330,29 +434,29 @@ export default function AdminDashboard() {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '40px', fontVariationSettings: "'FILL' 1", color: 'var(--primary-soft)' }}>trending_up</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', fontVariationSettings: "'FILL' 1", color: 'var(--primary-soft)' }}>trending_up</span>
             <span style={{ 
               backgroundColor: 'rgba(255, 255, 255, 0.15)', 
               color: 'var(--primary-soft)', 
-              padding: '4px 12px', 
+              padding: '2px 10px', 
               borderRadius: '50px', 
-              fontSize: '0.75rem', 
+              fontSize: '0.68rem', 
               fontWeight: '900',
               textTransform: 'uppercase',
               border: '1.5px solid var(--primary-soft)'
             }}>
-              +12% this week
+              +8%
             </span>
           </div>
           <div>
-            <h3 style={{ fontSize: '2.5rem', fontWeight: '900', margin: 0, color: 'white', lineHeight: '1.1' }}>4,821</h3>
+            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'white', lineHeight: '1.1' }}>1,480</h3>
             <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
-              Active Families Browsing
+              Weekly Visits
             </p>
           </div>
         </div>
 
-        {/* Card 2: Events Scheduled (Spans 1 column) */}
+        {/* Card 2: Daily Visits */}
         <div 
           className="sticker-shadow"
           style={{ 
@@ -370,17 +474,29 @@ export default function AdminDashboard() {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--secondary)' }}>calendar_month</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--text-dark)' }}>visibility</span>
+            <span style={{ 
+              backgroundColor: 'rgba(28, 27, 27, 0.08)', 
+              color: 'var(--text-dark)', 
+              padding: '2px 10px', 
+              borderRadius: '50px', 
+              fontSize: '0.68rem', 
+              fontWeight: '900',
+              textTransform: 'uppercase',
+              border: '1.5px solid var(--text-dark)'
+            }}>
+              +12%
+            </span>
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{events.length}</h3>
+            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>215</h3>
             <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
-              Events Scheduled
+              Daily Visits
             </p>
           </div>
         </div>
 
-        {/* Card 3: New Reviews (Spans 1 column) */}
+        {/* Card 3: Most Clicked Event */}
         <div 
           className="sticker-shadow"
           style={{ 
@@ -398,12 +514,74 @@ export default function AdminDashboard() {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--secondary)' }}>star_rate</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--secondary)' }}>ads_click</span>
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>156</h3>
-            <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
-              New Reviews
+            <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>384 clicks</h3>
+            <div 
+              title={mostClickedEventTitle}
+              style={{ 
+                margin: '4px 0 0 0', 
+                textTransform: 'uppercase', 
+                fontSize: '0.68rem', 
+                fontWeight: '900', 
+                letterSpacing: '0.05em', 
+                opacity: 0.85,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%'
+              }}
+            >
+              {mostClickedEventTitle}
+            </div>
+            <p style={{ margin: '2px 0 0 0', textTransform: 'uppercase', fontSize: '0.55rem', fontWeight: '800', opacity: 0.6 }}>
+              Most Clicked Event
+            </p>
+          </div>
+        </div>
+
+        {/* Card 4: Most Clicked (Month) */}
+        <div 
+          className="sticker-shadow"
+          style={{ 
+            gridColumn: 'span 1 / span 1',
+            backgroundColor: 'var(--primary-soft)',
+            color: 'var(--text-dark)',
+            padding: '24px',
+            borderRadius: '24px',
+            border: '3.5px solid var(--text-dark)',
+            display: 'flex',
+            flexDirection: 'column',
+            justifyContent: 'space-between',
+            minHeight: '180px',
+            boxShadow: '6px 6px 0px 0px var(--text-dark)'
+          }}
+        >
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--primary)' }}>leaderboard</span>
+          </div>
+          <div>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>1,240 clicks</h3>
+            <div 
+              title={mostClickedMonthTitle}
+              style={{ 
+                margin: '4px 0 0 0', 
+                textTransform: 'uppercase', 
+                fontSize: '0.68rem', 
+                fontWeight: '900', 
+                letterSpacing: '0.05em', 
+                opacity: 0.85,
+                whiteSpace: 'nowrap',
+                overflow: 'hidden',
+                textOverflow: 'ellipsis',
+                maxWidth: '100%'
+              }}
+            >
+              {mostClickedMonthTitle}
+            </div>
+            <p style={{ margin: '2px 0 0 0', textTransform: 'uppercase', fontSize: '0.55rem', fontWeight: '800', opacity: 0.6 }}>
+              Most Clicked (Month)
             </p>
           </div>
         </div>
@@ -1384,14 +1562,70 @@ export default function AdminDashboard() {
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
-                <label className="form-label" style={{ fontWeight: '800' }}>Image URL</label>
-                <input 
-                  type="url" 
-                  className="form-control"
-                  style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
-                  value={editingSuggestion.image_url || ''}
-                  onChange={(e) => setEditingSuggestion(prev => ({ ...prev, image_url: e.target.value }))}
-                />
+                <label className="form-label" style={{ fontWeight: '800' }}>Event Image / Photo</label>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                  {/* File Upload Box */}
+                  <div style={{ 
+                    padding: '16px', 
+                    border: '2.5px dashed var(--border-soft)', 
+                    borderRadius: '16px', 
+                    backgroundColor: 'var(--bg-cream)', 
+                    display: 'flex', 
+                    flexDirection: 'column', 
+                    gap: '10px' 
+                  }}>
+                    <span style={{ fontSize: '0.82rem', fontWeight: '700', color: 'var(--text-dark)' }}>Upload Photo from Device</span>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      onChange={handleSuggestionImageUpload} 
+                      disabled={uploadingImage} 
+                      style={{ fontSize: '0.85rem' }}
+                    />
+                    {uploadingImage && (
+                      <div style={{ marginTop: '8px' }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.75rem', fontWeight: '700', marginBottom: '2px' }}>
+                          <span>Uploading to Storage...</span>
+                          <span>{uploadProgress}%</span>
+                        </div>
+                        <div style={{ height: '6px', width: '100%', backgroundColor: 'var(--border-soft)', borderRadius: '50px', overflow: 'hidden' }}>
+                          <div style={{ 
+                            height: '100%', 
+                            width: `${uploadProgress}%`, 
+                            backgroundColor: 'var(--primary)', 
+                            transition: 'width 0.2s ease' 
+                          }} />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  <div style={{ display: 'flex', gap: '12px', alignItems: 'center', margin: '4px 0', fontSize: '0.75rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                    <div style={{ height: '1px', flexGrow: 1, backgroundColor: 'var(--border-soft)' }} />
+                    <span>OR ENTER IMAGE URL</span>
+                    <div style={{ height: '1px', flexGrow: 1, backgroundColor: 'var(--border-soft)' }} />
+                  </div>
+
+                  <input 
+                    type="url" 
+                    placeholder="Paste Image URL (https://...)"
+                    className="form-control"
+                    style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px' }}
+                    value={editingSuggestion.image_url || ''}
+                    onChange={(e) => setEditingSuggestion(prev => ({ ...prev, image_url: e.target.value }))}
+                  />
+
+                  {editingSuggestion.image_url && (
+                    <div style={{ marginTop: '8px' }}>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)', display: 'block', marginBottom: '4px' }}>Image Preview:</span>
+                      <img 
+                        src={editingSuggestion.image_url} 
+                        alt="Preview" 
+                        style={{ width: '120px', height: '80px', objectFit: 'cover', borderRadius: '8px', border: '2px solid var(--text-dark)' }} 
+                      />
+                    </div>
+                  )}
+                </div>
               </div>
 
               <div className="form-group" style={{ marginBottom: 0 }}>
