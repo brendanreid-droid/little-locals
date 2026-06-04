@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
-import { Search, Calendar as CalendarIcon, MapPin, Smile, Award, ArrowRight, Star, Heart } from 'lucide-react';
+import { Search, Calendar as CalendarIcon, MapPin, Smile, Award, ArrowRight, Star, Heart, BookOpen } from 'lucide-react';
 
 export default function EventList() {
   const [events, setEvents] = useState([]);
@@ -10,13 +10,14 @@ export default function EventList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
   const [selectedAge, setSelectedAge] = useState('All');
+  const [latestPost, setLatestPost] = useState(null);
   const directoryRef = useRef(null);
 
   const categories = ['All', 'Playground', 'Library', 'Art & Craft', 'Outdoors', 'Sports', 'Music & Storytime'];
   const ageGroups = ['All', '0-5 years', '6-12 years', 'Teens', 'All Ages'];
 
   useEffect(() => {
-    async function fetchEvents() {
+    async function loadData() {
       try {
         const eventsCol = collection(db, 'events');
         const q = query(eventsCol, orderBy('date', 'asc'));
@@ -26,13 +27,26 @@ export default function EventList() {
           ...doc.data()
         }));
         setEvents(eventData);
+
+        // Fetch latest published blog post
+        const postsCol = collection(db, 'posts');
+        const pq = query(postsCol, orderBy('date', 'desc'));
+        const postSnapshot = await getDocs(pq);
+        const postData = postSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        }));
+        const publishedPosts = postData.filter(post => post.is_published !== false);
+        if (publishedPosts.length > 0) {
+          setLatestPost(publishedPosts[0]);
+        }
       } catch (error) {
-        console.error("Error fetching events:", error);
+        console.error("Error loading homepage data:", error);
       } finally {
         setLoading(false);
       }
     }
-    fetchEvents();
+    loadData();
   }, []);
 
   const scrollToDirectory = () => {
@@ -285,6 +299,200 @@ export default function EventList() {
           </div>
         </div>
       </section>
+
+      {/* Latest Blog Post Section */}
+      {latestPost && (
+        <section style={{ 
+          padding: '80px 24px 20px', 
+          backgroundColor: 'var(--bg-cream)',
+          borderTop: '2px dashed var(--border-soft)'
+        }}>
+          <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+            {/* Section Header */}
+            <div style={{ 
+              display: 'flex', 
+              justifyContent: 'space-between', 
+              alignItems: 'flex-end', 
+              marginBottom: '40px',
+              textAlign: 'left'
+            }}>
+              <div>
+                <div style={{ 
+                  color: 'var(--secondary)', 
+                  fontWeight: '800', 
+                  fontSize: '0.85rem', 
+                  textTransform: 'uppercase', 
+                  letterSpacing: '0.15em',
+                  marginBottom: '8px'
+                }}>Freshly Published</div>
+                <h2 style={{ 
+                  fontFamily: 'var(--font-display)',
+                  fontWeight: 900, 
+                  fontSize: '2.4rem', 
+                  color: 'var(--primary)',
+                  margin: 0
+                }}>Latest Family Guide</h2>
+              </div>
+              <Link 
+                to="/blog" 
+                style={{ 
+                  display: 'inline-flex', 
+                  alignItems: 'center', 
+                  gap: '8px', 
+                  color: 'var(--primary)', 
+                  fontWeight: '800', 
+                  fontSize: '0.95rem',
+                  padding: '10px 24px',
+                  border: '3px solid var(--text-dark)',
+                  borderRadius: '50px',
+                  backgroundColor: 'var(--bg-white)',
+                  boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                  transition: 'var(--transition-bouncy)'
+                }}
+                className="featured-cal-btn"
+              >
+                Read All Guides
+                <ArrowRight size={18} />
+              </Link>
+            </div>
+
+            {/* Layout similar to Editor's Pick from BlogList.jsx */}
+            <div className="md:grid-cols-12 event-grid-featured" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: '1fr',
+              gap: '40px',
+              alignItems: 'center'
+            }}>
+              {/* Image Column */}
+              <div style={{ 
+                gridColumn: 'span 7',
+                position: 'relative'
+              }}>
+                <div 
+                  className="sticker-shadow"
+                  style={{ 
+                    backgroundColor: 'var(--bg-white)', 
+                    borderRadius: '24px', 
+                    overflow: 'hidden',
+                    border: '3.5px solid var(--text-dark)',
+                    transform: 'rotate(-1deg)',
+                    boxShadow: '8px 8px 0px 0px var(--text-dark)',
+                    transition: 'transform 0.3s ease'
+                  }}
+                >
+                  <img 
+                    src={latestPost.image_url || 'https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=1000&q=80'} 
+                    alt={latestPost.title} 
+                    style={{ 
+                      width: '100%', 
+                      height: '360px', 
+                      objectFit: 'cover',
+                      display: 'block'
+                    }} 
+                  />
+                  
+                  {/* Category Tag */}
+                  <div style={{ position: 'absolute', top: '20px', left: '20px', zIndex: 10 }}>
+                    <span style={{ 
+                      backgroundColor: 'var(--secondary-soft)', 
+                      color: 'var(--secondary)', 
+                      padding: '6px 14px', 
+                      borderRadius: '50px', 
+                      fontWeight: '800', 
+                      fontSize: '0.8rem', 
+                      border: '2px solid var(--text-dark)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      boxShadow: '3px 3px 0px 0px var(--text-dark)'
+                    }}>
+                      <span className="material-symbols-outlined text-[14px]" style={{ fontVariationSettings: "'FILL' 1" }}>menu_book</span>
+                      {latestPost.category || 'Review'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Content Column */}
+              <div style={{ 
+                gridColumn: 'span 5',
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '20px',
+                textAlign: 'left'
+              }}>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <span style={{ 
+                    color: 'var(--primary)', 
+                    fontWeight: '800', 
+                    fontSize: '0.85rem', 
+                    letterSpacing: '0.1em',
+                    textTransform: 'uppercase'
+                  }}>
+                    LATEST POST
+                  </span>
+                  <span style={{ color: 'var(--text-muted)' }}>•</span>
+                  <span style={{ 
+                    color: 'var(--text-muted)',
+                    fontSize: '0.85rem',
+                    fontWeight: '600'
+                  }}>
+                    {Math.max(1, Math.ceil((latestPost.content?.split(/\s+/).length || 0) / 200))} MIN READ
+                  </span>
+                </div>
+
+                <h3 style={{ 
+                  fontFamily: 'var(--font-display)',
+                  fontSize: '2.2rem', 
+                  fontWeight: '900', 
+                  color: 'var(--primary)',
+                  lineHeight: '1.1',
+                  letterSpacing: '-0.02em',
+                  margin: 0
+                }}>
+                  {latestPost.title}
+                </h3>
+
+                <p style={{ 
+                  fontFamily: 'var(--font-sans)',
+                  fontSize: '1.1rem', 
+                  color: 'var(--text-dark)',
+                  lineHeight: '1.7',
+                  margin: 0,
+                  opacity: 0.9
+                }}>
+                  {latestPost.excerpt || latestPost.content?.slice(0, 180) + '...'}
+                </p>
+
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginTop: '8px' }}>
+                  <Link 
+                    to={`/blog/${latestPost.id}`}
+                    style={{ 
+                      backgroundColor: 'var(--yellow-soft)', 
+                      color: 'var(--text-dark)', 
+                      padding: '14px 28px', 
+                      borderRadius: '16px', 
+                      fontWeight: '800', 
+                      fontSize: '1rem',
+                      border: '3px solid var(--text-dark)',
+                      boxShadow: '4px 4px 0px 0px var(--text-dark)',
+                      display: 'inline-flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      transition: 'var(--transition-bouncy)',
+                      cursor: 'pointer'
+                    }}
+                    className="btn-featured-story"
+                  >
+                    Read Full Review
+                    <ArrowRight size={18} />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* 3. Featured Events (Bento Grid) */}
       <section style={{ 

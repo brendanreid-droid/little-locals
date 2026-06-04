@@ -957,3 +957,11 @@ textarea.form-control {
     justify-content: center;
   }
 }
+
+/* Desktop 12-column grid helper */
+@media (min-width: 769px) {
+  .md\:grid-cols-12 {
+    display: grid !important;
+    grid-template-columns: repeat(12, 1fr) !important;
+  }
+}
