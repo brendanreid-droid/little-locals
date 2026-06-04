@@ -149,7 +149,7 @@ export default function EventList() {
               opacity: 0.95,
               lineHeight: '1.7'
             }}>
-              Your got-to guide for families on the Central Coast! We share fun, family-friendly activites, local events, and hidden gems happening across the Central Coast, NSW. If it's family-friendly and happening on the Central Coast, you'll find it here!
+              Your go-to guide for families on the Central Coast! We share fun, family-friendly activities, local events, and hidden gems happening across the Central Coast, NSW. If it's family-friendly and happening on the Central Coast, you'll find it here!
             </p>
 
             <button 
