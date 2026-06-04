@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, useParams, Link } from 'react-router-dom';
-import { doc, getDoc, collection, addDoc, updateDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, addDoc, updateDoc, deleteDoc, getDocs } from 'firebase/firestore';
 import { db, auth, storage } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
@@ -178,6 +178,21 @@ ${form.description || ''}
         const colRef = collection(db, 'events');
         const docAdded = await addDoc(colRef, form);
         eventId = docAdded.id;
+      }
+
+      // Clear any suggestions in the review queue that match the saved event's title and date
+      try {
+        const suggestionsCol = collection(db, 'suggestions');
+        const suggestionSnapshot = await getDocs(suggestionsCol);
+        const matchingSuggestions = suggestionSnapshot.docs.filter(doc => {
+          const data = doc.data();
+          return data.title?.toLowerCase() === form.title?.toLowerCase() && data.date === form.date;
+        });
+        for (const sugDoc of matchingSuggestions) {
+          await deleteDoc(doc(db, 'suggestions', sugDoc.id));
+        }
+      } catch (cleanErr) {
+        console.error("Error clearing matching suggestion:", cleanErr);
       }
 
       // If checked, post directly to Facebook via Vercel serverless function

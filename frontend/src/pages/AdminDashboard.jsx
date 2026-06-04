@@ -257,6 +257,50 @@ export default function AdminDashboard() {
     }
   };
 
+  const handleApproveAndPublishEditedSuggestion = async (e) => {
+    e.preventDefault();
+    if (!editingSuggestion.title || !editingSuggestion.date || !editingSuggestion.location) {
+      alert("Please fill in the Title, Date, and Location fields.");
+      return;
+    }
+    
+    try {
+      // 1. Add to main events collection
+      const eventsCol = collection(db, 'events');
+      await addDoc(eventsCol, {
+        title: editingSuggestion.title,
+        date: editingSuggestion.date || '',
+        time: editingSuggestion.time || '',
+        location: editingSuggestion.location || '',
+        description: editingSuggestion.description || '',
+        image_url: editingSuggestion.image_url || '',
+        price: 'FREE',
+        link: editingSuggestion.link || '',
+        category: editingSuggestion.category || 'Playground',
+        age_group: editingSuggestion.age_group || 'All Ages',
+        is_featured: editingSuggestion.is_featured || false
+      });
+
+      // 2. Delete from suggestions queue
+      await deleteDoc(doc(db, 'suggestions', editingSuggestion.id));
+      
+      // 3. Update UI state (remove from suggestions, add to events)
+      setSuggestions(prev => prev.filter(s => s.id !== editingSuggestion.id));
+      
+      // Refresh events
+      const eventsColRef = collection(db, 'events');
+      const eq = query(eventsColRef, orderBy('date', 'asc'));
+      const eventSnapshot = await getDocs(eq);
+      setEvents(eventSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+
+      alert("Event approved, published, and removed from suggestions queue!");
+      setEditingSuggestion(null);
+    } catch (error) {
+      console.error("Error approving edited suggestion:", error);
+      alert("Failed to approve suggestion: " + error.message);
+    }
+  };
+
   const handleRejectSuggestion = async (id) => {
     if (!window.confirm("Dismiss this recommended lead?")) return;
     
@@ -1724,7 +1768,7 @@ export default function AdminDashboard() {
                 </label>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', marginTop: '16px', justifyContent: 'flex-end' }}>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '16px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
                 <button 
                   type="button" 
                   className="btn btn-outline" 
@@ -1735,10 +1779,18 @@ export default function AdminDashboard() {
                 </button>
                 <button 
                   type="submit" 
+                  className="btn btn-outline"
+                  style={{ padding: '10px 24px', border: '2px solid var(--text-dark)', borderRadius: '50px', color: 'var(--primary)' }}
+                >
+                  Save Draft
+                </button>
+                <button 
+                  type="button" 
                   className="btn btn-primary"
+                  onClick={handleApproveAndPublishEditedSuggestion}
                   style={{ padding: '10px 24px', backgroundColor: 'var(--primary)', color: 'white', border: '2px solid var(--text-dark)', borderRadius: '50px' }}
                 >
-                  Save Changes
+                  Approve & Publish
                 </button>
               </div>
             </form>
