@@ -1377,7 +1377,7 @@ export default function EventList() {
         @media (max-width: 768px) {
           .hero-section {
             height: auto !important;
-            padding: 120px 20px 60px 20px !important;
+            padding: 48px 20px 48px 20px !important;
           }
           h1 {
             font-size: 2.2rem !important;
