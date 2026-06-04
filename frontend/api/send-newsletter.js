@@ -209,7 +209,7 @@ export default async function handler(req, res) {
   }
 
   const resendApiKey = process.env.RESEND_API_KEY;
-  const firebaseApiKey = process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY;
+  const firebaseApiKey = req.headers['x-firebase-api-key'] || process.env.VITE_FIREBASE_API_KEY || process.env.FIREBASE_API_KEY;
   const senderEmail = process.env.SENDER_EMAIL || 'Little Locals <onboard@resend.dev>'; // Falls back to sandbox default
 
   if (!resendApiKey) {

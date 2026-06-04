@@ -224,7 +224,8 @@ export default function AdminNewsletter() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Authorization': `Bearer ${idToken}`,
+          'x-firebase-api-key': import.meta.env.VITE_FIREBASE_API_KEY
         },
         body: JSON.stringify({
           subject,
@@ -289,7 +290,8 @@ export default function AdminNewsletter() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${idToken}`
+          'Authorization': `Bearer ${idToken}`,
+          'x-firebase-api-key': import.meta.env.VITE_FIREBASE_API_KEY
         },
         body: JSON.stringify({
           subject,
@@ -708,7 +710,7 @@ export default function AdminNewsletter() {
                   ) : (
                     <select
                       className="form-control"
-                      style={{ border: '3px solid var(--text-dark)', borderRadius: '12px', height: '44px', fontWeight: '700' }}
+                      style={{ border: '3px solid var(--text-dark)', borderRadius: '12px', height: 'auto', padding: '10px 16px', fontWeight: '700' }}
                       value={selectedBlogPost}
                       onChange={(e) => setSelectedBlogPost(e.target.value)}
                       disabled={sendingCampaign}
