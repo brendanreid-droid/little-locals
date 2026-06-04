@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Calendar as CalendarIcon, MapPin, Smile, Award, Clock, ArrowLeft, Share2, ClipboardCheck, Globe } from 'lucide-react';
+import { trackEventClick } from '../analytics';
 
 export default function EventDetail() {
   const { id } = useParams();
@@ -26,6 +27,8 @@ export default function EventDetail() {
         const snapshot = await getDoc(docRef);
         if (snapshot.exists()) {
           setEvent({ id: snapshot.id, ...snapshot.data() });
+          // Track this click event
+          trackEventClick(id);
         }
       } catch (error) {
         console.error("Error fetching event details:", error);

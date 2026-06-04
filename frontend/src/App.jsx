@@ -3,6 +3,7 @@ import { BrowserRouter as Router, Routes, Route, NavLink, Link } from 'react-rou
 import { Calendar as CalendarIcon, Grid, Lock, Heart, BookOpen } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
+import { trackVisit } from './analytics';
 import EventList from './pages/EventList';
 import EventCalendar from './pages/EventCalendar';
 import EventDetail from './pages/EventDetail';
@@ -20,6 +21,9 @@ function App() {
   const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    // Record page view analytics
+    trackVisit();
+
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       setIsAdmin(!!user);
     });

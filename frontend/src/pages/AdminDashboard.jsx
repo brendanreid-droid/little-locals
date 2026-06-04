@@ -17,6 +17,10 @@ export default function AdminDashboard() {
   const [editingSuggestion, setEditingSuggestion] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [weeklyVisits, setWeeklyVisits] = useState(0);
+  const [dailyVisits, setDailyVisits] = useState(0);
+  const [topEvent, setTopEvent] = useState(null);
+  const [topPost, setTopPost] = useState(null);
   const navigate = useNavigate();
 
   // Authentication check
@@ -85,7 +89,49 @@ export default function AdminDashboard() {
         const postsCol = collection(db, 'posts');
         const pq = query(postsCol, orderBy('date', 'desc'));
         const postSnapshot = await getDocs(pq);
-        setPosts(postSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })));
+        const fetchedPosts = postSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+        setPosts(fetchedPosts);
+
+        // Fetch daily visits
+        const visitsCol = collection(db, 'analytics_visits');
+        const visitSnapshot = await getDocs(visitsCol);
+        const visitData = visitSnapshot.docs.map(doc => ({ id: doc.id, visits: doc.data().visits || 0 }));
+
+        // Daily visits today
+        const todayVisitDoc = visitData.find(v => v.id === todayStr);
+        const dailyCount = todayVisitDoc ? todayVisitDoc.visits : 0;
+        setDailyVisits(dailyCount);
+
+        // Weekly visits (sum of visits in last 7 days)
+        const past7Days = [];
+        for (let i = 0; i < 7; i++) {
+          const d = new Date();
+          d.setDate(today.getDate() - i);
+          const y = d.getFullYear();
+          const m = String(d.getMonth() + 1).padStart(2, '0');
+          const day = String(d.getDate()).padStart(2, '0');
+          past7Days.push(`${y}-${m}-${day}`);
+        }
+        const weeklyCount = visitData
+          .filter(v => past7Days.includes(v.id))
+          .reduce((sum, v) => sum + v.visits, 0);
+        setWeeklyVisits(weeklyCount);
+
+        // Calculate top clicked event
+        const sortedEventsByClicks = [...activeEvents].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+        if (sortedEventsByClicks.length > 0) {
+          setTopEvent(sortedEventsByClicks[0]);
+        } else {
+          setTopEvent(null);
+        }
+
+        // Calculate top clicked blog post
+        const sortedPostsByClicks = [...fetchedPosts].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+        if (sortedPostsByClicks.length > 0) {
+          setTopPost(sortedPostsByClicks[0]);
+        } else {
+          setTopPost(null);
+        }
 
       } catch (error) {
         console.error("Error loading admin dashboard data:", error);
@@ -291,9 +337,11 @@ export default function AdminDashboard() {
     (post.category?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
-  // Dynamic titles for the custom analytics cards
-  const mostClickedEventTitle = events.length > 0 ? events[0].title : "Avoca Beach Splash Picnic";
-  const mostClickedMonthTitle = events.length > 1 ? events[1].title : (posts.length > 0 ? posts[0].title : "Umina Beach Toddler Play");
+  // Dynamic titles for the custom analytics cards (live data)
+  const mostClickedEventTitle = topEvent ? topEvent.title : "No events listed";
+  const mostClickedEventCount = topEvent ? (topEvent.clicks || 0) : 0;
+  const mostClickedMonthTitle = topPost ? topPost.title : "No reviews listed";
+  const mostClickedMonthCount = topPost ? (topPost.clicks || 0) : 0;
 
   return (
     <div style={{ 
@@ -449,7 +497,7 @@ export default function AdminDashboard() {
             </span>
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'white', lineHeight: '1.1' }}>1,480</h3>
+            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'white', lineHeight: '1.1' }}>{weeklyVisits.toLocaleString()}</h3>
             <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
               Weekly Visits
             </p>
@@ -489,7 +537,7 @@ export default function AdminDashboard() {
             </span>
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>215</h3>
+            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{dailyVisits.toLocaleString()}</h3>
             <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
               Daily Visits
             </p>
@@ -517,7 +565,7 @@ export default function AdminDashboard() {
             <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--secondary)' }}>ads_click</span>
           </div>
           <div>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>384 clicks</h3>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{mostClickedEventCount} clicks</h3>
             <div 
               title={mostClickedEventTitle}
               style={{ 
@@ -562,7 +610,7 @@ export default function AdminDashboard() {
             <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--primary)' }}>leaderboard</span>
           </div>
           <div>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>1,240 clicks</h3>
+            <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{mostClickedMonthCount} clicks</h3>
             <div 
               title={mostClickedMonthTitle}
               style={{ 

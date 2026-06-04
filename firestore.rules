@@ -2,16 +2,24 @@ rules_version = '2';
 service cloud.firestore {
   match /databases/{database}/documents {
     
-    // Public read access to events, write only for authenticated admins
+    // Public read access to events, write only for authenticated admins, except public clicks increment
     match /events/{eventId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create, delete: if request.auth != null;
+      allow update: if request.auth != null || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks']) &&
+        request.resource.data.clicks is int
+      );
     }
     
-    // Public read access to blog posts, write only for authenticated admins
+    // Public read access to blog posts, write only for authenticated admins, except public clicks increment
     match /posts/{postId} {
       allow read: if true;
-      allow write: if request.auth != null;
+      allow create, delete: if request.auth != null;
+      allow update: if request.auth != null || (
+        request.resource.data.diff(resource.data).affectedKeys().hasOnly(['clicks']) &&
+        request.resource.data.clicks is int
+      );
     }
     
     // Allow public creation of newsletter subscriptions, admin-only read/write
@@ -20,10 +28,16 @@ service cloud.firestore {
       allow read, update, delete: if request.auth != null;
     }
     
-    // Allow public creation of scraper suggestions (or admin only, let's make it public create so scraper or client can upload suggested events, but read/write by admin only)
+    // Allow public creation of scraper suggestions
     match /suggestions/{suggestionId} {
       allow create: if true;
       allow read, update, delete: if request.auth != null;
+    }
+
+    // Allow public tracking of daily visits (writes/updates), read only by authenticated admins
+    match /analytics_visits/{visitId} {
+      allow read: if request.auth != null;
+      allow write: if request.resource.data.visits is int;
     }
   }
 }

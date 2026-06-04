@@ -4,6 +4,7 @@ import { doc, getDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowLeft, Clock, Calendar, Bookmark, Share2, ClipboardCheck, Smile } from 'lucide-react';
+import { trackPostClick } from '../analytics';
 
 export default function BlogDetail() {
   const { id } = useParams();
@@ -27,6 +28,8 @@ export default function BlogDetail() {
         const snapshot = await getDoc(docRef);
         if (snapshot.exists()) {
           setPost({ id: snapshot.id, ...snapshot.data() });
+          // Track this click event
+          trackPostClick(id);
         }
       } catch (error) {
         console.error("Error fetching blog post details:", error);
