@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
-import { collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, query, orderBy, doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Search, Calendar as CalendarIcon, MapPin, Smile, Award, ArrowRight, Star, Heart, BookOpen } from 'lucide-react';
 
@@ -15,6 +15,32 @@ export default function EventList() {
 
   const categories = ['All', 'School Holidays', 'Weekend Activities', 'Weekday Activities', 'Markets', 'Playgrounds', 'Indoor Activities', 'Playgroups'];
   const ageGroups = ['All', '0-5 years', '6-12 years', 'Teens', 'All Ages'];
+
+  const [subscriberEmail, setSubscriberEmail] = useState('');
+  const [subscribingStatus, setSubscribingStatus] = useState('idle'); // 'idle', 'loading', 'success', 'error'
+  const [subscribingError, setSubscribingError] = useState('');
+
+  const handleSubscribe = async (e) => {
+    e.preventDefault();
+    if (!subscriberEmail) return;
+
+    setSubscribingStatus('loading');
+    setSubscribingError('');
+
+    try {
+      const emailClean = subscriberEmail.trim().toLowerCase();
+      await setDoc(doc(db, 'subscribers', emailClean), {
+        email: emailClean,
+        subscribedAt: new Date().toISOString()
+      });
+      setSubscribingStatus('success');
+      setSubscriberEmail('');
+    } catch (err) {
+      console.error("Subscription error:", err);
+      setSubscribingStatus('error');
+      setSubscribingError(err.message || 'Failed to subscribe. Please try again.');
+    }
+  };
 
   useEffect(() => {
     async function loadData() {
@@ -1261,53 +1287,68 @@ export default function EventList() {
               Join 2,500+ Central Coast families getting weekly updates on the best free things to do with their kids.
             </p>
             
-            <form 
-              onSubmit={(e) => { e.preventDefault(); alert("Thanks for subscribing to the weekly scoop!"); }}
-              style={{ 
-                display: 'flex', 
-                flexDirection: 'column', 
-                gap: '16px', 
-                maxWidth: '450px', 
-                margin: '0 auto' 
-              }}
-              className="md:flex-row"
-            >
-              <input 
-                type="email" 
-                placeholder="Your email address" 
-                required
+            {subscribingStatus === 'success' ? (
+              <div style={{ animation: 'slideUp 0.4s ease', padding: '16px 24px', backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '2.5px solid rgba(255, 255, 255, 0.3)', borderRadius: '16px', color: 'white', fontWeight: '800', display: 'inline-block' }}>
+                🎉 You're on the list! Welcome to the weekly scoop.
+              </div>
+            ) : (
+              <form 
+                onSubmit={handleSubscribe}
                 style={{ 
-                  flexGrow: 1, 
-                  padding: '16px 24px', 
-                  borderRadius: '16px', 
-                  backgroundColor: 'rgba(255, 255, 255, 0.15)', 
-                  border: '2.5px solid rgba(255, 255, 255, 0.3)', 
-                  color: 'white',
-                  fontSize: '1rem',
-                  outline: 'none',
-                  transition: 'border-color 0.2s'
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  gap: '16px', 
+                  maxWidth: '450px', 
+                  margin: '0 auto' 
                 }}
-                className="newsletter-input"
-              />
-              <button 
-                type="submit"
-                style={{ 
-                  backgroundColor: 'var(--secondary)', 
-                  color: 'white', 
-                  padding: '16px 36px', 
-                  borderRadius: '16px', 
-                  fontWeight: '800', 
-                  fontSize: '1rem',
-                  border: '3px solid var(--text-dark)',
-                  boxShadow: '3px 3px 0px 0px var(--text-dark)',
-                  cursor: 'pointer',
-                  transition: 'var(--transition-bouncy)'
-                }}
-                className="newsletter-btn"
+                className="md:flex-row"
               >
-                Subscribe
-              </button>
-            </form>
+                <input 
+                  type="email" 
+                  placeholder="Your email address" 
+                  required
+                  value={subscriberEmail}
+                  onChange={(e) => setSubscriberEmail(e.target.value)}
+                  disabled={subscribingStatus === 'loading'}
+                  style={{ 
+                    flexGrow: 1, 
+                    padding: '16px 24px', 
+                    borderRadius: '16px', 
+                    backgroundColor: 'rgba(255, 255, 255, 0.15)', 
+                    border: '2.5px solid rgba(255, 255, 255, 0.3)', 
+                    color: 'white',
+                    fontSize: '1rem',
+                    outline: 'none',
+                    transition: 'border-color 0.2s'
+                  }}
+                  className="newsletter-input"
+                />
+                <button 
+                  type="submit"
+                  disabled={subscribingStatus === 'loading'}
+                  style={{ 
+                    backgroundColor: 'var(--secondary)', 
+                    color: 'white', 
+                    padding: '16px 36px', 
+                    borderRadius: '16px', 
+                    fontWeight: '800', 
+                    fontSize: '1rem',
+                    border: '3px solid var(--text-dark)',
+                    boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                    cursor: 'pointer',
+                    transition: 'var(--transition-bouncy)'
+                  }}
+                  className="newsletter-btn"
+                >
+                  {subscribingStatus === 'loading' ? 'Subscribing...' : 'Subscribe'}
+                </button>
+              </form>
+            )}
+            {subscribingStatus === 'error' && (
+              <p style={{ color: '#ff8a8a', fontSize: '0.9rem', marginTop: '12px', fontWeight: '700' }}>
+                {subscribingError}
+              </p>
+            )}
           </div>
         </div>
       </section>

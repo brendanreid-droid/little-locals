@@ -4,7 +4,7 @@ import { collection, getDocs, doc, deleteDoc, addDoc, updateDoc, query, orderBy 
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth, storage } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
-import { Plus, Edit2, Trash2, LogOut, Search, Calendar, MapPin, Smile, CheckCircle, XCircle, BookOpen, Cpu, RefreshCw } from 'lucide-react';
+import { Plus, Edit2, Trash2, LogOut, Search, Calendar, MapPin, Smile, CheckCircle, XCircle, BookOpen, Cpu, RefreshCw, Mail } from 'lucide-react';
 
 export default function AdminDashboard() {
   const [events, setEvents] = useState([]);
@@ -558,6 +558,27 @@ export default function AdminDashboard() {
             className="admin-action-btn"
           >
             <BookOpen size={16} /> Write Blog Post
+          </Link>
+          <Link 
+            to="/admin/newsletter" 
+            style={{ 
+              padding: '12px 24px', 
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              backgroundColor: 'var(--yellow-soft)',
+              color: 'var(--text-dark)',
+              border: '3px solid var(--text-dark)',
+              borderRadius: '50px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: '3px 3px 0px 0px var(--text-dark)',
+              transition: 'var(--transition-bouncy)'
+            }}
+            className="admin-action-btn"
+          >
+            <Mail size={16} /> Newsletter
           </Link>
           <Link 
             to="/admin/analytics" 
