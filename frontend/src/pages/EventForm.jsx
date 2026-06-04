@@ -37,6 +37,10 @@ export default function EventForm() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
 
+  const [showMediaLibrary, setShowMediaLibrary] = useState(false);
+  const [mediaLibrary, setMediaLibrary] = useState([]);
+  const [loadingMedia, setLoadingMedia] = useState(false);
+
   const categories = ['School Holidays', 'Weekend Activities', 'Weekday Activities', 'Markets', 'Playgrounds', 'Indoor Activities', 'Playgroups'];
   const ageGroups = ['All Ages', '0-5 years', '6-12 years', 'Teens'];
   const timeOptions = [
@@ -198,6 +202,46 @@ export default function EventForm() {
     };
 
     setForm(prev => ({ ...prev, image_url: assets[form.category] || assets['Playgrounds'] }));
+  };
+
+  const openMediaLibrary = async () => {
+    setShowMediaLibrary(true);
+    setLoadingMedia(true);
+    try {
+      const urls = new Set();
+      // Fetch events
+      const eventsCol = collection(db, 'events');
+      const eventsSnap = await getDocs(eventsCol);
+      eventsSnap.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.image_url) urls.add(data.image_url);
+      });
+
+      // Fetch posts
+      const postsCol = collection(db, 'posts');
+      const postsSnap = await getDocs(postsCol);
+      postsSnap.docs.forEach(doc => {
+        const data = doc.data();
+        if (data.image_url) urls.add(data.image_url);
+        if (data.image_urls && Array.isArray(data.image_urls)) {
+          data.image_urls.forEach(url => {
+            if (url) urls.add(url);
+          });
+        }
+      });
+
+      setMediaLibrary(Array.from(urls));
+    } catch (err) {
+      console.error("Error loading media library:", err);
+      setError("Failed to load library images.");
+    } finally {
+      setLoadingMedia(false);
+    }
+  };
+
+  const handleSelectFromLibrary = (url) => {
+    setForm(prev => ({ ...prev, image_url: url }));
+    setShowMediaLibrary(false);
   };
 
   // Generate Facebook share text
@@ -664,6 +708,15 @@ ${form.description || ''}
               >
                 <Sparkles size={16} style={{ color: 'var(--primary)' }} /> Auto-Suggest
               </button>
+              <button 
+                type="button" 
+                className="btn btn-outline" 
+                style={{ padding: '0 20px', gap: '6px', whiteSpace: 'nowrap', backgroundColor: 'var(--secondary-soft)', color: 'var(--secondary)' }} 
+                onClick={openMediaLibrary}
+                disabled={loading || uploading}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>photo_library</span> Select from Library
+              </button>
             </div>
             
             {form.image_url && (
@@ -800,6 +853,141 @@ ${form.description || ''}
         </form>
 
       </div>
+
+      {/* Media Library Modal */}
+      {showMediaLibrary && (
+        <div style={{
+          position: 'fixed',
+          inset: 0,
+          backgroundColor: 'rgba(28, 27, 27, 0.65)',
+          backdropFilter: 'blur(4px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px'
+        }}>
+          <div 
+            className="sticker-shadow"
+            style={{
+              backgroundColor: 'var(--bg-white)',
+              borderRadius: '24px',
+              border: '3.5px solid var(--text-dark)',
+              width: '100%',
+              maxWidth: '650px',
+              maxHeight: '85vh',
+              display: 'flex',
+              flexDirection: 'column',
+              boxShadow: '8px 8px 0px 0px var(--text-dark)',
+              overflow: 'hidden'
+            }}
+          >
+            {/* Header */}
+            <div style={{
+              padding: '24px',
+              borderBottom: '3.5px solid var(--text-dark)',
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              backgroundColor: 'var(--primary-soft)'
+            }}>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '900', fontSize: '1.4rem', color: 'var(--primary)', margin: 0 }}>
+                Select from Previous Uploads
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowMediaLibrary(false)}
+                style={{
+                  backgroundColor: 'white',
+                  border: '2.5px solid var(--text-dark)',
+                  width: '36px',
+                  height: '36px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  cursor: 'pointer',
+                  fontWeight: '950',
+                  fontSize: '1.1rem',
+                  boxShadow: '2px 2px 0px 0px var(--text-dark)'
+                }}
+              >
+                ✕
+              </button>
+            </div>
+
+            {/* Body */}
+            <div 
+              className="custom-scrollbar"
+              style={{
+                padding: '24px',
+                overflowY: 'auto',
+                flexGrow: 1,
+                backgroundColor: 'var(--bg-cream)'
+              }}
+            >
+              {loadingMedia ? (
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px', padding: '48px 0' }}>
+                  <div style={{ width: '40px', height: '40px', border: '4px solid var(--border-soft)', borderTopColor: 'var(--primary)', borderRadius: '50%', animation: 'spin 1s linear infinite' }} />
+                  <span style={{ fontSize: '0.9rem', fontWeight: '800', color: 'var(--text-muted)' }}>Loading uploads...</span>
+                </div>
+              ) : mediaLibrary.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '48px 0', color: 'var(--text-muted)', fontWeight: '700' }}>
+                  No previously uploaded images found.
+                </div>
+              ) : (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fill, minmax(130px, 1fr))',
+                  gap: '16px'
+                }}>
+                  {mediaLibrary.map((url, idx) => (
+                    <div 
+                      key={idx}
+                      onClick={() => handleSelectFromLibrary(url)}
+                      style={{
+                        position: 'relative',
+                        aspectRatio: '4/3',
+                        borderRadius: '12px',
+                        border: '2.5px solid var(--text-dark)',
+                        overflow: 'hidden',
+                        cursor: 'pointer',
+                        boxShadow: '3px 3px 0px 0px var(--text-dark)',
+                        transition: 'transform 0.2s ease, box-shadow 0.2s ease',
+                      }}
+                      className="group hover:scale-[1.03] hover:shadow-[5px_5px_0px_0px_var(--text-dark)]"
+                    >
+                      <img 
+                        src={url} 
+                        alt={`Library asset ${idx}`} 
+                        style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+                      />
+                    </div>
+                  ))}
+                </div>
+              )}
+            </div>
+            
+            {/* Footer */}
+            <div style={{
+              padding: '16px 24px',
+              borderTop: '3.5px solid var(--text-dark)',
+              display: 'flex',
+              justifyContent: 'flex-end',
+              backgroundColor: 'var(--bg-white)'
+            }}>
+              <button
+                type="button"
+                onClick={() => setShowMediaLibrary(false)}
+                className="btn btn-outline"
+                style={{ height: '44px', padding: '0 24px' }}
+              >
+                Cancel
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
     </div>
   );
