@@ -21,7 +21,8 @@ export default function EventForm() {
     price: 'FREE', // always FREE
     link: '',
     category: 'Playground',
-    age_group: 'All Ages'
+    age_group: 'All Ages',
+    is_featured: false
   });
 
   const [shareToFacebook, setShareToFacebook] = useState(false);
@@ -64,7 +65,8 @@ export default function EventForm() {
             price: 'FREE',
             link: data.link || '',
             category: data.category || 'Playground',
-            age_group: data.age_group || 'All Ages'
+            age_group: data.age_group || 'All Ages',
+            is_featured: data.is_featured || false
           });
         } else {
           setError('Event not found.');
@@ -80,8 +82,8 @@ export default function EventForm() {
   }, [id, isEditMode]);
 
   const handleChange = (e) => {
-    const { name, value } = e.target;
-    setForm(prev => ({ ...prev, [name]: value }));
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({ ...prev, [name]: type === 'checkbox' ? checked : value }));
   };
 
   const handleFileUpload = (e) => {
@@ -477,6 +479,32 @@ ${form.description || ''}
             <label htmlFor="share_to_facebook" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-dark)', cursor: 'pointer' }}>
               <svg width="18" height="18" viewBox="0 0 24 24" fill="var(--secondary)"><path d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/></svg>
               Share directly to Little Locals Facebook Page
+            </label>
+          </div>
+
+          {/* Flag as Featured Event */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            padding: '16px 20px', 
+            borderRadius: 'var(--radius-md)', 
+            backgroundColor: 'var(--primary-soft)', 
+            border: '1px solid var(--border-soft)', 
+            margin: '8px 0' 
+          }}>
+            <input 
+              type="checkbox" 
+              id="is_featured" 
+              name="is_featured"
+              style={{ width: '20px', height: '20px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+              checked={form.is_featured}
+              onChange={handleChange}
+              disabled={loading || uploading}
+            />
+            <label htmlFor="is_featured" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-dark)', cursor: 'pointer' }}>
+              <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: '20px' }}>grade</span>
+              Flag as Featured Event (Highlights at the top of the homepage)
             </label>
           </div>
 

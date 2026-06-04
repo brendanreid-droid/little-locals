@@ -45,7 +45,7 @@ export default function EventList() {
   };
 
   // Filter events based on search, category and age
-  const filteredEvents = events.filter(event => {
+  const allFilteredEvents = events.filter(event => {
     const matchesSearch = 
       (event.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
       (event.description?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
@@ -57,10 +57,26 @@ export default function EventList() {
     return matchesSearch && matchesCategory && matchesAge;
   });
 
-  // Extract events for the bento section
-  const mainFeaturedEvent = events.length > 0 ? events[0] : null;
-  const secondaryEvent1 = events.length > 1 ? events[1] : null;
-  const secondaryEvent2 = events.length > 2 ? events[2] : null;
+  // Limit home page directory listings to the next 10 upcoming events
+  const filteredEvents = allFilteredEvents.slice(0, 10);
+
+  // Extract events for the bento section (specifically flagged as featured)
+  const featuredEvents = events.filter(e => e.is_featured === true);
+
+  // Fallback to the next upcoming events if there are not enough flagged featured events
+  const getFeaturedEvent = (index) => {
+    if (featuredEvents.length > index) {
+      return featuredEvents[index];
+    }
+    // Filter out items that are already used as featured to avoid duplicates in the bento grid
+    const remainingEvents = events.filter(e => !featuredEvents.includes(e));
+    const fallbackIndex = index - featuredEvents.length;
+    return remainingEvents.length > fallbackIndex ? remainingEvents[fallbackIndex] : null;
+  };
+
+  const mainFeaturedEvent = getFeaturedEvent(0);
+  const secondaryEvent1 = getFeaturedEvent(1);
+  const secondaryEvent2 = getFeaturedEvent(2);
 
   return (
     <div style={{ backgroundColor: 'var(--bg-cream)', minHeight: '100vh' }}>
@@ -806,7 +822,7 @@ export default function EventList() {
               textTransform: 'uppercase',
               letterSpacing: '0.02em'
             }}>
-              Directory Listings ({filteredEvents.length})
+              Upcoming Listings ({filteredEvents.length} of {allFilteredEvents.length})
             </h3>
 
             <div style={{ 
@@ -975,6 +991,33 @@ export default function EventList() {
                 );
               })}
             </div>
+            {allFilteredEvents.length > 10 && (
+              <div style={{ display: 'flex', justifyContent: 'center', marginTop: '48px' }}>
+                <Link 
+                  to="/calendar" 
+                  style={{ 
+                    backgroundColor: 'var(--yellow-soft)', 
+                    color: 'var(--primary)', 
+                    padding: '16px 36px', 
+                    borderRadius: '16px', 
+                    fontWeight: '800', 
+                    fontSize: '1.05rem',
+                    border: '3.5px solid var(--text-dark)',
+                    boxShadow: '4px 4px 0px 0px var(--text-dark)',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    textDecoration: 'none',
+                    cursor: 'pointer',
+                    transition: 'var(--transition-bouncy)'
+                  }}
+                  className="view-more-btn"
+                >
+                  View Full Events Calendar
+                  <ArrowRight size={20} />
+                </Link>
+              </div>
+            )}
           </div>
         )}
       </section>
@@ -1111,7 +1154,7 @@ export default function EventList() {
           transform: translate(-4px, -4px) rotate(0deg) scale(1.02) !important;
           box-shadow: 10px 10px 0px 0px var(--text-dark) !important;
         }
-        .explore-btn:hover, .featured-cal-btn:hover, .newsletter-btn:hover {
+        .explore-btn:hover, .featured-cal-btn:hover, .newsletter-btn:hover, .view-more-btn:hover {
           transform: translate(-3px, -3px) !important;
           box-shadow: 6px 6px 0px 0px var(--text-dark) !important;
         }

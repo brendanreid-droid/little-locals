@@ -234,7 +234,8 @@ export default function AdminDashboard() {
         price: 'FREE',
         link: suggestion.link || '',
         category: suggestion.category || 'Playground',
-        age_group: suggestion.age_group || 'All Ages'
+        age_group: suggestion.age_group || 'All Ages',
+        is_featured: suggestion.is_featured || false
       });
 
       // Delete from suggestions queue
@@ -1518,7 +1519,8 @@ export default function AdminDashboard() {
                   age_group: editingSuggestion.age_group || 'All Ages',
                   description: editingSuggestion.description || '',
                   link: editingSuggestion.link || '',
-                  image_url: editingSuggestion.image_url || ''
+                  image_url: editingSuggestion.image_url || '',
+                  is_featured: editingSuggestion.is_featured || false
                 });
                 
                 // Update local state
@@ -1696,6 +1698,30 @@ export default function AdminDashboard() {
                   onChange={(e) => setEditingSuggestion(prev => ({ ...prev, description: e.target.value }))}
                   required
                 />
+              </div>
+
+              {/* Flag as Featured Event Toggle */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px', 
+                padding: '12px 16px', 
+                borderRadius: '12px', 
+                backgroundColor: 'var(--primary-soft)', 
+                border: '2.5px solid var(--text-dark)',
+                marginTop: '4px'
+              }}>
+                <input 
+                  type="checkbox" 
+                  id="is_featured_suggestion" 
+                  checked={editingSuggestion.is_featured || false}
+                  onChange={(e) => setEditingSuggestion(prev => ({ ...prev, is_featured: e.target.checked }))}
+                  style={{ width: '18px', height: '18px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                />
+                <label htmlFor="is_featured_suggestion" style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--primary)' }}>grade</span>
+                  Flag as Featured Event (Highlights at top of homepage)
+                </label>
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '16px', justifyContent: 'flex-end' }}>
