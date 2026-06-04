@@ -17,10 +17,9 @@ export default function AdminDashboard() {
   const [editingSuggestion, setEditingSuggestion] = useState(null);
   const [uploadingImage, setUploadingImage] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
-  const [weeklyVisits, setWeeklyVisits] = useState(0);
-  const [dailyVisits, setDailyVisits] = useState(0);
-  const [topEvent, setTopEvent] = useState(null);
-  const [topPost, setTopPost] = useState(null);
+  const [monthlyVisits, setMonthlyVisits] = useState(0);
+  const [topEventThisMonth, setTopEventThisMonth] = useState(null);
+  const [topPostThisMonth, setTopPostThisMonth] = useState(null);
   const navigate = useNavigate();
 
   // Authentication check
@@ -92,45 +91,46 @@ export default function AdminDashboard() {
         const fetchedPosts = postSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
         setPosts(fetchedPosts);
 
-        // Fetch daily visits
+        // Fetch daily visits to compute monthly total
         const visitsCol = collection(db, 'analytics_visits');
         const visitSnapshot = await getDocs(visitsCol);
         const visitData = visitSnapshot.docs.map(doc => ({ id: doc.id, visits: doc.data().visits || 0 }));
 
-        // Daily visits today
-        const todayVisitDoc = visitData.find(v => v.id === todayStr);
-        const dailyCount = todayVisitDoc ? todayVisitDoc.visits : 0;
-        setDailyVisits(dailyCount);
+        const currentYearMonth = `${yyyy}-${mm}`;
 
-        // Weekly visits (sum of visits in last 7 days)
-        const past7Days = [];
-        for (let i = 0; i < 7; i++) {
-          const d = new Date();
-          d.setDate(today.getDate() - i);
-          const y = d.getFullYear();
-          const m = String(d.getMonth() + 1).padStart(2, '0');
-          const day = String(d.getDate()).padStart(2, '0');
-          past7Days.push(`${y}-${m}-${day}`);
-        }
-        const weeklyCount = visitData
-          .filter(v => past7Days.includes(v.id))
+        // Monthly visits (sum of all visits in the current calendar month)
+        const monthlyCount = visitData
+          .filter(v => v.id.startsWith(currentYearMonth))
           .reduce((sum, v) => sum + v.visits, 0);
-        setWeeklyVisits(weeklyCount);
+        setMonthlyVisits(monthlyCount);
 
-        // Calculate top clicked event
-        const sortedEventsByClicks = [...activeEvents].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
-        if (sortedEventsByClicks.length > 0) {
-          setTopEvent(sortedEventsByClicks[0]);
+        // Fetch monthly clicks
+        const clicksCol = collection(db, 'analytics_monthly_clicks');
+        const clickSnapshot = await getDocs(clicksCol);
+        const clickData = clickSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        const currentMonthClicks = clickData.filter(c => c.month === currentYearMonth);
+
+        // Calculate top clicked event this month
+        const eventClicks = currentMonthClicks.filter(c => c.itemType === 'event');
+        const sortedEventClicks = [...eventClicks].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+        if (sortedEventClicks.length > 0) {
+          const topEvId = sortedEventClicks[0].itemId;
+          const matchingEvent = fetchedEvents.find(e => e.id === topEvId);
+          setTopEventThisMonth(matchingEvent ? { ...matchingEvent, monthlyClicks: sortedEventClicks[0].clicks } : { title: 'Deleted/Unknown Event', clicks: sortedEventClicks[0].clicks, monthlyClicks: sortedEventClicks[0].clicks });
         } else {
-          setTopEvent(null);
+          setTopEventThisMonth(null);
         }
 
-        // Calculate top clicked blog post
-        const sortedPostsByClicks = [...fetchedPosts].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
-        if (sortedPostsByClicks.length > 0) {
-          setTopPost(sortedPostsByClicks[0]);
+        // Calculate top clicked blog post this month
+        const postClicks = currentMonthClicks.filter(c => c.itemType === 'post');
+        const sortedPostClicks = [...postClicks].sort((a, b) => (b.clicks || 0) - (a.clicks || 0));
+        if (sortedPostClicks.length > 0) {
+          const topPId = sortedPostClicks[0].itemId;
+          const matchingPost = fetchedPosts.find(p => p.id === topPId);
+          setTopPostThisMonth(matchingPost ? { ...matchingPost, monthlyClicks: sortedPostClicks[0].clicks } : { title: 'Deleted/Unknown Post', clicks: sortedPostClicks[0].clicks, monthlyClicks: sortedPostClicks[0].clicks });
         } else {
-          setTopPost(null);
+          setTopPostThisMonth(null);
         }
 
       } catch (error) {
@@ -414,10 +414,11 @@ export default function AdminDashboard() {
   );
 
   // Dynamic titles for the custom analytics cards (live data)
-  const mostClickedEventTitle = topEvent ? topEvent.title : "No events listed";
-  const mostClickedEventCount = topEvent ? (topEvent.clicks || 0) : 0;
-  const mostClickedMonthTitle = topPost ? topPost.title : "No reviews listed";
-  const mostClickedMonthCount = topPost ? (topPost.clicks || 0) : 0;
+  // Dynamic titles for the custom analytics cards (live data for this month)
+  const mostClickedEventTitle = topEventThisMonth ? topEventThisMonth.title : "No events clicked";
+  const mostClickedEventCount = topEventThisMonth ? (topEventThisMonth.monthlyClicks || 0) : 0;
+  const mostClickedMonthTitle = topPostThisMonth ? topPostThisMonth.title : "No reviews clicked";
+  const mostClickedMonthCount = topPostThisMonth ? (topPostThisMonth.monthlyClicks || 0) : 0;
 
   return (
     <div style={{ 
@@ -485,6 +486,27 @@ export default function AdminDashboard() {
             <Plus size={16} /> Create Event
           </Link>
           <Link 
+            to="/admin/analytics" 
+            style={{ 
+              padding: '12px 24px', 
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              backgroundColor: 'var(--yellow-soft)',
+              color: 'var(--text-dark)',
+              border: '3px solid var(--text-dark)',
+              borderRadius: '50px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: '3px 3px 0px 0px var(--text-dark)',
+              transition: 'var(--transition-bouncy)'
+            }}
+            className="admin-action-btn"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>monitoring</span> Full Analytics
+          </Link>
+          <Link 
             to="/admin/blog/new" 
             style={{ 
               padding: '12px 24px', 
@@ -534,13 +556,13 @@ export default function AdminDashboard() {
         className="analytics-grid animate-slide-up" 
         style={{ 
           display: 'grid', 
-          gridTemplateColumns: 'repeat(4, 1fr)', 
+          gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', 
           gap: '24px', 
           marginBottom: '48px',
           textAlign: 'left'
         }}
       >
-        {/* Card 1: Weekly Visits */}
+        {/* Card 1: Monthly Visits */}
         <div 
           className="sticker-shadow stats-card-green"
           style={{ 
@@ -558,29 +580,36 @@ export default function AdminDashboard() {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '32px', fontVariationSettings: "'FILL' 1", color: 'var(--primary-soft)' }}>trending_up</span>
-            <span style={{ 
-              backgroundColor: 'rgba(255, 255, 255, 0.15)', 
-              color: 'var(--primary-soft)', 
-              padding: '2px 10px', 
-              borderRadius: '50px', 
-              fontSize: '0.68rem', 
-              fontWeight: '900',
-              textTransform: 'uppercase',
-              border: '1.5px solid var(--primary-soft)'
-            }}>
-              +8%
-            </span>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', fontVariationSettings: "'FILL' 1", color: 'var(--primary-soft)' }}>calendar_month</span>
+            <Link 
+              to="/admin/analytics" 
+              style={{ 
+                backgroundColor: 'rgba(255, 255, 255, 0.15)', 
+                color: 'var(--primary-soft)', 
+                padding: '4px 12px', 
+                borderRadius: '50px', 
+                fontSize: '0.7rem', 
+                fontWeight: '900',
+                textTransform: 'uppercase',
+                border: '1.5px solid var(--primary-soft)',
+                textDecoration: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '4px'
+              }}
+            >
+              Full Stats <span className="material-symbols-outlined" style={{ fontSize: '12px' }}>arrow_forward</span>
+            </Link>
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'white', lineHeight: '1.1' }}>{weeklyVisits.toLocaleString()}</h3>
+            <h3 style={{ fontSize: '2.2rem', fontWeight: '900', margin: 0, color: 'white', lineHeight: '1.1' }}>{monthlyVisits.toLocaleString()}</h3>
             <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
-              Weekly Visits
+              Monthly Visits
             </p>
           </div>
         </div>
 
-        {/* Card 2: Daily Visits */}
+        {/* Card 2: Most Clicked Event */}
         <div 
           className="sticker-shadow"
           style={{ 
@@ -598,50 +627,22 @@ export default function AdminDashboard() {
           }}
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--text-dark)' }}>visibility</span>
+            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--secondary)' }}>ads_click</span>
             <span style={{ 
               backgroundColor: 'rgba(28, 27, 27, 0.08)', 
               color: 'var(--text-dark)', 
               padding: '2px 10px', 
               borderRadius: '50px', 
-              fontSize: '0.68rem', 
+              fontSize: '0.65rem', 
               fontWeight: '900',
               textTransform: 'uppercase',
               border: '1.5px solid var(--text-dark)'
             }}>
-              +12%
+              This Month
             </span>
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{dailyVisits.toLocaleString()}</h3>
-            <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', letterSpacing: '0.05em', opacity: 0.85 }}>
-              Daily Visits
-            </p>
-          </div>
-        </div>
-
-        {/* Card 3: Most Clicked Event */}
-        <div 
-          className="sticker-shadow"
-          style={{ 
-            gridColumn: 'span 1 / span 1',
-            backgroundColor: 'var(--secondary-soft)',
-            color: 'var(--text-dark)',
-            padding: '24px',
-            borderRadius: '24px',
-            border: '3.5px solid var(--text-dark)',
-            display: 'flex',
-            flexDirection: 'column',
-            justifyContent: 'space-between',
-            minHeight: '180px',
-            boxShadow: '6px 6px 0px 0px var(--text-dark)'
-          }}
-        >
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--secondary)' }}>ads_click</span>
-          </div>
-          <div>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{mostClickedEventCount} clicks</h3>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{mostClickedEventCount} clicks</h3>
             <div 
               title={mostClickedEventTitle}
               style={{ 
@@ -660,17 +661,17 @@ export default function AdminDashboard() {
               {mostClickedEventTitle}
             </div>
             <p style={{ margin: '2px 0 0 0', textTransform: 'uppercase', fontSize: '0.55rem', fontWeight: '800', opacity: 0.6 }}>
-              Most Clicked Event
+              Top Event This Month
             </p>
           </div>
         </div>
 
-        {/* Card 4: Most Clicked (Month) */}
+        {/* Card 3: Most Clicked Blog */}
         <div 
           className="sticker-shadow"
           style={{ 
             gridColumn: 'span 1 / span 1',
-            backgroundColor: 'var(--primary-soft)',
+            backgroundColor: 'var(--secondary-soft)',
             color: 'var(--text-dark)',
             padding: '24px',
             borderRadius: '24px',
@@ -684,9 +685,21 @@ export default function AdminDashboard() {
         >
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
             <span className="material-symbols-outlined" style={{ fontSize: '32px', color: 'var(--primary)' }}>leaderboard</span>
+            <span style={{ 
+              backgroundColor: 'rgba(28, 27, 27, 0.08)', 
+              color: 'var(--text-dark)', 
+              padding: '2px 10px', 
+              borderRadius: '50px', 
+              fontSize: '0.65rem', 
+              fontWeight: '900',
+              textTransform: 'uppercase',
+              border: '1.5px solid var(--text-dark)'
+            }}>
+              This Month
+            </span>
           </div>
           <div>
-            <h3 style={{ fontSize: '1.6rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{mostClickedMonthCount} clicks</h3>
+            <h3 style={{ fontSize: '1.8rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)', lineHeight: '1.1' }}>{mostClickedMonthCount} clicks</h3>
             <div 
               title={mostClickedMonthTitle}
               style={{ 
@@ -705,7 +718,7 @@ export default function AdminDashboard() {
               {mostClickedMonthTitle}
             </div>
             <p style={{ margin: '2px 0 0 0', textTransform: 'uppercase', fontSize: '0.55rem', fontWeight: '800', opacity: 0.6 }}>
-              Most Clicked (Month)
+              Top Blog This Month
             </p>
           </div>
         </div>

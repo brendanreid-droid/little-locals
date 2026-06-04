@@ -31,8 +31,24 @@ export async function trackVisit() {
 export async function trackEventClick(eventId) {
   if (!eventId) return;
   try {
+    // 1. Increment all-time clicks
     const docRef = doc(db, 'events', eventId);
     await updateDoc(docRef, { clicks: increment(1) });
+
+    // 2. Increment monthly clicks
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const monthStr = `${yyyy}-${mm}`;
+    const monthlyDocId = `${monthStr}_${eventId}`;
+    
+    const monthlyDocRef = doc(db, 'analytics_monthly_clicks', monthlyDocId);
+    await setDoc(monthlyDocRef, {
+      clicks: increment(1),
+      itemId: eventId,
+      itemType: 'event',
+      month: monthStr
+    }, { merge: true });
   } catch (error) {
     console.warn("Could not track event click (it might be a draft or suggestion):", error);
   }
@@ -42,9 +58,26 @@ export async function trackEventClick(eventId) {
 export async function trackPostClick(postId) {
   if (!postId) return;
   try {
+    // 1. Increment all-time clicks
     const docRef = doc(db, 'posts', postId);
     await updateDoc(docRef, { clicks: increment(1) });
+
+    // 2. Increment monthly clicks
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    const mm = String(today.getMonth() + 1).padStart(2, '0');
+    const monthStr = `${yyyy}-${mm}`;
+    const monthlyDocId = `${monthStr}_${postId}`;
+
+    const monthlyDocRef = doc(db, 'analytics_monthly_clicks', monthlyDocId);
+    await setDoc(monthlyDocRef, {
+      clicks: increment(1),
+      itemId: postId,
+      itemType: 'post',
+      month: monthStr
+    }, { merge: true });
   } catch (error) {
     console.warn("Could not track post click:", error);
   }
 }
+
