@@ -650,6 +650,7 @@ textarea.form-control {
   }
   .hamburger-toggle {
     display: flex;
+    margin-right: 8px;
   }
   .nav-links {
     display: none;
