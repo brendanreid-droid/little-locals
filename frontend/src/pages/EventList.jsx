@@ -226,9 +226,9 @@ export default function EventList() {
             <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>The best fenced and fun spots on the coast.</p>
           </div>
 
-          {/* Card 2: School Holidays */}
+          {/* Card 2: Indoor Activities */}
           <div 
-            onClick={() => handleQuickLinkClick('School Holidays')}
+            onClick={() => handleQuickLinkClick('Indoor Activities')}
             style={{ 
               backgroundColor: 'var(--yellow-soft)', 
               padding: '40px 32px', 
@@ -242,7 +242,7 @@ export default function EventList() {
               cursor: 'pointer',
               transition: 'transform 0.3s ease'
             }}
-            className="quick-link-card link-school-holidays"
+            className="quick-link-card link-indoor-activities"
           >
             <div style={{ 
               width: '80px', 
@@ -256,15 +256,15 @@ export default function EventList() {
               border: '2.5px solid var(--text-dark)',
               color: 'white'
             }} className="icon-container">
-              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>beach_access</span>
+              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>roofing</span>
             </div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>School Holidays</h3>
-            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Exciting programs and camps during break times.</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>Indoor Activities</h3>
+            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Rainy day proof fun, museums, and indoor play.</p>
           </div>
 
-          {/* Card 3: Weekend Activities */}
+          {/* Card 3: Playgroups */}
           <div 
-            onClick={() => handleQuickLinkClick('Weekend Activities')}
+            onClick={() => handleQuickLinkClick('Playgroups')}
             style={{ 
               backgroundColor: 'var(--primary-soft)', 
               padding: '40px 32px', 
@@ -278,7 +278,7 @@ export default function EventList() {
               cursor: 'pointer',
               transition: 'transform 0.3s ease'
             }}
-            className="quick-link-card link-weekend-activities"
+            className="quick-link-card link-playgroups"
           >
             <div style={{ 
               width: '80px', 
@@ -292,10 +292,10 @@ export default function EventList() {
               border: '2.5px solid var(--text-dark)',
               color: 'white'
             }} className="icon-container">
-              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>festival</span>
+              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>groups</span>
             </div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>Weekend Activities</h3>
-            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Family-friendly events for your Saturday & Sunday.</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>Playgroups</h3>
+            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Local meetups, baby groups, and social sessions.</p>
           </div>
         </div>
       </section>
