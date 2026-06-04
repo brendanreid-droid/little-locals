@@ -1385,60 +1385,7 @@ export default function AdminDashboard() {
             </div>
           </div>
 
-          {/* Top Contributor Panel */}
-          <div 
-            style={{ 
-              backgroundColor: 'var(--primary)', 
-              color: 'white', 
-              borderRadius: '24px', 
-              border: '3px solid var(--text-dark)', 
-              padding: '24px',
-              boxShadow: '6px 6px 0px 0px var(--text-dark)',
-              textAlign: 'left'
-            }}
-            className="sticker-shadow"
-          >
-            <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '16px' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '50%', border: '2px solid white', overflow: 'hidden' }}>
-                <img 
-                  alt="Community Manager Profile" 
-                  src="https://lh3.googleusercontent.com/aida-public/AB6AXuDetSlOpI8UPVLlYDpEU7kokBv2dol66k5I0i0K0Cs3jcls3TuO-vGQSD1XLw_0VVj0QerwR0ufYTGmw07hGRvz3wFZ9coeSQUXH6hgwiAIfassFYPlN36pUT8s0PfAlinYSh4qb8KsD0V0C5md73wcobcEF0-RljHkIVyIP-zpqix5Uws21dP9gOL2wzPz0eMQGe8zRoNMQx24M_Zvb02OphxKbN8G5SXrA-8DlA3nquCIfYif_WSb5V_XPQYLr8Bq6_X7Sj7islE" 
-                  style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
-                />
-              </div>
-              <div>
-                <p style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--primary-soft)', margin: 0 }}>
-                  Top Contributor
-                </p>
-                <h4 style={{ fontSize: '1.15rem', fontWeight: '900', color: 'white', margin: 0 }}>
-                  Sarah Jenkins
-                </h4>
-              </div>
-            </div>
-            <p style={{ fontSize: '0.88rem', lineHeight: '1.5', opacity: 0.9, margin: '0 0 20px 0', fontStyle: 'italic' }}>
-              "Just added 5 new reviews for the Woy Woy playground. The locals are loving the new splash pad!"
-            </p>
-            <button 
-              onClick={() => alert("Sarah Jenkins has been awarded 100 points!")}
-              style={{ 
-                width: '100%', 
-                backgroundColor: 'white', 
-                color: 'var(--primary)', 
-                border: '2px solid var(--text-dark)', 
-                padding: '12px', 
-                borderRadius: '12px', 
-                fontSize: '0.85rem', 
-                fontWeight: '900', 
-                cursor: 'pointer',
-                boxShadow: '3px 3px 0px 0px var(--text-dark)',
-                transition: 'var(--transition-bouncy)',
-                textAlign: 'center'
-              }}
-              className="reward-btn"
-            >
-              Reward Contributor
-            </button>
-          </div>
+
         </div>
 
       </div>
