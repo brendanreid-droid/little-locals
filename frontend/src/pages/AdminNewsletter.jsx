@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { collection, getDocs, doc, deleteDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, query, orderBy, addDoc } from 'firebase/firestore';
 import { db, auth } from '../firebase';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ArrowLeft, Send, Trash2, Mail, Users, CheckSquare, Square, Eye, AlertCircle, Calendar, BookOpen, RefreshCw } from 'lucide-react';
@@ -12,6 +12,7 @@ export default function AdminNewsletter() {
   const [subscribers, setSubscribers] = useState([]);
   const [events, setEvents] = useState([]);
   const [posts, setPosts] = useState([]);
+  const [history, setHistory] = useState([]);
   const [loadingData, setLoadingData] = useState(true);
 
   // Form states
@@ -40,7 +41,7 @@ export default function AdminNewsletter() {
     return () => unsubscribe();
   }, [navigate]);
 
-  // Load subscribers, events, and posts
+  // Load subscribers, events, posts, and history
   const loadAllData = async () => {
     setLoadingData(true);
     setError('');
@@ -69,6 +70,14 @@ export default function AdminNewsletter() {
       const postData = postSnap.docs.map(docObj => ({ id: docObj.id, ...docObj.data() }));
       setPosts(postData);
 
+      // 4. Fetch Newsletter History
+      const histSnap = await getDocs(collection(db, 'newsletter_history'));
+      const histList = histSnap.docs.map(docObj => ({
+        id: docObj.id,
+        ...docObj.data()
+      })).sort((a, b) => b.sentAt?.localeCompare(a.sentAt));
+      setHistory(histList);
+
     } catch (err) {
       console.error("Error loading newsletter data:", err);
       setError("Failed to load subscriber or content data: " + err.message);
@@ -92,6 +101,19 @@ export default function AdminNewsletter() {
     } catch (err) {
       console.error("Error deleting subscriber:", err);
       setError("Failed to delete subscriber: " + err.message);
+    }
+  };
+
+  const handleDeleteHistory = async (id) => {
+    if (!window.confirm("Delete this newsletter history entry?")) return;
+    try {
+      await deleteDoc(doc(db, 'newsletter_history', id));
+      setHistory(prev => prev.filter(h => h.id !== id));
+      setSuccess("History entry deleted successfully.");
+      setTimeout(() => setSuccess(''), 3000);
+    } catch (err) {
+      console.error("Error deleting history:", err);
+      setError("Failed to delete history entry: " + err.message);
     }
   };
 
@@ -284,7 +306,19 @@ export default function AdminNewsletter() {
         throw new Error(resData.error || 'Failed to dispatch newsletter campaign.');
       }
 
+      // Log campaign dispatch to newsletter history in Firestore
+      await addDoc(collection(db, 'newsletter_history'), {
+        subject,
+        preheader: preheader || '',
+        message,
+        sentAt: new Date().toISOString(),
+        recipientsCount: allEmails.length,
+        embeddedEventsCount: selectedEventsData.length,
+        embeddedBlogPostTitle: selectedPostData ? selectedPostData.title : null
+      });
+
       setSuccess(`Campaign successfully dispatched to all ${count} subscribers! 🚀`);
+      loadAllData();
     } catch (err) {
       console.error(err);
       setError(err.message || 'Error dispatching newsletter campaign.');
@@ -316,7 +350,7 @@ export default function AdminNewsletter() {
       >
         
         {/* Upper Header Panel */}
-        <div style={{ padding: '40px 40px 32px 40px', borderBottom: '3.5px solid var(--text-dark)', backgroundColor: 'var(--primary-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px', textAlign: 'left' }}>
+        <div className="newsletter-header" style={{ borderBottom: '3.5px solid var(--text-dark)', backgroundColor: 'var(--primary-soft)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '24px', textAlign: 'left' }}>
           <div>
             <h1 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '2.4rem', color: 'var(--primary)', margin: 0, letterSpacing: '-0.01em' }}>
               Newsletter Dispatch
@@ -327,7 +361,7 @@ export default function AdminNewsletter() {
           </div>
 
           {/* Sub-tabs Toggle */}
-          <div style={{ display: 'flex', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
             <button 
               onClick={() => setActiveSubTab('compose')}
               style={{
@@ -346,7 +380,27 @@ export default function AdminNewsletter() {
                 letterSpacing: '0.05em'
               }}
             >
-              Compose Newsletter
+              Compose
+            </button>
+            <button 
+              onClick={() => setActiveSubTab('history')}
+              style={{
+                padding: '10px 20px',
+                fontWeight: '900',
+                fontSize: '0.8rem',
+                border: '2.5px solid var(--text-dark)',
+                borderRadius: '50px',
+                backgroundColor: activeSubTab === 'history' ? 'var(--primary)' : 'var(--bg-white)',
+                color: activeSubTab === 'history' ? 'white' : 'var(--text-dark)',
+                boxShadow: activeSubTab === 'history' ? '3px 3px 0px 0px var(--text-dark)' : 'none',
+                transform: activeSubTab === 'history' ? 'translateY(-2px)' : 'none',
+                cursor: 'pointer',
+                transition: 'var(--transition-bouncy)',
+                textTransform: 'uppercase',
+                letterSpacing: '0.05em'
+              }}
+            >
+              History ({history.length})
             </button>
             <button 
               onClick={() => setActiveSubTab('subscribers')}
@@ -402,7 +456,7 @@ export default function AdminNewsletter() {
         ) : activeSubTab === 'subscribers' ? (
           
           /* SUBSCRIBERS LIST VIEW */
-          <div style={{ padding: '40px' }}>
+          <div className="newsletter-panel-padding">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', color: 'var(--primary)' }}>
                 Registered Followers List
@@ -473,13 +527,89 @@ export default function AdminNewsletter() {
               </div>
             )}
           </div>
+        ) : activeSubTab === 'history' ? (
+          
+          /* HISTORY LIST VIEW */
+          <div className="newsletter-panel-padding">
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', color: 'var(--primary)', margin: 0 }}>
+                Sent Newsletters Archive
+              </h3>
+              <button 
+                onClick={loadAllData}
+                style={{ background: 'none', border: 'none', color: 'var(--primary)', fontWeight: '800', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.9rem' }}
+              >
+                <RefreshCw size={16} /> Refresh
+              </button>
+            </div>
+
+            {history.length === 0 ? (
+              <div style={{ textAlign: 'center', padding: '60px 24px', border: '3px dashed var(--text-dark)', borderRadius: '24px', backgroundColor: 'var(--bg-cream)' }}>
+                <Mail size={48} style={{ color: 'var(--text-muted)', marginBottom: '16px' }} />
+                <h4 style={{ fontWeight: 800, fontSize: '1.2rem', color: 'var(--primary)' }}>No campaigns sent yet</h4>
+                <p style={{ color: 'var(--text-muted)', marginTop: '4px', fontSize: '0.9rem' }}>Send a campaign newsletter to see its history logged here.</p>
+              </div>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+                {history.map(item => (
+                  <div 
+                    key={item.id}
+                    className="sticker-shadow"
+                    style={{ 
+                      backgroundColor: 'var(--bg-white)', 
+                      borderRadius: '20px', 
+                      padding: '24px', 
+                      border: '3px solid var(--text-dark)',
+                      display: 'flex',
+                      flexDirection: 'column',
+                      gap: '14px',
+                      boxShadow: '4px 4px 0px 0px var(--text-dark)',
+                      textAlign: 'left'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '12px' }}>
+                      <div>
+                        <h4 style={{ fontWeight: 900, fontSize: '1.25rem', color: 'var(--primary)', margin: '0 0 6px 0' }}>{item.subject}</h4>
+                        <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: '700' }}>
+                          <span>📅 {item.sentAt ? new Date(item.sentAt).toLocaleString('en-AU', { dateStyle: 'medium', timeStyle: 'short' }) : 'Unknown'}</span>
+                          <span>•</span>
+                          <span style={{ color: 'var(--secondary)' }}>👥 Sent to {item.recipientsCount || 0} followers</span>
+                        </div>
+                      </div>
+                      <button 
+                        onClick={() => handleDeleteHistory(item.id)}
+                        style={{ backgroundColor: 'transparent', border: 'none', color: '#ff6b6b', cursor: 'pointer', padding: '4px' }}
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    </div>
+
+                    <div style={{ fontSize: '0.88rem', color: 'var(--text-dark)', opacity: 0.9, backgroundColor: 'var(--bg-cream)', padding: '16px', borderRadius: '12px', border: '2px solid var(--text-dark)', maxHeight: '120px', overflowY: 'auto' }} className="custom-scrollbar">
+                      {item.message?.split('\n').map((line, i) => <p key={i} style={{ margin: 0, marginBottom: '6px' }}>{line}</p>)}
+                    </div>
+
+                    <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', fontSize: '0.78rem', fontWeight: '800', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                      <span style={{ backgroundColor: 'var(--primary-soft)', color: 'var(--primary)', padding: '4px 10px', borderRadius: '6px', border: '2px solid var(--text-dark)' }}>
+                        Events Embedded: {item.embeddedEventsCount || 0}
+                      </span>
+                      {item.embeddedBlogPostTitle && (
+                        <span style={{ backgroundColor: 'var(--secondary-soft)', color: 'var(--secondary)', padding: '4px 10px', borderRadius: '6px', border: '2px solid var(--text-dark)', textOverflow: 'ellipsis', overflow: 'hidden', whiteSpace: 'nowrap', maxWidth: '280px' }} title={item.embeddedBlogPostTitle}>
+                          Guide: {item.embeddedBlogPostTitle}
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
         ) : (
           
           /* COMPOSE & SEND VIEW */
-          <div style={{ padding: '40px', display: 'grid', gridTemplateColumns: '1fr', gap: '32px' }} className="md:grid-cols-12">
+          <div className="newsletter-grid">
             
             {/* Left Composer Form (Spans 7 columns on md) */}
-            <div style={{ gridColumn: 'span 7' }} className="newsletter-composer-pane">
+            <div className="newsletter-composer-pane">
               <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', color: 'var(--primary)', marginBottom: '24px', textAlign: 'left' }}>
                 1. Campaign Details
               </h3>
@@ -665,7 +795,7 @@ export default function AdminNewsletter() {
             </div>
 
             {/* Right Live Preview Panel (Spans 5 columns on md) */}
-            <div style={{ gridColumn: 'span 5', display: 'flex', flexDirection: 'column' }} className="newsletter-preview-pane">
+            <div className="newsletter-preview-pane">
               <h3 style={{ display: 'flex', alignItems: 'center', gap: '8px', fontFamily: 'var(--font-display)', fontWeight: 800, fontSize: '1.4rem', color: 'var(--primary)', marginBottom: '24px', textAlign: 'left' }}>
                 <Eye size={20} /> 2. Live Email Preview
               </h3>
@@ -683,6 +813,45 @@ export default function AdminNewsletter() {
         )}
 
       </div>
+
+      {/* Responsive Stylesheet */}
+      <style>{`
+        .newsletter-header {
+          padding: 40px 40px 32px 40px;
+        }
+        .newsletter-grid {
+          display: grid;
+          grid-template-columns: 1.3fr 1fr;
+          gap: 32px;
+          padding: 40px;
+        }
+        .newsletter-panel-padding {
+          padding: 40px;
+        }
+        @media (max-width: 1024px) {
+          .newsletter-header {
+            padding: 24px 20px !important;
+          }
+          .newsletter-grid {
+            grid-template-columns: 1fr !important;
+            padding: 16px !important;
+            gap: 24px !important;
+          }
+          .newsletter-panel-padding {
+            padding: 16px !important;
+          }
+          .newsletter-composer-pane, .newsletter-preview-pane {
+            grid-column: span 12 / span 12 !important;
+          }
+          .newsletter-preview-pane {
+            height: 520px !important;
+          }
+          .newsletter-preview-pane iframe {
+            height: 440px !important;
+          }
+        }
+      `}</style>
+
     </div>
   );
 }
