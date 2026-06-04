@@ -965,3 +965,15 @@ textarea.form-control {
     grid-template-columns: repeat(12, 1fr) !important;
   }
 }
+
+.share-btn-hover {
+  transition: var(--transition-bouncy) !important;
+}
+.share-btn-hover:hover {
+  transform: translate(-3px, -3px) !important;
+  box-shadow: 5px 5px 0px 0px var(--text-dark) !important;
+}
+.share-btn-hover:active {
+  transform: translate(0px, 0px) !important;
+  box-shadow: 2px 2px 0px 0px var(--text-dark) !important;
+}
