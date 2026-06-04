@@ -22,10 +22,15 @@ export default function EventForm() {
     link: '',
     category: 'Playground',
     age_group: 'All Ages',
-    is_featured: false
+    is_featured: false,
+    is_recurring: false,
+    recurrence_type: 'weekly',
+    recurrence_until: '',
+    recurring_id: ''
   });
 
   const [shareToFacebook, setShareToFacebook] = useState(false);
+  const [applyToSeries, setApplyToSeries] = useState(false);
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(isEditMode);
   const [uploading, setUploading] = useState(false);
@@ -66,7 +71,11 @@ export default function EventForm() {
             link: data.link || '',
             category: data.category || 'Playground',
             age_group: data.age_group || 'All Ages',
-            is_featured: data.is_featured || false
+            is_featured: data.is_featured || false,
+            is_recurring: data.is_recurring || false,
+            recurrence_type: data.recurrence_type || 'weekly',
+            recurrence_until: data.recurrence_until || '',
+            recurring_id: data.recurring_id || ''
           });
         } else {
           setError('Event not found.');
@@ -170,23 +179,104 @@ ${form.description || ''}
 
     try {
       let eventId = id;
+      let targetDates = [form.date];
       
       if (isEditMode) {
         const docRef = doc(db, 'events', id);
         await updateDoc(docRef, form);
+        
+        if (applyToSeries && form.recurring_id) {
+          // Update all events with the same recurring_id where date >= form.date
+          const eventsCol = collection(db, 'events');
+          const snapshot = await getDocs(eventsCol);
+          const futureEvents = snapshot.docs.filter(docObj => {
+            const data = docObj.data();
+            return data.recurring_id === form.recurring_id && data.date >= form.date && docObj.id !== id;
+          });
+          
+          for (const docObj of futureEvents) {
+            const dRef = doc(db, 'events', docObj.id);
+            await updateDoc(dRef, {
+              title: form.title,
+              time: form.time,
+              location: form.location,
+              description: form.description,
+              image_url: form.image_url,
+              category: form.category,
+              age_group: form.age_group,
+              is_featured: form.is_featured,
+              price: 'FREE',
+              link: form.link
+            });
+          }
+        }
+      } else if (form.is_recurring) {
+        if (!form.recurrence_until) {
+          throw new Error("Please specify the Repeat Until Date.");
+        }
+        
+        const startDate = new Date(form.date);
+        const untilDate = new Date(form.recurrence_until);
+        
+        if (untilDate <= startDate) {
+          throw new Error("Repeat Until Date must be after the start Date.");
+        }
+        
+        const maxDate = new Date(startDate);
+        maxDate.setMonth(maxDate.getMonth() + 6);
+        if (untilDate > maxDate) {
+          throw new Error("To keep performance high, a recurring series cannot repeat for more than 6 months.");
+        }
+        
+        const dateStrings = [];
+        let curr = new Date(startDate);
+        
+        while (curr <= untilDate) {
+          dateStrings.push(curr.toISOString().split('T')[0]);
+          
+          if (form.recurrence_type === 'weekly') {
+            curr.setDate(curr.getDate() + 7);
+          } else if (form.recurrence_type === 'fortnightly') {
+            curr.setDate(curr.getDate() + 14);
+          } else if (form.recurrence_type === 'monthly') {
+            curr.setMonth(curr.getMonth() + 1);
+          } else {
+            break;
+          }
+        }
+        
+        targetDates = dateStrings;
+        
+        const recurringId = `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+        const colRef = collection(db, 'events');
+        
+        let firstEventId = '';
+        for (let i = 0; i < dateStrings.length; i++) {
+          const occDate = dateStrings[i];
+          const docAdded = await addDoc(colRef, {
+            ...form,
+            date: occDate,
+            recurring_id: recurringId,
+            is_recurring: true
+          });
+          if (i === 0) {
+            firstEventId = docAdded.id;
+          }
+        }
+        eventId = firstEventId;
       } else {
         const colRef = collection(db, 'events');
         const docAdded = await addDoc(colRef, form);
         eventId = docAdded.id;
       }
 
-      // Clear any suggestions in the review queue that match the saved event's title and date
+      // Clear any suggestions in the review queue that match the saved event's title and dates
       try {
         const suggestionsCol = collection(db, 'suggestions');
         const suggestionSnapshot = await getDocs(suggestionsCol);
         const matchingSuggestions = suggestionSnapshot.docs.filter(doc => {
           const data = doc.data();
-          return data.title?.toLowerCase() === form.title?.toLowerCase() && data.date === form.date;
+          return data.title?.toLowerCase() === form.title?.toLowerCase() && targetDates.includes(data.date);
         });
         for (const sugDoc of matchingSuggestions) {
           await deleteDoc(doc(db, 'suggestions', sugDoc.id));
@@ -372,6 +462,78 @@ ${form.description || ''}
             </div>
           </div>
 
+          {/* Recurrence Setup */}
+          {!isEditMode && (
+            <div style={{ 
+              padding: '20px', 
+              borderRadius: 'var(--radius-md)', 
+              border: '2.5px solid var(--text-dark)', 
+              backgroundColor: 'var(--bg-cream)',
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '16px',
+              marginTop: '8px'
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                <input 
+                  type="checkbox" 
+                  id="is_recurring" 
+                  name="is_recurring" 
+                  checked={form.is_recurring}
+                  onChange={handleChange}
+                  disabled={loading || uploading}
+                  style={{ width: '20px', height: '20px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                />
+                <label htmlFor="is_recurring" style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--primary)' }}>sync</span>
+                  Make this a recurring event series
+                </label>
+              </div>
+
+              {form.is_recurring && (
+                <div style={{ 
+                  display: 'grid', 
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                  gap: '16px',
+                  paddingTop: '12px',
+                  borderTop: '2px dashed var(--border-soft)'
+                }}>
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor="recurrence_type">Repeat Frequency</label>
+                    <select 
+                      id="recurrence_type" 
+                      name="recurrence_type" 
+                      className="form-control"
+                      value={form.recurrence_type}
+                      onChange={handleChange}
+                      disabled={loading || uploading}
+                      style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px' }}
+                    >
+                      <option value="weekly">Weekly</option>
+                      <option value="fortnightly">Fortnightly</option>
+                      <option value="monthly">Monthly</option>
+                    </select>
+                  </div>
+
+                  <div className="form-group" style={{ marginBottom: 0 }}>
+                    <label className="form-label" htmlFor="recurrence_until">Repeat Until Date</label>
+                    <input 
+                      type="date" 
+                      id="recurrence_until" 
+                      name="recurrence_until" 
+                      className="form-control"
+                      value={form.recurrence_until}
+                      onChange={handleChange}
+                      disabled={loading || uploading}
+                      style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px' }}
+                      required={form.is_recurring}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Image Uploader & URL selector */}
           <div className="form-group" style={{ marginBottom: 0 }}>
             <label className="form-label">Activity Image / Photo</label>
@@ -522,6 +684,35 @@ ${form.description || ''}
               Flag as Featured Event (Highlights at the top of the homepage)
             </label>
           </div>
+
+          {/* Apply to Recurring Series Option (Edit mode only) */}
+          {isEditMode && form.recurring_id && (
+            <div style={{ 
+              display: 'flex', 
+              alignItems: 'center', 
+              gap: '12px', 
+              padding: '16px 20px', 
+              borderRadius: 'var(--radius-md)', 
+              backgroundColor: 'var(--yellow-soft)', 
+              border: '2.5px solid var(--text-dark)', 
+              boxShadow: '4px 4px 0px 0px var(--text-dark)',
+              margin: '12px 0' 
+            }}>
+              <input 
+                type="checkbox" 
+                id="applyToSeries" 
+                name="applyToSeries"
+                style={{ width: '20px', height: '20px', accentColor: 'var(--teal)', cursor: 'pointer' }}
+                checked={applyToSeries}
+                onChange={(e) => setApplyToSeries(e.target.checked)}
+                disabled={loading || uploading}
+              />
+              <label htmlFor="applyToSeries" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-dark)', cursor: 'pointer' }}>
+                <span className="material-symbols-outlined" style={{ color: 'var(--teal)', fontSize: '20px' }}>update</span>
+                Apply changes to all future events in this recurring series?
+              </label>
+            </div>
+          )}
 
           {/* Save Button */}
           <button 

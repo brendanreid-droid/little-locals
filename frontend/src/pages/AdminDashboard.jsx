@@ -196,12 +196,43 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleDeleteEvent = async (id) => {
-    if (!window.confirm("Are you sure you want to delete this event listing?")) return;
-    
+  const handleDeleteEvent = async (event) => {
+    const isRecurring = !!event.recurring_id;
+    let deleteChoice = 'single'; // 'single', 'all', or null (cancel)
+
+    if (isRecurring) {
+      const deleteAll = window.confirm(
+        "This event is part of a recurring series.\n\n" +
+        "Click OK to delete ALL events in this recurring series.\n" +
+        "Click Cancel to delete ONLY this single occurrence."
+      );
+      if (deleteAll) {
+        deleteChoice = 'all';
+      } else {
+        const deleteSingle = window.confirm("Are you sure you want to delete ONLY this single event occurrence?");
+        if (!deleteSingle) return;
+        deleteChoice = 'single';
+      }
+    } else {
+      if (!window.confirm("Are you sure you want to delete this event listing?")) return;
+    }
+
     try {
-      await deleteDoc(doc(db, 'events', id));
-      setEvents(prev => prev.filter(event => event.id !== id));
+      if (deleteChoice === 'all') {
+        const eventsCol = collection(db, 'events');
+        const snapshot = await getDocs(eventsCol);
+        const matchingEvents = snapshot.docs.filter(docObj => docObj.data().recurring_id === event.recurring_id);
+        
+        for (const docObj of matchingEvents) {
+          await deleteDoc(doc(db, 'events', docObj.id));
+        }
+        
+        setEvents(prev => prev.filter(e => e.recurring_id !== event.recurring_id));
+        alert("All occurrences in the recurring series have been deleted.");
+      } else {
+        await deleteDoc(doc(db, 'events', event.id));
+        setEvents(prev => prev.filter(e => e.id !== event.id));
+      }
     } catch (error) {
       console.error("Error deleting event:", error);
       alert("Failed to delete event: " + error.message);
@@ -909,7 +940,7 @@ export default function AdminDashboard() {
                       <Edit2 size={14} /> Edit
                     </Link>
                     <button 
-                      onClick={() => handleDeleteEvent(event.id)} 
+                      onClick={() => handleDeleteEvent(event)} 
                       style={{ 
                         padding: '10px 18px', 
                         fontSize: '0.85rem', 
