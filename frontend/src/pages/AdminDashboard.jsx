@@ -486,27 +486,6 @@ export default function AdminDashboard() {
             <Plus size={16} /> Create Event
           </Link>
           <Link 
-            to="/admin/analytics" 
-            style={{ 
-              padding: '12px 24px', 
-              fontSize: '0.85rem',
-              fontWeight: '800',
-              backgroundColor: 'var(--yellow-soft)',
-              color: 'var(--text-dark)',
-              border: '3px solid var(--text-dark)',
-              borderRadius: '50px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
-              cursor: 'pointer',
-              boxShadow: '3px 3px 0px 0px var(--text-dark)',
-              transition: 'var(--transition-bouncy)'
-            }}
-            className="admin-action-btn"
-          >
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>monitoring</span> Full Analytics
-          </Link>
-          <Link 
             to="/admin/blog/new" 
             style={{ 
               padding: '12px 24px', 
@@ -526,6 +505,27 @@ export default function AdminDashboard() {
             className="admin-action-btn"
           >
             <BookOpen size={16} /> Write Blog Post
+          </Link>
+          <Link 
+            to="/admin/analytics" 
+            style={{ 
+              padding: '12px 24px', 
+              fontSize: '0.85rem',
+              fontWeight: '800',
+              backgroundColor: 'var(--yellow-soft)',
+              color: 'var(--text-dark)',
+              border: '3px solid var(--text-dark)',
+              borderRadius: '50px',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              cursor: 'pointer',
+              boxShadow: '3px 3px 0px 0px var(--text-dark)',
+              transition: 'var(--transition-bouncy)'
+            }}
+            className="admin-action-btn"
+          >
+            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>monitoring</span> Full Analytics
           </Link>
           <button 
             onClick={handleLogout} 

@@ -200,13 +200,7 @@ export default function AdminAnalytics() {
   const totalActiveEventsCount = events.length;
 
   return (
-    <div style={{ 
-      padding: '48px 24px', 
-      maxWidth: '1280px', 
-      margin: '0 auto',
-      backgroundColor: 'var(--bg-cream)',
-      minHeight: '100vh'
-    }}>
+    <div className="analytics-page-container">
       
       {/* Navigation & Header */}
       <div style={{ textAlign: 'left', marginBottom: '32px' }}>
@@ -224,13 +218,7 @@ export default function AdminAnalytics() {
         >
           <ArrowLeft size={16} /> Back to Dashboard
         </Link>
-        <h1 style={{ 
-          fontFamily: 'var(--font-display)', 
-          fontWeight: 950, 
-          fontSize: '2.5rem', 
-          color: 'var(--primary)',
-          margin: 0
-        }}>
+        <h1 className="analytics-page-title">
           Website Performance & Analytics
         </h1>
         <p style={{ color: 'var(--text-muted)', fontSize: '1rem', marginTop: '6px', fontWeight: '600' }}>
@@ -239,76 +227,60 @@ export default function AdminAnalytics() {
       </div>
 
       {/* 1. Overview Cards Grid */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', 
-        gap: '24px', 
-        marginBottom: '48px' 
-      }}>
+      <div className="analytics-overview-grid">
         {/* Daily views */}
-        <div className="sticker-shadow" style={{ backgroundColor: 'var(--bg-white)', padding: '24px', borderRadius: '24px', border: '3.5px solid var(--text-dark)', boxShadow: '6px 6px 0px 0px var(--text-dark)', display: 'flex', alignItems: 'center', gap: '20px', textAlign: 'left' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'var(--primary-soft)', border: '2.5px solid var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)' }}>
+        <div className="sticker-shadow analytics-overview-card">
+          <div className="analytics-card-icon-container" style={{ backgroundColor: 'var(--primary-soft)', color: 'var(--primary)' }}>
             <Eye size={24} />
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)' }}>{metrics.daily.toLocaleString()}</h3>
-            <p style={{ margin: '2px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Daily Views</p>
+            <h3 className="analytics-card-value">{metrics.daily.toLocaleString()}</h3>
+            <p className="analytics-card-label">Daily Views</p>
           </div>
         </div>
 
         {/* Weekly views */}
-        <div className="sticker-shadow" style={{ backgroundColor: 'var(--bg-white)', padding: '24px', borderRadius: '24px', border: '3.5px solid var(--text-dark)', boxShadow: '6px 6px 0px 0px var(--text-dark)', display: 'flex', alignItems: 'center', gap: '20px', textAlign: 'left' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'var(--secondary-soft)', border: '2.5px solid var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--secondary)' }}>
+        <div className="sticker-shadow analytics-overview-card">
+          <div className="analytics-card-icon-container" style={{ backgroundColor: 'var(--secondary-soft)', color: 'var(--secondary)' }}>
             <TrendingUp size={24} />
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)' }}>{metrics.weekly.toLocaleString()}</h3>
-            <p style={{ margin: '2px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Weekly Views (7d)</p>
+            <h3 className="analytics-card-value">{metrics.weekly.toLocaleString()}</h3>
+            <p className="analytics-card-label">Weekly Views (7d)</p>
           </div>
         </div>
 
         {/* Monthly views */}
-        <div className="sticker-shadow" style={{ backgroundColor: 'var(--bg-white)', padding: '24px', borderRadius: '24px', border: '3.5px solid var(--text-dark)', boxShadow: '6px 6px 0px 0px var(--text-dark)', display: 'flex', alignItems: 'center', gap: '20px', textAlign: 'left' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'var(--yellow-soft)', border: '2.5px solid var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)' }}>
+        <div className="sticker-shadow analytics-overview-card">
+          <div className="analytics-card-icon-container" style={{ backgroundColor: 'var(--yellow-soft)', color: 'var(--text-dark)' }}>
             <Calendar size={24} />
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)' }}>{metrics.monthly.toLocaleString()}</h3>
-            <p style={{ margin: '2px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>Monthly Views</p>
+            <h3 className="analytics-card-value">{metrics.monthly.toLocaleString()}</h3>
+            <p className="analytics-card-label">Monthly Views</p>
           </div>
         </div>
 
         {/* All-time views */}
-        <div className="sticker-shadow" style={{ backgroundColor: 'var(--bg-white)', padding: '24px', borderRadius: '24px', border: '3.5px solid var(--text-dark)', boxShadow: '6px 6px 0px 0px var(--text-dark)', display: 'flex', alignItems: 'center', gap: '20px', textAlign: 'left' }}>
-          <div style={{ width: '56px', height: '56px', borderRadius: '16px', backgroundColor: 'var(--primary)', border: '2.5px solid var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white' }}>
+        <div className="sticker-shadow analytics-overview-card">
+          <div className="analytics-card-icon-container" style={{ backgroundColor: 'var(--primary)', color: 'white' }}>
             <Users size={24} />
           </div>
           <div>
-            <h3 style={{ fontSize: '2rem', fontWeight: '900', margin: 0, color: 'var(--text-dark)' }}>{metrics.allTime.toLocaleString()}</h3>
-            <p style={{ margin: '2px 0 0 0', textTransform: 'uppercase', fontSize: '0.72rem', fontWeight: '900', color: 'var(--text-muted)', letterSpacing: '0.05em' }}>All-Time Views</p>
+            <h3 className="analytics-card-value">{metrics.allTime.toLocaleString()}</h3>
+            <p className="analytics-card-label">All-Time Views</p>
           </div>
         </div>
       </div>
 
       {/* 2. Visual Visits Trend Chart Section */}
-      <div 
-        className="sticker-shadow"
-        style={{ 
-          backgroundColor: 'var(--bg-white)', 
-          border: '3.5px solid var(--text-dark)', 
-          borderRadius: '24px', 
-          padding: '36px', 
-          boxShadow: '6px 6px 0px 0px var(--text-dark)',
-          marginBottom: '48px',
-          textAlign: 'left'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px', marginBottom: '32px' }}>
+      <div className="sticker-shadow analytics-section-card">
+        <div className="analytics-section-header">
           <div>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.6rem', color: 'var(--primary)', margin: 0 }}>
+            <h2 className="analytics-section-title">
               Visitor Views Trend (Last 30 Days)
             </h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', fontWeight: '600', marginTop: '4px' }}>
+            <p className="analytics-section-subtitle">
               Shows unique daily views on this browser/session. Hover over bars to view individual counts.
             </p>
           </div>
@@ -406,16 +378,10 @@ export default function AdminAnalytics() {
       </div>
 
       {/* 3. Leaderboards: All-Time vs Monthly Clicks */}
-      <div style={{ 
-        display: 'grid', 
-        gridTemplateColumns: 'repeat(auto-fit, minmax(450px, 1fr))', 
-        gap: '32px',
-        marginBottom: '48px',
-        textAlign: 'left'
-      }}>
+      <div className="analytics-leaderboard-grid">
         
         {/* Left Col: Monthly Leaderboard (This Month Only) */}
-        <div className="sticker-shadow" style={{ backgroundColor: 'var(--bg-white)', border: '3.5px solid var(--text-dark)', borderRadius: '24px', padding: '32px', boxShadow: '6px 6px 0px 0px var(--text-dark)' }}>
+        <div className="sticker-shadow analytics-section-card" style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
             <span className="material-symbols-outlined" style={{ color: 'var(--secondary)', fontSize: '28px' }}>workspace_premium</span>
             <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.4rem', color: 'var(--primary)', margin: 0 }}>
@@ -425,33 +391,33 @@ export default function AdminAnalytics() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Top Clicked Event This Month */}
-            <div style={{ padding: '20px', borderRadius: '16px', border: '2.5px solid var(--text-dark)', backgroundColor: 'var(--yellow-soft)', display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'var(--secondary-soft)', border: '2px solid var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--secondary)', flexShrink: 0 }}>
+            <div className="analytics-leaderboard-item" style={{ backgroundColor: 'var(--yellow-soft)' }}>
+              <div className="analytics-leaderboard-icon" style={{ backgroundColor: 'var(--secondary-soft)', color: 'var(--secondary)' }}>
                 <Calendar size={20} />
               </div>
               <div style={{ minWidth: 0, flexGrow: 1 }}>
-                <h4 style={{ fontWeight: '800', fontSize: '1.05rem', color: 'var(--text-dark)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <h4 className="analytics-leaderboard-title">
                   {topEventThisMonth ? topEventThisMonth.title : "No clicks recorded"}
                 </h4>
-                <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: '800', opacity: 0.7 }}>Most Clicked Event (Month)</p>
+                <p className="analytics-leaderboard-desc">Most Clicked Event (Month)</p>
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '950', color: 'var(--text-dark)', whiteSpace: 'nowrap' }}>
+              <div className="analytics-leaderboard-clicks">
                 {topEventThisMonth ? `${topEventThisMonth.monthlyClicks || 0} clicks` : '—'}
               </div>
             </div>
 
             {/* Top Clicked Blog Post This Month */}
-            <div style={{ padding: '20px', borderRadius: '16px', border: '2.5px solid var(--text-dark)', backgroundColor: 'var(--primary-soft)', display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'var(--yellow-soft)', border: '2px solid var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--text-dark)', flexShrink: 0 }}>
+            <div className="analytics-leaderboard-item" style={{ backgroundColor: 'var(--primary-soft)' }}>
+              <div className="analytics-leaderboard-icon" style={{ backgroundColor: 'var(--yellow-soft)', color: 'var(--text-dark)' }}>
                 <BookOpen size={20} />
               </div>
               <div style={{ minWidth: 0, flexGrow: 1 }}>
-                <h4 style={{ fontWeight: '800', fontSize: '1.05rem', color: 'var(--text-dark)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <h4 className="analytics-leaderboard-title">
                   {topPostThisMonth ? topPostThisMonth.title : "No clicks recorded"}
                 </h4>
-                <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: '800', opacity: 0.7 }}>Most Clicked Blog (Month)</p>
+                <p className="analytics-leaderboard-desc">Most Clicked Blog (Month)</p>
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '950', color: 'var(--text-dark)', whiteSpace: 'nowrap' }}>
+              <div className="analytics-leaderboard-clicks">
                 {topPostThisMonth ? `${topPostThisMonth.monthlyClicks || 0} clicks` : '—'}
               </div>
             </div>
@@ -459,7 +425,7 @@ export default function AdminAnalytics() {
         </div>
 
         {/* Right Col: All-Time Leaderboard */}
-        <div className="sticker-shadow" style={{ backgroundColor: 'var(--bg-white)', border: '3.5px solid var(--text-dark)', borderRadius: '24px', padding: '32px', boxShadow: '6px 6px 0px 0px var(--text-dark)' }}>
+        <div className="sticker-shadow analytics-section-card" style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
             <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: '28px' }}>stars</span>
             <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.4rem', color: 'var(--primary)', margin: 0 }}>
@@ -469,33 +435,33 @@ export default function AdminAnalytics() {
 
           <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
             {/* Top Clicked Event All Time */}
-            <div style={{ padding: '20px', borderRadius: '16px', border: '2.5px solid var(--text-dark)', backgroundColor: 'var(--bg-cream)', display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'var(--primary-soft)', border: '2px solid var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--primary)', flexShrink: 0 }}>
+            <div className="analytics-leaderboard-item" style={{ backgroundColor: 'var(--bg-cream)' }}>
+              <div className="analytics-leaderboard-icon" style={{ backgroundColor: 'var(--primary-soft)', color: 'var(--primary)' }}>
                 <Award size={20} />
               </div>
               <div style={{ minWidth: 0, flexGrow: 1 }}>
-                <h4 style={{ fontWeight: '800', fontSize: '1.05rem', color: 'var(--text-dark)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <h4 className="analytics-leaderboard-title">
                   {topEventAllTime ? topEventAllTime.title : "No clicks recorded"}
                 </h4>
-                <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: '800', opacity: 0.7 }}>Top Event All-Time</p>
+                <p className="analytics-leaderboard-desc">Top Event All-Time</p>
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '950', color: 'var(--text-dark)', whiteSpace: 'nowrap' }}>
+              <div className="analytics-leaderboard-clicks">
                 {topEventAllTime ? `${topEventAllTime.clicks || 0} clicks` : '—'}
               </div>
             </div>
 
             {/* Top Clicked Blog Post All Time */}
-            <div style={{ padding: '20px', borderRadius: '16px', border: '2.5px solid var(--text-dark)', backgroundColor: 'var(--bg-cream)', display: 'flex', gap: '16px', alignItems: 'center' }}>
-              <div style={{ width: '48px', height: '48px', borderRadius: '12px', backgroundColor: 'var(--secondary-soft)', border: '2px solid var(--text-dark)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--secondary)', flexShrink: 0 }}>
+            <div className="analytics-leaderboard-item" style={{ backgroundColor: 'var(--bg-cream)' }}>
+              <div className="analytics-leaderboard-icon" style={{ backgroundColor: 'var(--secondary-soft)', color: 'var(--secondary)' }}>
                 <AwardIcon size={20} />
               </div>
               <div style={{ minWidth: 0, flexGrow: 1 }}>
-                <h4 style={{ fontWeight: '800', fontSize: '1.05rem', color: 'var(--text-dark)', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <h4 className="analytics-leaderboard-title">
                   {topPostAllTime ? topPostAllTime.title : "No clicks recorded"}
                 </h4>
-                <p style={{ margin: '4px 0 0 0', textTransform: 'uppercase', fontSize: '0.65rem', fontWeight: '800', opacity: 0.7 }}>Top Blog All-Time</p>
+                <p className="analytics-leaderboard-desc">Top Blog All-Time</p>
               </div>
-              <div style={{ fontSize: '1.25rem', fontWeight: '950', color: 'var(--text-dark)', whiteSpace: 'nowrap' }}>
+              <div className="analytics-leaderboard-clicks">
                 {topPostAllTime ? `${topPostAllTime.clicks || 0} clicks` : '—'}
               </div>
             </div>
@@ -505,22 +471,12 @@ export default function AdminAnalytics() {
       </div>
 
       {/* 4. Directory Categories Coverage Distribution */}
-      <div 
-        className="sticker-shadow"
-        style={{ 
-          backgroundColor: 'var(--bg-white)', 
-          border: '3.5px solid var(--text-dark)', 
-          borderRadius: '24px', 
-          padding: '36px', 
-          boxShadow: '6px 6px 0px 0px var(--text-dark)',
-          textAlign: 'left'
-        }}
-      >
+      <div className="sticker-shadow analytics-section-card">
         <div style={{ marginBottom: '24px' }}>
-          <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.6rem', color: 'var(--primary)', margin: 0 }}>
+          <h2 className="analytics-section-title">
             Directory Category Coverage
           </h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '0.88rem', fontWeight: '600', marginTop: '4px' }}>
+          <p className="analytics-section-subtitle">
             Review the distribution of active activities listed in the directory to see which categories need content generation.
           </p>
         </div>
@@ -530,7 +486,7 @@ export default function AdminAnalytics() {
             No active events listed to analyze.
           </div>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+          <div className="analytics-category-grid">
             {['Playground', 'Library', 'Art & Craft', 'Outdoors', 'Sports', 'Music & Storytime', 'General'].map(category => {
               const count = categoryBreakdown[category] || 0;
               const percentage = Math.round((count / totalActiveEventsCount) * 100);
@@ -547,18 +503,7 @@ export default function AdminAnalytics() {
               };
 
               return (
-                <div 
-                  key={category}
-                  style={{ 
-                    padding: '16px 20px', 
-                    borderRadius: '16px', 
-                    border: '2.5px solid var(--text-dark)', 
-                    backgroundColor: 'var(--bg-cream)',
-                    display: 'flex',
-                    flexDirection: 'column',
-                    gap: '10px'
-                  }}
-                >
+                <div key={category} className="analytics-category-item">
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontWeight: '900', fontSize: '0.85rem', color: 'var(--text-dark)' }}>
                     <span>{category}</span>
                     <span>{count} ({percentage}%)</span>
@@ -582,13 +527,308 @@ export default function AdminAnalytics() {
       </div>
 
       <style>{`
+        /* Custom responsive classes for AdminAnalytics */
+        .analytics-page-container {
+          padding: 48px 24px;
+          max-width: 1280px;
+          margin: 0 auto;
+          background-color: var(--bg-cream);
+          min-height: 100vh;
+        }
+
+        .analytics-page-title {
+          font-family: var(--font-display);
+          font-weight: 950;
+          font-size: 2.5rem;
+          color: var(--primary);
+          margin: 0;
+        }
+
+        .analytics-overview-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+          gap: 24px;
+          margin-bottom: 48px;
+        }
+
+        .analytics-overview-card {
+          background-color: var(--bg-white);
+          padding: 24px;
+          border-radius: 24px;
+          border: 3.5px solid var(--text-dark);
+          box-shadow: 6px 6px 0px 0px var(--text-dark);
+          display: flex;
+          align-items: center;
+          gap: 20px;
+          text-align: left;
+        }
+
+        .analytics-card-icon-container {
+          width: 56px;
+          height: 56px;
+          border-radius: 16px;
+          border: 2.5px solid var(--text-dark);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .analytics-card-value {
+          font-size: 2rem;
+          font-weight: 900;
+          margin: 0;
+          color: var(--text-dark);
+          line-height: 1.1;
+        }
+
+        .analytics-card-label {
+          margin: 2px 0 0 0;
+          text-transform: uppercase;
+          font-size: 0.72rem;
+          font-weight: 900;
+          color: var(--text-muted);
+          letter-spacing: 0.05em;
+        }
+
+        .analytics-section-card {
+          background-color: var(--bg-white);
+          border: 3.5px solid var(--text-dark);
+          border-radius: 24px;
+          padding: 36px;
+          box-shadow: 6px 6px 0px 0px var(--text-dark);
+          margin-bottom: 48px;
+          text-align: left;
+        }
+
+        .analytics-section-header {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 16px;
+          margin-bottom: 32px;
+        }
+
+        .analytics-section-title {
+          font-family: var(--font-display);
+          font-weight: 900;
+          font-size: 1.6rem;
+          color: var(--primary);
+          margin: 0;
+        }
+
+        .analytics-section-subtitle {
+          color: var(--text-muted);
+          font-size: 0.88rem;
+          font-weight: 600;
+          margin-top: 4px;
+        }
+
+        .analytics-leaderboard-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+          gap: 32px;
+          margin-bottom: 48px;
+          text-align: left;
+        }
+
+        .analytics-leaderboard-item {
+          padding: 20px;
+          border-radius: 16px;
+          border: 2.5px solid var(--text-dark);
+          display: flex;
+          gap: 16px;
+          align-items: center;
+        }
+
+        .analytics-leaderboard-icon {
+          width: 48px;
+          height: 48px;
+          border-radius: 12px;
+          border: 2px solid var(--text-dark);
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          flex-shrink: 0;
+        }
+
+        .analytics-leaderboard-title {
+          font-weight: 800;
+          font-size: 1.05rem;
+          color: var(--text-dark);
+          margin: 0;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
+        }
+
+        .analytics-leaderboard-desc {
+          margin: 4px 0 0 0;
+          text-transform: uppercase;
+          font-size: 0.65rem;
+          font-weight: 800;
+          opacity: 0.7;
+        }
+
+        .analytics-leaderboard-clicks {
+          font-size: 1.25rem;
+          font-weight: 950;
+          color: var(--text-dark);
+          white-space: nowrap;
+        }
+
+        .analytics-category-grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 24px;
+        }
+
+        .analytics-category-item {
+          padding: 16px 20px;
+          border-radius: 16px;
+          border: 2.5px solid var(--text-dark);
+          background-color: var(--bg-cream);
+          display: flex;
+          flex-direction: column;
+          gap: 10px;
+        }
+
         .svg-bar:hover {
           fill: var(--yellow) !important;
           transform: scaleY(1.05);
         }
+
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
+        }
+
+        /* Mobile specific overrides */
+        @media (max-width: 1024px) {
+          .analytics-leaderboard-grid {
+            grid-template-columns: 1fr;
+            gap: 24px;
+          }
+        }
+
+        @media (max-width: 768px) {
+          .analytics-page-container {
+            padding: 20px 12px;
+          }
+
+          .analytics-page-title {
+            font-size: 1.8rem;
+          }
+
+          .analytics-overview-grid {
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+          }
+
+          .analytics-overview-card {
+            padding: 16px 12px;
+            gap: 12px;
+            border-radius: 16px;
+            border-width: 2.5px;
+            box-shadow: 4px 4px 0px 0px var(--text-dark);
+          }
+
+          .analytics-card-icon-container {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            border-width: 2px;
+          }
+
+          .analytics-card-icon-container svg {
+            width: 20px;
+            height: 20px;
+          }
+
+          .analytics-card-value {
+            font-size: 1.5rem;
+          }
+
+          .analytics-card-label {
+            font-size: 0.62rem;
+          }
+
+          .analytics-section-card {
+            padding: 20px 16px;
+            border-radius: 16px;
+            border-width: 2.5px;
+            box-shadow: 4px 4px 0px 0px var(--text-dark);
+            margin-bottom: 32px;
+          }
+
+          .analytics-section-header {
+            margin-bottom: 16px;
+          }
+
+          .analytics-section-title {
+            font-size: 1.3rem;
+          }
+
+          .analytics-section-subtitle {
+            font-size: 0.78rem;
+          }
+
+          .analytics-leaderboard-grid {
+            gap: 20px;
+            margin-bottom: 32px;
+          }
+
+          .analytics-leaderboard-item {
+            padding: 14px;
+            gap: 12px;
+            border-radius: 12px;
+          }
+
+          .analytics-leaderboard-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 10px;
+          }
+
+          .analytics-leaderboard-icon svg {
+            width: 18px;
+            height: 18px;
+          }
+
+          .analytics-leaderboard-title {
+            font-size: 0.95rem;
+          }
+
+          .analytics-leaderboard-desc {
+            font-size: 0.58rem;
+          }
+
+          .analytics-leaderboard-clicks {
+            font-size: 1.05rem;
+          }
+
+          .analytics-category-grid {
+            grid-template-columns: 1fr;
+            gap: 16px;
+          }
+
+          .analytics-category-item {
+            padding: 12px 16px;
+            border-radius: 12px;
+            gap: 8px;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .analytics-leaderboard-title {
+            font-size: 0.85rem;
+          }
+
+          .analytics-leaderboard-clicks {
+            font-size: 0.95rem;
+          }
         }
       `}</style>
       
