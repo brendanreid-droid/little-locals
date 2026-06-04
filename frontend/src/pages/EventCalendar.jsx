@@ -206,7 +206,7 @@ export default function EventCalendar() {
             The <span style={{ color: 'var(--yellow)' }}>Grid of Joy</span>: {monthName}
           </h1>
           <p style={{ color: 'var(--text-muted)', fontSize: '1.1rem', marginTop: '8px', fontWeight: '500' }}>
-            Your ultimate guide to 100% free family fun on the Central Coast. Every day is a new adventure.
+            Your ultimate guide to family fun on the Central Coast. Every day is a new adventure.
           </p>
         </div>
         

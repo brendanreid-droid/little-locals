@@ -102,7 +102,7 @@ function App() {
           <div style={{ maxWidth: '600px', margin: '0 auto', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <h4 style={{ fontWeight: 800, color: 'var(--text-dark)' }}>Little Locals Central Coast</h4>
             <p style={{ fontSize: '0.9rem', color: 'var(--text-muted)' }}>
-              Providing parents with a centralised directory for 100% free events, activities, playground reviews, and family-friendly things to do. We make finding local fun simple and cost-free.
+              Providing parents with a centralised directory for events, activities, playground reviews, and family-friendly things to do. We make finding local fun simple.
             </p>
             <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '6px', fontSize: '0.85rem', marginTop: '12px' }}>
               <span>Made with</span>

@@ -115,26 +115,6 @@ export default function EventList() {
         }} className="hero-container">
           <div style={{ maxWidth: '650px', color: 'white' }}>
             
-            {/* Floating Tag */}
-            <div style={{ 
-              display: 'inline-flex', 
-              alignItems: 'center', 
-              gap: '8px', 
-              backgroundColor: 'var(--yellow-soft)', 
-              color: 'var(--teal)', 
-              padding: '6px 18px', 
-              borderRadius: '50px', 
-              marginBottom: '24px',
-              border: '2.5px solid var(--text-dark)',
-              transform: 'rotate(-2deg)',
-              boxShadow: '3px 3px 0px 0px var(--text-dark)',
-              fontWeight: '800',
-              fontSize: '0.85rem'
-            }} className="floating-sticker">
-              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>star</span>
-              100% Family Fun
-            </div>
-
             {/* Sora Geometric Display Header */}
             <h1 style={{ 
               fontFamily: 'var(--font-display)',
