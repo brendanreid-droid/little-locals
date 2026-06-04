@@ -10,7 +10,7 @@ export default function BlogList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const categories = ['All', 'Review', 'Parenting Guide', 'School Holidays', 'Tips & Hacks'];
+  const categories = ['All', 'Review', 'School Holidays'];
 
   useEffect(() => {
     async function fetchPosts() {
@@ -259,7 +259,7 @@ export default function BlogList() {
             <Search style={{ position: 'absolute', left: '20px', top: '50%', transform: 'translateY(-50%)', color: 'var(--text-muted)' }} size={20} />
             <input 
               type="text" 
-              placeholder="Search reviews, guides, school holidays..." 
+              placeholder="Search reviews, school holidays..." 
               className="form-control"
               style={{ 
                 paddingLeft: '56px',

@@ -31,7 +31,7 @@ export default function BlogForm() {
   const [manualImageUrl, setManualImageUrl] = useState('');
   const [error, setError] = useState('');
 
-  const categories = ['Review', 'Parenting Guide', 'School Holidays', 'Tips & Hacks'];
+  const categories = ['Review', 'School Holidays'];
 
   // Route protection
   useEffect(() => {
@@ -186,9 +186,7 @@ export default function BlogForm() {
   const handleSuggestImage = () => {
     const assets = {
       'Review': 'https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80',
-      'Parenting Guide': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
-      'School Holidays': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
-      'Tips & Hacks': 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80'
+      'School Holidays': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80'
     };
 
     const suggestedUrl = assets[form.category] || assets['Review'];
@@ -296,7 +294,7 @@ Read the full review and guide here: https://littlelocals.au/blog/${postId}`;
           {isEditMode ? 'Edit Blog Post' : 'Write New Blog Post'}
         </h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.95rem', marginBottom: '32px' }}>
-          Write honest, detailed playground reviews or parenting guides for Little Locals.
+          Write honest, detailed playground reviews or school holiday guides for Little Locals.
         </p>
 
         {error && (
