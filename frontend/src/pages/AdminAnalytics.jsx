@@ -487,19 +487,19 @@ export default function AdminAnalytics() {
           </div>
         ) : (
           <div className="analytics-category-grid">
-            {['Playground', 'Library', 'Art & Craft', 'Outdoors', 'Sports', 'Music & Storytime', 'General'].map(category => {
+            {['School Holidays', 'Weekend Activities', 'Weekday Activities', 'Markets', 'Playgrounds', 'Indoor Activities', 'Playgroups'].map(category => {
               const count = categoryBreakdown[category] || 0;
               const percentage = Math.round((count / totalActiveEventsCount) * 100);
               
               // Define custom retro colors for progress bars
               const barColors = {
-                'Playground': 'var(--primary)',
-                'Library': 'var(--secondary)',
-                'Art & Craft': 'var(--teal)',
-                'Outdoors': 'var(--yellow)',
-                'Sports': 'var(--secondary-soft)',
-                'Music & Storytime': 'var(--primary-soft)',
-                'General': 'var(--text-muted)'
+                'School Holidays': 'var(--primary)',
+                'Weekend Activities': 'var(--secondary)',
+                'Weekday Activities': 'var(--teal)',
+                'Markets': 'var(--yellow)',
+                'Playgrounds': 'var(--secondary-soft)',
+                'Indoor Activities': 'var(--primary-soft)',
+                'Playgroups': 'var(--teal-soft)'
               };
 
               return (

@@ -264,7 +264,7 @@ export default function AdminDashboard() {
         image_url: suggestion.image_url || '',
         price: 'FREE',
         link: suggestion.link || '',
-        category: suggestion.category || 'Playground',
+        category: suggestion.category || 'Playgrounds',
         age_group: suggestion.age_group || 'All Ages',
         is_featured: suggestion.is_featured || false
       });
@@ -307,7 +307,7 @@ export default function AdminDashboard() {
         image_url: editingSuggestion.image_url || '',
         price: 'FREE',
         link: editingSuggestion.link || '',
-        category: editingSuggestion.category || 'Playground',
+        category: editingSuggestion.category || 'Playgrounds',
         age_group: editingSuggestion.age_group || 'All Ages',
         is_featured: editingSuggestion.is_featured || false
       });
@@ -1676,10 +1676,10 @@ export default function AdminDashboard() {
                   <select 
                     className="form-control"
                     style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', padding: '12px', height: '48px' }}
-                    value={editingSuggestion.category || 'Playground'}
+                    value={editingSuggestion.category || 'Playgrounds'}
                     onChange={(e) => setEditingSuggestion(prev => ({ ...prev, category: e.target.value }))}
                   >
-                    {['Playground', 'Library', 'Art & Craft', 'Outdoors', 'Sports', 'Music & Storytime', 'General'].map(cat => (
+                    {['School Holidays', 'Weekend Activities', 'Weekday Activities', 'Markets', 'Playgrounds', 'Indoor Activities', 'Playgroups'].map(cat => (
                       <option key={cat} value={cat}>{cat}</option>
                     ))}
                   </select>

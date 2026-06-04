@@ -13,7 +13,7 @@ export default function EventList() {
   const [latestPost, setLatestPost] = useState(null);
   const directoryRef = useRef(null);
 
-  const categories = ['All', 'Playground', 'Library', 'Art & Craft', 'Outdoors', 'Sports', 'Music & Storytime'];
+  const categories = ['All', 'School Holidays', 'Weekend Activities', 'Weekday Activities', 'Markets', 'Playgrounds', 'Indoor Activities', 'Playgroups'];
   const ageGroups = ['All', '0-5 years', '6-12 years', 'Teens', 'All Ages'];
 
   useEffect(() => {
@@ -138,7 +138,7 @@ export default function EventList() {
               marginBottom: '24px', 
               letterSpacing: '-0.02em'
             }}>
-              Discover <span style={{ color: 'var(--primary-soft)' }}>Delightful</span> Free Activities for Kids
+              Discover <span style={{ color: 'var(--primary-soft)' }}>Delightful</span> Activities for Kids
             </h1>
 
             {/* Approaches Body Text */}
@@ -149,7 +149,7 @@ export default function EventList() {
               opacity: 0.95,
               lineHeight: '1.7'
             }}>
-              No paid ads, no hidden costs. Just centralised free events, activities, and playground reviews to keep your little locals happy.
+              Your got-to guide for families on the Central Coast! We share fun, family-friendly activites, local events, and hidden gems happening across the Central Coast, NSW. If it's family-friendly and happening on the Central Coast, you'll find it here!
             </p>
 
             <button 
@@ -192,7 +192,7 @@ export default function EventList() {
         }}>
           {/* Card 1: Playgrounds */}
           <div 
-            onClick={() => handleQuickLinkClick('Playground')}
+            onClick={() => handleQuickLinkClick('Playgrounds')}
             style={{ 
               backgroundColor: 'var(--secondary-soft)', 
               padding: '40px 32px', 
@@ -226,9 +226,9 @@ export default function EventList() {
             <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>The best fenced and fun spots on the coast.</p>
           </div>
 
-          {/* Card 2: Libraries */}
+          {/* Card 2: School Holidays */}
           <div 
-            onClick={() => handleQuickLinkClick('Library')}
+            onClick={() => handleQuickLinkClick('School Holidays')}
             style={{ 
               backgroundColor: 'var(--yellow-soft)', 
               padding: '40px 32px', 
@@ -242,7 +242,7 @@ export default function EventList() {
               cursor: 'pointer',
               transition: 'transform 0.3s ease'
             }}
-            className="quick-link-card link-libraries"
+            className="quick-link-card link-school-holidays"
           >
             <div style={{ 
               width: '80px', 
@@ -256,15 +256,15 @@ export default function EventList() {
               border: '2.5px solid var(--text-dark)',
               color: 'white'
             }} className="icon-container">
-              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>auto_stories</span>
+              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>beach_access</span>
             </div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>Libraries</h3>
-            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Storytime, craft, and quiet reading nooks.</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>School Holidays</h3>
+            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Exciting programs and camps during break times.</p>
           </div>
 
-          {/* Card 3: Art & Craft */}
+          {/* Card 3: Weekend Activities */}
           <div 
-            onClick={() => handleQuickLinkClick('Art & Craft')}
+            onClick={() => handleQuickLinkClick('Weekend Activities')}
             style={{ 
               backgroundColor: 'var(--primary-soft)', 
               padding: '40px 32px', 
@@ -278,7 +278,7 @@ export default function EventList() {
               cursor: 'pointer',
               transition: 'transform 0.3s ease'
             }}
-            className="quick-link-card link-arts"
+            className="quick-link-card link-weekend-activities"
           >
             <div style={{ 
               width: '80px', 
@@ -292,10 +292,10 @@ export default function EventList() {
               border: '2.5px solid var(--text-dark)',
               color: 'white'
             }} className="icon-container">
-              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>palette</span>
+              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>festival</span>
             </div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>Art Classes</h3>
-            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Creative workshops for every age group.</p>
+            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>Weekend Activities</h3>
+            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Family-friendly events for your Saturday & Sunday.</p>
           </div>
         </div>
       </section>

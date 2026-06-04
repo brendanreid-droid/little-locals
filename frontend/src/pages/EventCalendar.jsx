@@ -18,7 +18,7 @@ export default function EventCalendar() {
   const [suggestDate, setSuggestDate] = useState('');
   const [suggestTime, setSuggestTime] = useState('');
   const [suggestLocation, setSuggestLocation] = useState('');
-  const [suggestCategory, setSuggestCategory] = useState('Playground');
+  const [suggestCategory, setSuggestCategory] = useState('Playgrounds');
   const [suggestAge, setSuggestAge] = useState('All Ages');
   const [suggestDescription, setSuggestDescription] = useState('');
   const [suggestLink, setSuggestLink] = useState('');
@@ -56,7 +56,7 @@ export default function EventCalendar() {
       setSuggestDate('');
       setSuggestTime('');
       setSuggestLocation('');
-      setSuggestCategory('Playground');
+      setSuggestCategory('Playgrounds');
       setSuggestAge('All Ages');
       setSuggestDescription('');
       setSuggestLink('');
@@ -1127,13 +1127,13 @@ export default function EventCalendar() {
                     value={suggestCategory}
                     onChange={(e) => setSuggestCategory(e.target.value)}
                   >
-                    <option value="Playground">Playground</option>
-                    <option value="Library">Library</option>
-                    <option value="Art & Craft">Art & Craft</option>
-                    <option value="Outdoors">Outdoors</option>
-                    <option value="Sports">Sports</option>
-                    <option value="Music & Storytime">Music & Storytime</option>
-                    <option value="General">General</option>
+                    <option value="School Holidays">School Holidays</option>
+                    <option value="Weekend Activities">Weekend Activities</option>
+                    <option value="Weekday Activities">Weekday Activities</option>
+                    <option value="Markets">Markets</option>
+                    <option value="Playgrounds">Playgrounds</option>
+                    <option value="Indoor Activities">Indoor Activities</option>
+                    <option value="Playgroups">Playgroups</option>
                   </select>
                 </div>
 

@@ -20,7 +20,7 @@ export default function EventForm() {
     image_url: '',
     price: 'FREE', // always FREE
     link: '',
-    category: 'Playground',
+    category: 'Playgrounds',
     age_group: 'All Ages',
     is_featured: false,
     is_recurring: false,
@@ -37,7 +37,7 @@ export default function EventForm() {
   const [uploadProgress, setUploadProgress] = useState(0);
   const [error, setError] = useState('');
 
-  const categories = ['Playground', 'Library', 'Art & Craft', 'Outdoors', 'Sports', 'Music & Storytime'];
+  const categories = ['School Holidays', 'Weekend Activities', 'Weekday Activities', 'Markets', 'Playgrounds', 'Indoor Activities', 'Playgroups'];
   const ageGroups = ['All Ages', '0-5 years', '6-12 years', 'Teens'];
 
   // Route protection
@@ -67,9 +67,9 @@ export default function EventForm() {
             location: data.location || '',
             description: data.description || '',
             image_url: data.image_url || '',
-            price: 'FREE',
+            price: data.price || 'FREE',
             link: data.link || '',
-            category: data.category || 'Playground',
+            category: data.category || 'Playgrounds',
             age_group: data.age_group || 'All Ages',
             is_featured: data.is_featured || false,
             is_recurring: data.is_recurring || false,
@@ -81,8 +81,8 @@ export default function EventForm() {
           setError('Event not found.');
         }
       } catch (err) {
-        console.error("Error loading event:", err);
-        setError('Error loading event: ' + err.message);
+        console.error("Error loading event for edit:", err);
+        setError("Failed to load event data.");
       } finally {
         setFetching(false);
       }
@@ -136,15 +136,16 @@ export default function EventForm() {
 
   const handleSuggestImage = () => {
     const assets = {
-      'Playground': 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80',
-      'Library': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
-      'Art & Craft': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
-      'Outdoors': 'https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80',
-      'Sports': 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80',
-      'Music & Storytime': 'https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80'
+      'School Holidays': 'https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80',
+      'Weekend Activities': 'https://images.unsplash.com/photo-1517649763962-0c623066013b?auto=format&fit=crop&w=800&q=80',
+      'Weekday Activities': 'https://images.unsplash.com/photo-1544716278-ca5e3f4abd8c?auto=format&fit=crop&w=800&q=80',
+      'Markets': 'https://images.unsplash.com/photo-1533900298318-6b8da08a523e?auto=format&fit=crop&w=800&q=80',
+      'Playgrounds': 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80',
+      'Indoor Activities': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
+      'Playgroups': 'https://images.unsplash.com/photo-1587654780291-39c9404d746b?auto=format&fit=crop&w=800&q=80'
     };
 
-    setForm(prev => ({ ...prev, image_url: assets[form.category] || assets['Playground'] }));
+    setForm(prev => ({ ...prev, image_url: assets[form.category] || assets['Playgrounds'] }));
   };
 
   // Generate Facebook share text
