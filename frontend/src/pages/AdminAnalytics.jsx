@@ -282,7 +282,7 @@ export default function AdminAnalytics() {
               Visitor Views Trend (Last 30 Days)
             </h2>
             <p className="analytics-section-subtitle">
-              Shows unique daily views on this browser/session. Hover over bars to view individual counts.
+              Shows unique daily views on this browser/session. Hover over bars to view individual counts. <span style={{ fontStyle: 'italic', display: 'inline-block', color: 'var(--text-muted)' }} className="mobile-swipe-hint">(Swipe horizontally to scroll chart on mobile)</span>
             </p>
           </div>
           <div style={{ display: 'flex', gap: '16px', fontSize: '0.8rem', fontWeight: '800', color: 'var(--text-dark)' }}>
@@ -294,13 +294,13 @@ export default function AdminAnalytics() {
         </div>
 
         {/* Custom SVG Bar Chart */}
-        <div style={{ overflowX: 'auto', width: '100%' }}>
-          <div style={{ minWidth: '700px', height: '260px', position: 'relative' }}>
+        <div style={{ overflowX: 'auto', width: '100%', paddingBottom: '8px' }} className="custom-scrollbar">
+          <div style={{ width: '800px', height: '260px', position: 'relative' }}>
             <svg 
-              width="100%" 
+              width="800" 
               height="240" 
               viewBox="0 0 800 240" 
-              style={{ overflow: 'visible' }}
+              style={{ display: 'block' }}
             >
               {/* Horizontal gridlines */}
               {[0, 0.25, 0.5, 0.75, 1].map((ratio, index) => {
@@ -700,6 +700,10 @@ export default function AdminAnalytics() {
           transform: scaleY(1.05);
         }
 
+        .mobile-swipe-hint {
+          display: none;
+        }
+
         @keyframes spin {
           0% { transform: rotate(0deg); }
           100% { transform: rotate(360deg); }
@@ -723,9 +727,14 @@ export default function AdminAnalytics() {
           }
 
           .analytics-overview-grid {
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
             gap: 16px;
             margin-bottom: 32px;
+          }
+
+          .mobile-swipe-hint {
+            display: block;
+            margin-top: 4px;
           }
 
           .analytics-overview-card {
@@ -819,6 +828,12 @@ export default function AdminAnalytics() {
             padding: 12px 16px;
             border-radius: 12px;
             gap: 8px;
+          }
+        }
+
+        @media (max-width: 500px) {
+          .analytics-overview-grid {
+            grid-template-columns: 1fr;
           }
         }
 
