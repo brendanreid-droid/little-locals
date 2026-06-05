@@ -490,6 +490,7 @@ export default function AdminDashboard() {
         
         newOccs.push({
           title: lastOccDoc.title,
+          date: nextDateStr,
           category: lastOccDoc.category || 'Playground',
           location: lastOccDoc.location || '',
           time: lastOccDoc.time || '',
@@ -498,6 +499,7 @@ export default function AdminDashboard() {
           image_url: lastOccDoc.image_url || '',
           price: lastOccDoc.price || 'FREE',
           link: lastOccDoc.link || '',
+          recurring_id: lastOccDoc.recurring_id || null,
           source: 'Admin Extension',
           created_at: new Date().toISOString()
         });
@@ -518,13 +520,44 @@ export default function AdminDashboard() {
       const newlyAdded = await Promise.all(promises);
       
       setEvents(prev => [...prev, ...newlyAdded].sort((a, b) => new Date(a.date) - new Date(b.date)));
-      
       alert(`Successfully extended "${title}" by 3 months! Created ${newOccs.length} new occurrences (every ${gapDays} days).`);
-    } catch (error) {
-      console.error("Failed to extend event series:", error);
-      alert("Failed to extend event series: " + error.message);
+    } catch (err) {
+      console.error("Failed to extend event series:", err);
+      alert("Failed to extend event series: " + err.message);
     } finally {
       setExtendingSeries(null);
+    }
+  };
+
+  const handleDeleteRecurringSeries = async (title, recurringId) => {
+    if (!window.confirm(`Are you sure you want to delete ALL occurrences in the recurring series "${title}"?`)) return;
+
+    setLoading(true);
+    try {
+      const eventsCol = collection(db, 'events');
+      const snapshot = await getDocs(eventsCol);
+      // Filter by recurringId if available, fallback to title matching
+      const matchingDocs = snapshot.docs.filter(docObj => {
+        const data = docObj.data();
+        if (recurringId && data.recurring_id === recurringId) return true;
+        return data.title === title;
+      });
+
+      for (const docObj of matchingDocs) {
+        await deleteDoc(doc(db, 'events', docObj.id));
+      }
+
+      setEvents(prev => prev.filter(e => {
+        if (recurringId && e.recurring_id === recurringId) return false;
+        return e.title !== title;
+      }));
+
+      alert(`Successfully deleted all occurrences in the series "${title}".`);
+    } catch (err) {
+      console.error("Error deleting recurring series:", err);
+      alert("Failed to delete recurring series: " + err.message);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -577,7 +610,8 @@ export default function AdminDashboard() {
         title,
         endDate: lastOcc.date,
         lastOccurrenceDoc: lastOcc,
-        occurrencesCount: occs.length
+        occurrencesCount: occs.length,
+        recurring_id: lastOcc.recurring_id || null
       };
 
       activeSeries.push(seriesInfo);
@@ -587,7 +621,21 @@ export default function AdminDashboard() {
     }
   });
 
-  activeSeries.sort((a, b) => a.title.localeCompare(b.title));
+  // Sort activeSeries so ending soon are at the top, sorted by end date (earliest first),
+  // and all others are sorted alphabetically by title
+  activeSeries.sort((a, b) => {
+    const aEnding = endingSeriesList.some(s => s.title === a.title);
+    const bEnding = endingSeriesList.some(s => s.title === b.title);
+    
+    if (aEnding && !bEnding) return -1;
+    if (!aEnding && bEnding) return 1;
+    
+    if (aEnding && bEnding) {
+      return new Date(a.endDate) - new Date(b.endDate);
+    }
+    
+    return a.title.localeCompare(b.title);
+  });
   endingSeriesList.sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
 
   return (
@@ -889,48 +937,7 @@ export default function AdminDashboard() {
             />
           </div>
 
-          {/* Warning Banner for Ending Recurring Series */}
-          {endingSeriesList.length > 0 && (
-            <div style={{
-              backgroundColor: 'hsl(14, 95%, 96%)',
-              border: '3px solid var(--text-dark)',
-              borderRadius: '20px',
-              padding: '20px 24px',
-              marginBottom: '28px',
-              boxShadow: '4px 4px 0px 0px var(--text-dark)',
-              textAlign: 'left'
-            }}>
-              <h4 style={{ fontWeight: 900, color: 'var(--yellow)', display: 'flex', alignItems: 'center', gap: '8px', margin: '0 0 8px 0' }}>
-                <AlertTriangle size={18} style={{ color: 'var(--yellow)' }} />
-                Recurring Series Ending Soon!
-              </h4>
-              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 16px 0', fontWeight: '500' }}>
-                The following repeating event series will finish in the next 30 days. Extend them to keep the calendar populated.
-              </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '340px', overflowY: 'auto', paddingRight: '8px' }} className="custom-scrollbar">
-                {endingSeriesList.map(series => (
-                  <div key={series.title} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', padding: '10px 16px', backgroundColor: 'var(--bg-white)', borderRadius: '12px', border: '2.5px solid var(--text-dark)' }}>
-                    <div>
-                      <strong style={{ fontSize: '0.9rem', color: 'var(--text-dark)' }}>{series.title}</strong>
-                      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                        Ends on: {new Date(series.endDate).toLocaleDateString('en-AU', { weekday: 'short', day: 'numeric', month: 'short' })} ({series.occurrencesCount} instances)
-                      </div>
-                    </div>
-                    <button
-                      onClick={() => handleExtendEvent(series.title, series.lastOccurrenceDoc)}
-                      disabled={extendingSeries === series.title}
-                      className="btn btn-secondary"
-                      style={{ padding: '8px 16px', fontSize: '0.75rem', height: '36px', border: '2px solid var(--text-dark)', boxShadow: '2px 2px 0px 0px var(--text-dark)' }}
-                    >
-                      {extendingSeries === series.title ? 'Extending...' : 'Extend 3 Months'}
-                    </button>
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-
-          {/* Collapsible Recurring Series Manager */}
+          {/* Consolidated Recurring Series Manager */}
           <div style={{
             backgroundColor: 'var(--bg-white)',
             border: '3px solid var(--text-dark)',
@@ -946,7 +953,24 @@ export default function AdminDashboard() {
             >
               <h4 style={{ fontWeight: 900, color: 'var(--primary)', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <Repeat size={18} />
-                Manage Recurring Series ({activeSeries.length})
+                Manage Recurring Events ({activeSeries.length})
+                {endingSeriesList.length > 0 && (
+                  <span style={{
+                    backgroundColor: 'hsl(14, 95%, 90%)',
+                    color: 'hsl(14, 90%, 35%)',
+                    fontSize: '0.7rem',
+                    fontWeight: '900',
+                    padding: '2px 8px',
+                    borderRadius: '6px',
+                    border: '1.5px solid var(--text-dark)',
+                    marginLeft: '8px',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px'
+                  }}>
+                    ⚠️ {endingSeriesList.length} Ending Soon
+                  </span>
+                )}
               </h4>
               <span style={{ fontSize: '0.8rem', fontWeight: '800', textTransform: 'uppercase', color: 'var(--secondary)' }}>
                 {showSeriesManager ? 'Hide Series' : 'Show Series'}
@@ -958,25 +982,108 @@ export default function AdminDashboard() {
                 {activeSeries.length === 0 ? (
                   <p style={{ color: 'var(--text-muted)', fontSize: '0.85rem', textAlign: 'center', margin: 0 }}>No active recurring series found on the calendar.</p>
                 ) : (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '300px', overflowY: 'auto', paddingRight: '8px' }} className="custom-scrollbar">
-                    {activeSeries.map(series => (
-                      <div key={series.title} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: '10px', padding: '10px 16px', backgroundColor: 'var(--bg-cream)', borderRadius: '12px', border: '2.5px solid var(--text-dark)' }}>
-                        <div>
-                          <strong style={{ fontSize: '0.85rem', color: 'var(--text-dark)' }}>{series.title}</strong>
-                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '2px' }}>
-                            Scheduled until: {new Date(series.endDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })} ({series.occurrencesCount} instances)
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '380px', overflowY: 'auto', paddingRight: '8px' }} className="custom-scrollbar">
+                    {activeSeries.map(series => {
+                      const isEndingSoon = endingSeriesList.some(s => s.title === series.title);
+                      
+                      return (
+                        <div 
+                          key={series.title} 
+                          style={{ 
+                            display: 'flex', 
+                            justifyContent: 'space-between', 
+                            alignItems: 'center', 
+                            flexWrap: 'wrap',
+                            gap: '12px', 
+                            padding: '12px 16px', 
+                            backgroundColor: isEndingSoon ? 'hsl(45, 100%, 96%)' : 'var(--bg-cream)', 
+                            borderRadius: '12px', 
+                            border: isEndingSoon ? '2.5px solid var(--yellow)' : '2.5px solid var(--text-dark)'
+                          }}
+                        >
+                          <div style={{ flex: '1 1 200px' }}>
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                              <strong style={{ fontSize: '0.9rem', color: 'var(--text-dark)' }}>{series.title}</strong>
+                              {isEndingSoon && (
+                                <span style={{
+                                  backgroundColor: 'var(--yellow)',
+                                  color: 'var(--text-dark)',
+                                  fontSize: '0.65rem',
+                                  fontWeight: '900',
+                                  padding: '1px 6px',
+                                  borderRadius: '4px',
+                                  textTransform: 'uppercase',
+                                  letterSpacing: '0.05em'
+                                }}>
+                                  Ending Soon
+                                </span>
+                              )}
+                            </div>
+                            <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '4px', fontWeight: '600' }}>
+                              Scheduled until: {new Date(series.endDate).toLocaleDateString('en-AU', { day: 'numeric', month: 'short', year: 'numeric' })} ({series.occurrencesCount} instances)
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', alignItems: 'center' }}>
+                            <button
+                              onClick={() => handleExtendEvent(series.title, series.lastOccurrenceDoc)}
+                              disabled={extendingSeries === series.title}
+                              className="btn btn-secondary"
+                              style={{ 
+                                padding: '6px 12px', 
+                                fontSize: '0.72rem', 
+                                height: '32px', 
+                                border: '2px solid var(--text-dark)', 
+                                boxShadow: '2px 2px 0px 0px var(--text-dark)',
+                                backgroundColor: isEndingSoon ? 'var(--yellow)' : 'var(--bg-white)',
+                                color: 'var(--text-dark)',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              {extendingSeries === series.title ? 'Extending...' : 'Extend 3m'}
+                            </button>
+
+                            <Link
+                              to={`/admin/events/${series.lastOccurrenceDoc.id}/edit`}
+                              className="btn btn-outline"
+                              style={{ 
+                                padding: '6px 12px', 
+                                fontSize: '0.72rem', 
+                                height: '32px', 
+                                border: '2px solid var(--text-dark)', 
+                                boxShadow: '2px 2px 0px 0px var(--text-dark)',
+                                backgroundColor: 'var(--bg-white)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                            >
+                              <Edit2 size={12} /> Edit
+                            </Link>
+
+                            <button
+                              onClick={() => handleDeleteRecurringSeries(series.title, series.recurring_id)}
+                              className="btn btn-outline"
+                              style={{ 
+                                padding: '6px 12px', 
+                                fontSize: '0.72rem', 
+                                height: '32px', 
+                                border: '2px solid var(--text-dark)', 
+                                boxShadow: '2px 2px 0px 0px var(--text-dark)',
+                                backgroundColor: 'var(--bg-white)',
+                                color: 'hsl(0, 80%, 40%)',
+                                display: 'inline-flex',
+                                alignItems: 'center',
+                                gap: '4px',
+                                cursor: 'pointer'
+                              }}
+                            >
+                              <Trash2 size={12} /> Delete
+                            </button>
                           </div>
                         </div>
-                        <button
-                          onClick={() => handleExtendEvent(series.title, series.lastOccurrenceDoc)}
-                          disabled={extendingSeries === series.title}
-                          className="btn btn-primary"
-                          style={{ padding: '6px 14px', fontSize: '0.7rem', height: '32px', border: '2px solid var(--text-dark)', boxShadow: '2px 2px 0px 0px var(--text-dark)' }}
-                        >
-                          {extendingSeries === series.title ? 'Extending...' : 'Extend'}
-                        </button>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
