@@ -1046,7 +1046,7 @@ export default function EventList() {
               textTransform: 'uppercase',
               letterSpacing: '0.02em'
             }}>
-              Upcoming Listings ({filteredEvents.length} of {allFilteredEvents.length})
+              Upcoming Listings
             </h3>
 
             <div style={{ 
