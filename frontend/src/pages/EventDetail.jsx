@@ -34,7 +34,9 @@ export default function EventDetail() {
         const docRef = doc(db, 'events', id);
         const snapshot = await getDoc(docRef);
         if (snapshot.exists()) {
-          setEvent({ id: snapshot.id, ...snapshot.data() });
+          const data = snapshot.data();
+          setEvent({ id: snapshot.id, ...data });
+          document.title = `${data.title} | Kids Activities | Little Locals`;
           // Track this click event
           trackEventClick(id);
         }

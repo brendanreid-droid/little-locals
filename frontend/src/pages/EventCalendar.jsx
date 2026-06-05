@@ -74,6 +74,7 @@ export default function EventCalendar() {
   const weekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
   useEffect(() => {
+    document.title = 'Kids Events Calendar | Little Locals Central Coast';
     async function fetchEvents() {
       try {
         const eventsCol = collection(db, 'events');

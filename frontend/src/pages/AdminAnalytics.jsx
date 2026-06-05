@@ -32,6 +32,7 @@ export default function AdminAnalytics() {
 
   // Route protection
   useEffect(() => {
+    document.title = 'Admin Analytics | Little Locals';
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         navigate('/admin/login');

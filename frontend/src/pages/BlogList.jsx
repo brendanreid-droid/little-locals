@@ -13,6 +13,7 @@ export default function BlogList() {
   const categories = ['All', 'Review', 'School Holidays'];
 
   useEffect(() => {
+    document.title = 'Parenting Reviews & Family Guides | Little Locals';
     async function fetchPosts() {
       try {
         const postsCol = collection(db, 'posts');

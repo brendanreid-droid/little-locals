@@ -52,6 +52,7 @@ export default function EventList() {
   };
 
   useEffect(() => {
+    document.title = 'Little Locals | Kids Activities & Playground Reviews Central Coast';
     async function loadData() {
       try {
         const eventsCol = collection(db, 'events');

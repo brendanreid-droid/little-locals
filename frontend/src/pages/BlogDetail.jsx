@@ -35,7 +35,9 @@ export default function BlogDetail() {
         const docRef = doc(db, 'posts', id);
         const snapshot = await getDoc(docRef);
         if (snapshot.exists()) {
-          setPost({ id: snapshot.id, ...snapshot.data() });
+          const data = snapshot.data();
+          setPost({ id: snapshot.id, ...data });
+          document.title = `${data.title} | Family Guides & Reviews | Little Locals`;
           // Track this click event
           trackPostClick(id);
         }

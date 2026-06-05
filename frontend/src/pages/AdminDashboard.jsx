@@ -77,6 +77,7 @@ export default function AdminDashboard() {
 
   // Authentication check
   useEffect(() => {
+    document.title = 'Admin Dashboard | Little Locals';
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (!user) {
         navigate('/admin/login');

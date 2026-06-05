@@ -12,6 +12,7 @@ export default function AdminLogin() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    document.title = 'Admin Login | Little Locals';
     console.log("--- Firebase Configuration Diagnostics ---");
     console.log("VITE_FIREBASE_API_KEY Loaded:", !!import.meta.env.VITE_FIREBASE_API_KEY);
     console.log("VITE_FIREBASE_PROJECT_ID:", import.meta.env.VITE_FIREBASE_PROJECT_ID);
@@ -65,7 +66,7 @@ export default function AdminLogin() {
         </div>
         <h2 style={{ fontWeight: 900, marginBottom: '8px' }}>Admin Portal</h2>
         <p style={{ color: 'var(--text-muted)', fontSize: '0.9rem', marginBottom: '32px' }}>
-          Log in to manage the Central Coast free events calendar.
+          Log in to manage the Central Coast events calendar.
         </p>
 
         {/* Error Callout */}
@@ -137,7 +138,7 @@ export default function AdminLogin() {
 
         <div style={{ marginTop: '24px', fontSize: '0.8rem', color: 'var(--text-muted)' }}>
           <Smile size={14} style={{ display: 'inline', marginRight: '4px', verticalAlign: 'middle' }} />
-          Little Locals - Promoting 100% free fun.
+          Little Locals - Promoting local family fun.
         </div>
 
       </div>
