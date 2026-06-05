@@ -526,7 +526,8 @@ export default function AdminDashboard() {
             borderRadius: '20px', 
             border: '2.5px solid var(--text-dark)', 
             padding: '16px',
-            boxShadow: '4px 4px 0px 0px var(--text-dark)'
+            boxShadow: '4px 4px 0px 0px var(--text-dark)',
+            flex: '1 1 500px'
           }}
         >
           <Link 
@@ -542,7 +543,8 @@ export default function AdminDashboard() {
               border: '2px solid var(--text-dark)',
               cursor: 'pointer',
               transition: 'var(--transition-bouncy)',
-              color: 'var(--text-dark)'
+              color: 'var(--text-dark)',
+              flex: '1 1 120px'
             }}
             className="quick-launch-btn hover-bg-secondary"
           >
@@ -562,7 +564,8 @@ export default function AdminDashboard() {
               border: '2px solid var(--text-dark)',
               cursor: 'pointer',
               transition: 'var(--transition-bouncy)',
-              color: 'var(--text-dark)'
+              color: 'var(--text-dark)',
+              flex: '1 1 120px'
             }}
             className="quick-launch-btn hover-bg-tertiary"
           >
@@ -582,7 +585,8 @@ export default function AdminDashboard() {
               border: '2px solid var(--text-dark)',
               cursor: 'pointer',
               transition: 'var(--transition-bouncy)',
-              color: 'var(--text-dark)'
+              color: 'var(--text-dark)',
+              flex: '1 1 120px'
             }}
             className="quick-launch-btn hover-bg-yellow"
           >
@@ -602,7 +606,8 @@ export default function AdminDashboard() {
               border: '2px solid var(--text-dark)',
               cursor: 'pointer',
               transition: 'var(--transition-bouncy)',
-              color: 'var(--text-dark)'
+              color: 'var(--text-dark)',
+              flex: '1 1 120px'
             }}
             className="quick-launch-btn hover-bg-teal"
           >
@@ -622,7 +627,8 @@ export default function AdminDashboard() {
               border: '2px solid var(--text-dark)',
               cursor: 'pointer',
               transition: 'var(--transition-bouncy)',
-              color: 'var(--text-dark)'
+              color: 'var(--text-dark)',
+              flex: '2 1 252px'
             }}
             className="quick-launch-btn hover-bg-danger"
           >
