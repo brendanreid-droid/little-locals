@@ -612,7 +612,7 @@ export default function AdminDashboard() {
             className="quick-launch-btn hover-bg-teal"
           >
             <span className="material-symbols-outlined" style={{ fontSize: '20px', marginBottom: '4px', color: 'var(--teal-soft)' }}>monitoring</span>
-            <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Full Analytics</span>
+            <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Analytics</span>
           </Link>
           <button 
             onClick={handleLogout} 
@@ -786,7 +786,18 @@ export default function AdminDashboard() {
               <p style={{ color: 'var(--text-muted)', marginTop: '6px', fontSize: '0.95rem' }}>Create an event to show up on the homepage!</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '20px',
+                maxHeight: '650px',
+                overflowY: 'auto',
+                paddingRight: '12px',
+                paddingBottom: '8px'
+              }}
+              className="custom-scrollbar"
+            >
               {filteredEvents.map(event => (
                 <div 
                   key={event.id}
@@ -934,7 +945,18 @@ export default function AdminDashboard() {
               <p style={{ color: 'var(--text-muted)', marginTop: '6px', fontSize: '0.95rem' }}>Write a parenting review or guide to share with the community!</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '20px',
+                maxHeight: '650px',
+                overflowY: 'auto',
+                paddingRight: '12px',
+                paddingBottom: '8px'
+              }}
+              className="custom-scrollbar"
+            >
               {filteredPosts.map(post => (
                 <div 
                   key={post.id}
@@ -1148,7 +1170,18 @@ export default function AdminDashboard() {
               <p style={{ color: 'var(--text-muted)', marginTop: '6px', fontSize: '0.95rem' }}>When the scraper is executed from the portal, findings will appear here.</p>
             </div>
           ) : (
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
+            <div 
+              style={{ 
+                display: 'flex', 
+                flexDirection: 'column', 
+                gap: '28px',
+                maxHeight: '650px',
+                overflowY: 'auto',
+                paddingRight: '12px',
+                paddingBottom: '8px'
+              }}
+              className="custom-scrollbar"
+            >
               {suggestions.map(s => (
                 <div 
                   key={s.id}
