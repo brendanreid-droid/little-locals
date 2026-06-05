@@ -385,7 +385,7 @@ export default function AdminAnalytics() {
         <div className="sticker-shadow analytics-section-card" style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
             <span className="material-symbols-outlined" style={{ color: 'var(--secondary)', fontSize: '28px' }}>workspace_premium</span>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.4rem', color: 'var(--primary)', margin: 0 }}>
+            <h2 className="analytics-leaderboard-header-title">
               Top Performers (This Month)
             </h2>
           </div>
@@ -429,7 +429,7 @@ export default function AdminAnalytics() {
         <div className="sticker-shadow analytics-section-card" style={{ marginBottom: 0 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px' }}>
             <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: '28px' }}>stars</span>
-            <h2 style={{ fontFamily: 'var(--font-display)', fontWeight: 900, fontSize: '1.4rem', color: 'var(--primary)', margin: 0 }}>
+            <h2 className="analytics-leaderboard-header-title">
               Top Performers (All-Time)
             </h2>
           </div>
@@ -626,6 +626,14 @@ export default function AdminAnalytics() {
           margin-top: 4px;
         }
 
+        .analytics-leaderboard-header-title {
+          font-family: var(--font-display);
+          font-weight: 900;
+          font-size: 1.4rem;
+          color: var(--primary);
+          margin: 0;
+        }
+
         .analytics-leaderboard-grid {
           display: grid;
           grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
@@ -786,8 +794,13 @@ export default function AdminAnalytics() {
           }
 
           .analytics-leaderboard-grid {
+            grid-template-columns: 1fr;
             gap: 20px;
             margin-bottom: 32px;
+          }
+
+          .analytics-leaderboard-header-title {
+            font-size: 1.25rem;
           }
 
           .analytics-leaderboard-item {
@@ -837,13 +850,42 @@ export default function AdminAnalytics() {
           }
         }
 
-        @media (max-width: 400px) {
-          .analytics-leaderboard-title {
-            font-size: 0.85rem;
+        @media (max-width: 480px) {
+          .analytics-leaderboard-item {
+            display: grid !important;
+            grid-template-columns: auto 1fr !important;
+            gap: 8px 12px !important;
+            padding: 12px !important;
+            align-items: center !important;
           }
-
+          .analytics-leaderboard-icon {
+            grid-row: 1 / 3 !important;
+          }
+          .analytics-leaderboard-item > div:not([class]) {
+            grid-column: 2 !important;
+            grid-row: 1 !important;
+            min-width: 0 !important;
+          }
           .analytics-leaderboard-clicks {
-            font-size: 0.95rem;
+            grid-column: 2 !important;
+            grid-row: 2 !important;
+            font-size: 0.95rem !important;
+            margin-top: 2px !important;
+            align-self: flex-start !important;
+          }
+          .analytics-leaderboard-title {
+            white-space: normal !important;
+            display: -webkit-box !important;
+            -webkit-line-clamp: 2 !important;
+            -webkit-box-orient: vertical !important;
+            overflow: hidden !important;
+            font-size: 0.9rem !important;
+          }
+        }
+
+        @media (max-width: 400px) {
+          .analytics-leaderboard-clicks {
+            font-size: 0.85rem !important;
           }
         }
       `}</style>
