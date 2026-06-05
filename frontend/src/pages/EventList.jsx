@@ -298,41 +298,7 @@ export default function EventList() {
             <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Rainy day proof fun, museums, and indoor play.</p>
           </div>
 
-          {/* Card 3: Playgroups */}
-          <div 
-            onClick={() => handleQuickLinkClick('Playgroups')}
-            style={{ 
-              backgroundColor: 'var(--primary-soft)', 
-              padding: '40px 32px', 
-              borderRadius: '24px', 
-              border: '3.5px solid var(--text-dark)',
-              boxShadow: '6px 6px 0px 0px var(--text-dark)',
-              display: 'flex', 
-              flexDirection: 'column', 
-              alignItems: 'center', 
-              textAlign: 'center',
-              cursor: 'pointer',
-              transition: 'transform 0.3s ease'
-            }}
-            className="quick-link-card link-playgroups"
-          >
-            <div style={{ 
-              width: '80px', 
-              height: '80px', 
-              backgroundColor: 'var(--primary)', 
-              borderRadius: '50%', 
-              display: 'flex', 
-              alignItems: 'center', 
-              justifyContent: 'center', 
-              marginBottom: '24px',
-              border: '2.5px solid var(--text-dark)',
-              color: 'white'
-            }} className="icon-container">
-              <span className="material-symbols-outlined text-[36px]" style={{ fontVariationSettings: "'FILL' 0" }}>groups</span>
-            </div>
-            <h3 style={{ fontFamily: 'var(--font-display)', fontWeight: '800', fontSize: '1.5rem', color: 'var(--primary)', marginBottom: '8px' }}>Playgroups</h3>
-            <p style={{ color: 'var(--primary)', opacity: 0.8, fontSize: '0.95rem', fontWeight: '600' }}>Local meetups, baby groups, and social sessions.</p>
-          </div>
+
         </div>
       </section>
 

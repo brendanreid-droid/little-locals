@@ -11,7 +11,7 @@ export default function BlogList() {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const categories = ['All', 'Review', 'School Holidays', 'Playgrounds', 'Indoor Activities', 'Playgroups'];
+  const categories = ['All', 'Review', 'School Holidays', 'Playgrounds', 'Indoor Activities'];
 
   useEffect(() => {
     if (location.state?.category) {
