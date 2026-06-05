@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendPasswordResetEmail } from 'firebase/auth';
 import { auth } from '../firebase';
 import { Lock, Mail, AlertCircle, Smile } from 'lucide-react';
 
@@ -8,6 +8,7 @@ export default function AdminLogin() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
@@ -39,6 +40,32 @@ export default function AdminLogin() {
         setError('Incorrect email or password. Please try again.');
       } else {
         setError('Authentication error: ' + err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleForgotPassword = async () => {
+    if (!email) {
+      setError('Please enter your email address in the field above first.');
+      setSuccess('');
+      return;
+    }
+
+    setLoading(true);
+    setError('');
+    setSuccess('');
+
+    try {
+      await sendPasswordResetEmail(auth, email);
+      setSuccess('Password reset link sent! Please check your inbox.');
+    } catch (err) {
+      console.error("Password reset error:", err);
+      if (err.code === 'auth/user-not-found') {
+        setError('No administrator account found with that email address.');
+      } else {
+        setError('Failed to send password reset email: ' + err.message);
       }
     } finally {
       setLoading(false);
@@ -82,10 +109,32 @@ export default function AdminLogin() {
             color: 'hsl(0, 80%, 40%)', 
             fontSize: '0.85rem',
             textAlign: 'left',
-            marginBottom: '20px'
+            marginBottom: '20px',
+            animation: 'slideUp 0.3s ease'
           }}>
             <AlertCircle size={18} style={{ flexShrink: 0 }} />
             <span>{error}</span>
+          </div>
+        )}
+
+        {/* Success Callout */}
+        {success && (
+          <div style={{ 
+            display: 'flex', 
+            gap: '8px', 
+            alignItems: 'center', 
+            backgroundColor: 'hsl(147, 91%, 95%)', 
+            border: '1px solid hsl(147, 91%, 80%)', 
+            padding: '12px 16px', 
+            borderRadius: 'var(--radius-sm)', 
+            color: 'hsl(147, 91%, 20%)', 
+            fontSize: '0.85rem',
+            textAlign: 'left',
+            marginBottom: '20px',
+            animation: 'slideUp 0.3s ease'
+          }}>
+            <Smile size={18} style={{ flexShrink: 0 }} />
+            <span>{success}</span>
           </div>
         )}
 
@@ -123,6 +172,25 @@ export default function AdminLogin() {
                 onChange={(e) => setPassword(e.target.value)}
                 disabled={loading}
               />
+            </div>
+            <div style={{ textAlign: 'right', marginTop: '8px' }}>
+              <button
+                type="button"
+                onClick={handleForgotPassword}
+                disabled={loading}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  color: 'var(--secondary)',
+                  fontSize: '0.82rem',
+                  fontWeight: '800',
+                  cursor: 'pointer',
+                  textDecoration: 'underline',
+                  padding: 0
+                }}
+              >
+                Forgot password?
+              </button>
             </div>
           </div>
 
