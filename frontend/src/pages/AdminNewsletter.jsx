@@ -193,7 +193,7 @@ export default function AdminNewsletter() {
             ${blogHtml}
           </div>
           <div class="footer">
-            <p>Little Locals Central Coast • Unsubscribe reply newsletter@littlelocalscc.com</p>
+            <p>Little Locals Central Coast • <a href="/unsubscribe" target="_blank" style="color: #8e4e00; text-decoration: underline; font-weight: bold;">Unsubscribe here</a></p>
           </div>
         </div>
       </body>

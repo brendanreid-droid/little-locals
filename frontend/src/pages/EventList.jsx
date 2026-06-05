@@ -35,6 +35,15 @@ export default function EventList() {
       });
       setSubscribingStatus('success');
       setSubscriberEmail('');
+
+      // Send welcome email in background
+      fetch('/api/send-welcome-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        body: JSON.stringify({ email: emailClean })
+      }).catch(err => console.error("Error triggering welcome email:", err));
     } catch (err) {
       console.error("Subscription error:", err);
       setSubscribingStatus('error');

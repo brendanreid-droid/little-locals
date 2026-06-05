@@ -15,6 +15,7 @@ import EventForm from './pages/EventForm';
 import BlogForm from './pages/BlogForm';
 import AdminAnalytics from './pages/AdminAnalytics';
 import AdminNewsletter from './pages/AdminNewsletter';
+import Unsubscribe from './pages/Unsubscribe';
 import logoHorizontal from './assets/logo-horizontal.png';
 import './App.css';
 
@@ -92,6 +93,7 @@ function App() {
             <Route path="/admin/dashboard" element={<AdminDashboard />} />
             <Route path="/admin/analytics" element={<AdminAnalytics />} />
             <Route path="/admin/newsletter" element={<AdminNewsletter />} />
+            <Route path="/unsubscribe" element={<Unsubscribe />} />
             <Route path="/admin/events/new" element={<EventForm />} />
             <Route path="/admin/events/:id/edit" element={<EventForm />} />
             <Route path="/admin/blog/new" element={<BlogForm />} />

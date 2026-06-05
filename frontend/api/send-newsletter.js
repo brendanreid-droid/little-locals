@@ -38,7 +38,7 @@ async function verifyAdminToken(authHeader, apiKey) {
   return true;
 }
 
-function buildHtmlTemplate({ subject, preheader, message, events = [], blogPost = null }) {
+function buildHtmlTemplate({ subject, preheader, message, events = [], blogPost = null, baseUrl }) {
   // Convert message newline breaks to HTML paragraphs
   const messageHtml = message
     .split('\n\n')
@@ -187,7 +187,7 @@ function buildHtmlTemplate({ subject, preheader, message, events = [], blogPost 
           </p>
           <p style="font-size: 11px; color: #999999; margin: 0; line-height: 1.4;">
             You received this because you signed up on our home page. <br>
-            If you wish to unsubscribe, please reply directly or contact us at <a href="mailto:newsletter@littlelocalscc.com" style="color: #8e4e00; text-decoration: underline;">newsletter@littlelocalscc.com</a>.
+            If you wish to stop receiving these updates, you can <a href="${baseUrl}/unsubscribe" style="color: #8e4e00; text-decoration: underline; font-weight: bold;">unsubscribe here</a>.
           </p>
         </div>
       </div>
@@ -223,8 +223,13 @@ export default async function handler(req, res) {
     const authHeader = req.headers.authorization;
     await verifyAdminToken(authHeader, firebaseApiKey);
 
+    // Resolve base URL dynamically from request headers
+    const proto = req.headers['x-forwarded-proto'] || 'https';
+    const host = req.headers.host || 'littlelocals.au';
+    const baseUrl = `${proto}://${host}`;
+
     // 2. Generate Branded Email HTML Content
-    const emailHtml = buildHtmlTemplate({ subject, preheader, message, events, blogPost });
+    const emailHtml = buildHtmlTemplate({ subject, preheader, message, events, blogPost, baseUrl });
 
     // 3. Batch Send via Resend API (limit to 100 BCC recipients per request to protect privacy and respect limits)
     const BATCH_SIZE = 100;
