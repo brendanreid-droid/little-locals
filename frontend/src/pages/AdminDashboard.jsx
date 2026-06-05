@@ -588,6 +588,7 @@ export default function AdminDashboard() {
   });
 
   activeSeries.sort((a, b) => a.title.localeCompare(b.title));
+  endingSeriesList.sort((a, b) => new Date(a.endDate) - new Date(b.endDate));
 
   return (
     <div style={{ 
@@ -906,7 +907,7 @@ export default function AdminDashboard() {
               <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', margin: '0 0 16px 0', fontWeight: '500' }}>
                 The following repeating event series will finish in the next 30 days. Extend them to keep the calendar populated.
               </p>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', maxHeight: '340px', overflowY: 'auto', paddingRight: '8px' }} className="custom-scrollbar">
                 {endingSeriesList.map(series => (
                   <div key={series.title} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px', padding: '10px 16px', backgroundColor: 'var(--bg-white)', borderRadius: '12px', border: '2.5px solid var(--text-dark)' }}>
                     <div>
