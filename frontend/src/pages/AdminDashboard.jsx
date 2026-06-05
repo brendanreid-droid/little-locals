@@ -1384,8 +1384,8 @@ export default function AdminDashboard() {
                 }}
                 className="quick-launch-btn hover-bg-secondary"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '28px', marginBottom: '4px' }}>event</span>
-                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Add Event</span>
+                <Plus size={24} style={{ marginBottom: '4px', color: 'var(--secondary)' }} />
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Create Event</span>
               </Link>
               
               <Link 
@@ -1404,12 +1404,12 @@ export default function AdminDashboard() {
                 }}
                 className="quick-launch-btn hover-bg-tertiary"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '28px', marginBottom: '4px' }}>edit_note</span>
-                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>New Post</span>
+                <BookOpen size={24} style={{ marginBottom: '4px', color: 'var(--primary)' }} />
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Write Blog</span>
               </Link>
 
-              <button 
-                onClick={() => alert("Contests feature coming soon!")}
+              <Link 
+                to="/admin/newsletter"
                 style={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
@@ -1420,17 +1420,36 @@ export default function AdminDashboard() {
                   borderRadius: '16px', 
                   border: '2px solid var(--text-dark)',
                   cursor: 'pointer',
-                  transition: 'var(--transition-bouncy)',
-                  color: 'var(--text-dark)'
+                  transition: 'var(--transition-bouncy)'
                 }}
                 className="quick-launch-btn hover-bg-yellow"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '28px', marginBottom: '4px' }}>trophy</span>
-                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Contest</span>
-              </button>
+                <Mail size={24} style={{ marginBottom: '4px', color: 'var(--yellow)' }} />
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Newsletter</span>
+              </Link>
+
+              <Link 
+                to="/admin/analytics"
+                style={{ 
+                  display: 'flex', 
+                  flexDirection: 'column', 
+                  alignItems: 'center', 
+                  justifyContent: 'center', 
+                  padding: '16px 8px', 
+                  backgroundColor: 'var(--bg-cream)', 
+                  borderRadius: '16px', 
+                  border: '2px solid var(--text-dark)',
+                  cursor: 'pointer',
+                  transition: 'var(--transition-bouncy)'
+                }}
+                className="quick-launch-btn hover-bg-teal"
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: '24px', marginBottom: '4px', color: 'var(--teal-soft)' }}>monitoring</span>
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Analytics</span>
+              </Link>
 
               <button 
-                onClick={() => alert("Email Blasts feature coming soon!")}
+                onClick={handleLogout}
                 style={{ 
                   display: 'flex', 
                   flexDirection: 'column', 
@@ -1442,12 +1461,12 @@ export default function AdminDashboard() {
                   border: '2px solid var(--text-dark)',
                   cursor: 'pointer',
                   transition: 'var(--transition-bouncy)',
-                  color: 'var(--text-dark)'
+                  gridColumn: 'span 2'
                 }}
-                className="quick-launch-btn hover-bg-primary"
+                className="quick-launch-btn hover-bg-danger"
               >
-                <span className="material-symbols-outlined" style={{ fontSize: '28px', marginBottom: '4px' }}>group</span>
-                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Email Blast</span>
+                <LogOut size={24} style={{ marginBottom: '4px', color: 'hsl(0, 75%, 45%)' }} />
+                <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sign Out</span>
               </button>
             </div>
           </div>

@@ -1275,7 +1275,7 @@ export default function EventList() {
               marginBottom: '20px', 
               color: 'white',
               lineHeight: 1.15
-            }}>Never miss a free event again.</h2>
+            }}>Never miss an event again.</h2>
             
             <p style={{ 
               fontFamily: 'var(--font-sans)',
@@ -1284,7 +1284,7 @@ export default function EventList() {
               opacity: 0.9,
               lineHeight: 1.6
             }}>
-              Join 2,500+ Central Coast families getting weekly updates on the best free things to do with their kids.
+              Join 4,000+ Central Coast families getting weekly updates on the best things to do with their kids.
             </p>
             
             {subscribingStatus === 'success' ? (
