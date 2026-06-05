@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { BrowserRouter as Router, Routes, Route, NavLink, Link } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, NavLink, Link, useLocation } from 'react-router-dom';
 import { Calendar as CalendarIcon, Grid, Lock, Heart, BookOpen } from 'lucide-react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { auth } from './firebase';
@@ -19,6 +19,17 @@ import Unsubscribe from './pages/Unsubscribe';
 import logoHorizontal from './assets/logo-horizontal.png';
 import './App.css';
 
+// Automatically scrolls the viewport to the top on navigation
+function ScrollToTop() {
+  const { pathname } = useLocation();
+
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [pathname]);
+
+  return null;
+}
+
 function App() {
   const [menuOpen, setMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
@@ -35,6 +46,7 @@ function App() {
 
   return (
     <Router>
+      <ScrollToTop />
       <div className="app-container">
         
         {/* Beautiful Dynamic Header */}
