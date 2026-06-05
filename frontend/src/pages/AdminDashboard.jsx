@@ -516,111 +516,118 @@ export default function AdminDashboard() {
           </p>
         </div>
         
-        <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+        <div 
+          className="sticker-shadow"
+          style={{ 
+            display: 'flex', 
+            gap: '12px', 
+            flexWrap: 'wrap',
+            backgroundColor: 'var(--bg-cream)', 
+            borderRadius: '20px', 
+            border: '2.5px solid var(--text-dark)', 
+            padding: '16px',
+            boxShadow: '4px 4px 0px 0px var(--text-dark)'
+          }}
+        >
           <Link 
             to="/admin/events/new" 
             style={{ 
-              padding: '12px 24px', 
-              fontSize: '0.85rem',
-              fontWeight: '800',
-              backgroundColor: 'var(--secondary)',
-              color: 'white',
-              border: '3px solid var(--text-dark)',
-              borderRadius: '50px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '12px 16px', 
+              backgroundColor: 'var(--bg-white)', 
+              borderRadius: '12px', 
+              border: '2px solid var(--text-dark)',
               cursor: 'pointer',
-              boxShadow: '3px 3px 0px 0px var(--text-dark)',
-              transition: 'var(--transition-bouncy)'
+              transition: 'var(--transition-bouncy)',
+              color: 'var(--text-dark)'
             }}
-            className="admin-action-btn"
+            className="quick-launch-btn hover-bg-secondary"
           >
-            <Plus size={16} /> Create Event
+            <Plus size={20} style={{ marginBottom: '4px', color: 'var(--secondary)' }} />
+            <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Create Event</span>
           </Link>
           <Link 
             to="/admin/blog/new" 
             style={{ 
-              padding: '12px 24px', 
-              fontSize: '0.85rem',
-              fontWeight: '800',
-              backgroundColor: 'var(--primary)',
-              color: 'white',
-              border: '3px solid var(--text-dark)',
-              borderRadius: '50px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '12px 16px', 
+              backgroundColor: 'var(--bg-white)', 
+              borderRadius: '12px', 
+              border: '2px solid var(--text-dark)',
               cursor: 'pointer',
-              boxShadow: '3px 3px 0px 0px var(--text-dark)',
-              transition: 'var(--transition-bouncy)'
+              transition: 'var(--transition-bouncy)',
+              color: 'var(--text-dark)'
             }}
-            className="admin-action-btn"
+            className="quick-launch-btn hover-bg-tertiary"
           >
-            <BookOpen size={16} /> Write Blog Post
+            <BookOpen size={20} style={{ marginBottom: '4px', color: 'var(--primary)' }} />
+            <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Write Blog</span>
           </Link>
           <Link 
             to="/admin/newsletter" 
             style={{ 
-              padding: '12px 24px', 
-              fontSize: '0.85rem',
-              fontWeight: '800',
-              backgroundColor: 'var(--yellow-soft)',
-              color: 'var(--text-dark)',
-              border: '3px solid var(--text-dark)',
-              borderRadius: '50px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '12px 16px', 
+              backgroundColor: 'var(--bg-white)', 
+              borderRadius: '12px', 
+              border: '2px solid var(--text-dark)',
               cursor: 'pointer',
-              boxShadow: '3px 3px 0px 0px var(--text-dark)',
-              transition: 'var(--transition-bouncy)'
+              transition: 'var(--transition-bouncy)',
+              color: 'var(--text-dark)'
             }}
-            className="admin-action-btn"
+            className="quick-launch-btn hover-bg-yellow"
           >
-            <Mail size={16} /> Newsletter
+            <Mail size={20} style={{ marginBottom: '4px', color: 'var(--yellow)' }} />
+            <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Newsletter</span>
           </Link>
           <Link 
             to="/admin/analytics" 
             style={{ 
-              padding: '12px 24px', 
-              fontSize: '0.85rem',
-              fontWeight: '800',
-              backgroundColor: 'var(--yellow-soft)',
-              color: 'var(--text-dark)',
-              border: '3px solid var(--text-dark)',
-              borderRadius: '50px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '12px 16px', 
+              backgroundColor: 'var(--bg-white)', 
+              borderRadius: '12px', 
+              border: '2px solid var(--text-dark)',
               cursor: 'pointer',
-              boxShadow: '3px 3px 0px 0px var(--text-dark)',
-              transition: 'var(--transition-bouncy)'
+              transition: 'var(--transition-bouncy)',
+              color: 'var(--text-dark)'
             }}
-            className="admin-action-btn"
+            className="quick-launch-btn hover-bg-teal"
           >
-            <span className="material-symbols-outlined" style={{ fontSize: '16px' }}>monitoring</span> Full Analytics
+            <span className="material-symbols-outlined" style={{ fontSize: '20px', marginBottom: '4px', color: 'var(--teal-soft)' }}>monitoring</span>
+            <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Full Analytics</span>
           </Link>
           <button 
             onClick={handleLogout} 
             style={{ 
-              padding: '12px 24px', 
-              fontSize: '0.85rem',
-              fontWeight: '800',
-              backgroundColor: 'var(--bg-white)',
-              color: 'var(--text-dark)',
-              border: '3px solid var(--text-dark)',
-              borderRadius: '50px',
-              display: 'inline-flex',
-              alignItems: 'center',
-              gap: '6px',
+              display: 'flex', 
+              flexDirection: 'column', 
+              alignItems: 'center', 
+              justifyContent: 'center', 
+              padding: '12px 16px', 
+              backgroundColor: 'var(--bg-white)', 
+              borderRadius: '12px', 
+              border: '2px solid var(--text-dark)',
               cursor: 'pointer',
-              boxShadow: '3px 3px 0px 0px var(--text-dark)',
-              transition: 'var(--transition-bouncy)'
+              transition: 'var(--transition-bouncy)',
+              color: 'var(--text-dark)'
             }}
-            className="admin-action-btn"
+            className="quick-launch-btn hover-bg-danger"
           >
-            <LogOut size={16} /> Sign Out
+            <LogOut size={20} style={{ marginBottom: '4px', color: 'hsl(0, 75%, 45%)' }} />
+            <span style={{ fontSize: '0.68rem', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Sign Out</span>
           </button>
         </div>
       </div>
@@ -1742,6 +1749,14 @@ export default function AdminDashboard() {
         
         .hover-bg-primary:hover {
           background-color: var(--secondary-soft) !important;
+        }
+        
+        .hover-bg-teal:hover {
+          background-color: hsl(174, 70%, 92%) !important;
+        }
+        
+        .hover-bg-danger:hover {
+          background-color: hsl(0, 100%, 94%) !important;
         }
         
         @keyframes spin {
