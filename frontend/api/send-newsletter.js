@@ -38,6 +38,17 @@ async function verifyAdminToken(authHeader, apiKey) {
   return true;
 }
 
+function proxyImageUrl(url, baseUrl) {
+  if (!url) return '';
+  // Match standard firebase storage download URLs and extract the relative path
+  const match = url.match(/https:\/\/firebasestorage\.googleapis\.com\/v0\/b\/[^\/]+\/o\/(.+)/);
+  if (match) {
+    const relativePath = match[1].split('?')[0];
+    return `${baseUrl}/storage/${relativePath}`;
+  }
+  return url;
+}
+
 function buildHtmlTemplate({ subject, preheader, message, events = [], blogPost = null, baseUrl }) {
   // Convert message newline breaks to HTML paragraphs
   const messageHtml = message
@@ -68,7 +79,7 @@ function buildHtmlTemplate({ subject, preheader, message, events = [], blogPost 
             <tr>
               ${event.image_url ? `
               <td valign="top" width="100" style="padding-right: 16px;">
-                <img src="${event.image_url}" alt="" width="100" style="border-radius: 8px; border: 2.5px solid #1c1b1b; object-fit: cover; display: block;" height="100" />
+                <img src="${proxyImageUrl(event.image_url, baseUrl)}" alt="" width="100" style="border-radius: 8px; border: 2.5px solid #1c1b1b; object-fit: cover; display: block;" height="100" />
               </td>
               ` : ''}
               <td valign="top">
@@ -113,7 +124,7 @@ function buildHtmlTemplate({ subject, preheader, message, events = [], blogPost 
         <!-- Blog Card -->
         <div style="background-color: #ffffff; border: 3px solid #1c1b1b; border-radius: 16px; padding: 24px; box-shadow: 4px 4px 0px 0px #1c1b1b;">
           ${blogPost.image_url ? `
-            <img src="${blogPost.image_url}" alt="${blogPost.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 2.5px solid #1c1b1b; margin-bottom: 16px; display: block;" />
+            <img src="${proxyImageUrl(blogPost.image_url, baseUrl)}" alt="${blogPost.title}" style="width: 100%; height: 200px; object-fit: cover; border-radius: 12px; border: 2.5px solid #1c1b1b; margin-bottom: 16px; display: block;" />
           ` : ''}
           <span style="background-color: #ffdcc1; color: #8e4e00; padding: 3px 10px; font-size: 11px; font-weight: 800; border-radius: 6px; border: 2px solid #1c1b1b; text-transform: uppercase; letter-spacing: 0.05em; display: inline-block; margin-bottom: 8px;">
             ${blogPost.category || 'Review'} • ${readingTime} MIN READ
