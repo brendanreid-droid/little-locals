@@ -135,9 +135,7 @@ ${event.description || ''}
               alt={event.title} 
               style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
             />
-            <div style={{ position: 'absolute', top: '20px', left: '20px', backgroundColor: 'var(--secondary)', color: 'white', padding: '8px 20px', borderRadius: '50px', fontWeight: '900', fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(0,0,0,0.15)' }}>
-              100% FREE
-            </div>
+
           </div>
 
           <div className="detail-card-content">

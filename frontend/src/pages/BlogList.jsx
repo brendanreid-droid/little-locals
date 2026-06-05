@@ -1,16 +1,23 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { collection, getDocs, query, orderBy } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Search, BookOpen, Clock, Calendar, ArrowRight, Smile, Star, ArrowUpRight } from 'lucide-react';
 
 export default function BlogList() {
+  const location = useLocation();
   const [posts, setPosts] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedCategory, setSelectedCategory] = useState('All');
 
-  const categories = ['All', 'Review', 'School Holidays'];
+  const categories = ['All', 'Review', 'School Holidays', 'Playgrounds', 'Indoor Activities', 'Playgroups'];
+
+  useEffect(() => {
+    if (location.state?.category) {
+      setSelectedCategory(location.state.category);
+    }
+  }, [location.state]);
 
   useEffect(() => {
     document.title = 'Parenting Reviews & Family Guides | Little Locals';

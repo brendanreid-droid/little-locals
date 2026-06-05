@@ -35,7 +35,7 @@ export default function BlogForm() {
   const [mediaLibrary, setMediaLibrary] = useState([]);
   const [loadingMedia, setLoadingMedia] = useState(false);
 
-  const categories = ['Review', 'School Holidays'];
+  const categories = ['Review', 'School Holidays', 'Playgrounds', 'Indoor Activities', 'Playgroups'];
 
   // Route protection
   useEffect(() => {
@@ -190,7 +190,10 @@ export default function BlogForm() {
   const handleSuggestImage = () => {
     const assets = {
       'Review': 'https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80',
-      'School Holidays': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80'
+      'School Holidays': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
+      'Playgrounds': 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80',
+      'Indoor Activities': 'https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80',
+      'Playgroups': 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80'
     };
 
     const suggestedUrl = assets[form.category] || assets['Review'];

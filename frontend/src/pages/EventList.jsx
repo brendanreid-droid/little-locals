@@ -1,10 +1,11 @@
 import { useState, useEffect, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { collection, getDocs, query, orderBy, doc, setDoc } from 'firebase/firestore';
 import { db } from '../firebase';
 import { Search, Calendar as CalendarIcon, MapPin, Smile, Award, ArrowRight, Star, Heart, BookOpen } from 'lucide-react';
 
 export default function EventList() {
+  const navigate = useNavigate();
   const [events, setEvents] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
@@ -90,8 +91,7 @@ export default function EventList() {
   };
 
   const handleQuickLinkClick = (category) => {
-    setSelectedCategory(category);
-    scrollToDirectory();
+    navigate('/blog', { state: { category } });
   };
 
   // Filter events based on search, category and age
@@ -613,28 +613,7 @@ export default function EventList() {
                 }}
                 className="featured-large-bento"
               >
-                {/* Floating FREE badge */}
-                <div style={{ 
-                  position: 'absolute', 
-                  top: '-20px', 
-                  right: '-10px', 
-                  width: '90px', 
-                  height: '90px', 
-                  backgroundColor: 'var(--yellow)', 
-                  borderRadius: '50%', 
-                  display: 'flex', 
-                  alignItems: 'center', 
-                  justifyContent: 'center', 
-                  color: 'white', 
-                  fontWeight: '900', 
-                  fontSize: '1.25rem',
-                  border: '4px solid var(--text-dark)',
-                  boxShadow: '3px 3px 0px 0px var(--text-dark)',
-                  transform: 'rotate(12deg)',
-                  zIndex: 10
-                }} className="floating-sticker-alt">
-                  FREE
-                </div>
+
 
                 <div style={{ 
                   position: 'relative', 
@@ -1085,19 +1064,7 @@ export default function EventList() {
                       overflow: 'hidden',
                       border: '2.5px solid var(--text-dark)'
                     }}>
-                      <span style={{ 
-                        position: 'absolute', 
-                        top: '12px', 
-                        left: '12px', 
-                        backgroundColor: 'var(--secondary)', 
-                        color: 'white', 
-                        padding: '4px 12px', 
-                        borderRadius: '50px', 
-                        fontSize: '0.75rem', 
-                        fontWeight: '900',
-                        border: '1.5px solid var(--text-dark)',
-                        zIndex: 10
-                      }}>FREE</span>
+
                       
                       <img 
                         src={event.image_url || 'https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=600&q=80'} 
