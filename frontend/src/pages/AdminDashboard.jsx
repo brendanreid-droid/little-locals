@@ -322,7 +322,8 @@ export default function AdminDashboard() {
         link: suggestion.link || '',
         category: suggestion.category || 'Playgrounds',
         age_group: suggestion.age_group || 'All Ages',
-        is_featured: suggestion.is_featured || false
+        is_featured: suggestion.is_featured || false,
+        is_school_holiday: suggestion.is_school_holiday || false
       });
 
       // Delete from suggestions queue
@@ -365,7 +366,8 @@ export default function AdminDashboard() {
         link: editingSuggestion.link || '',
         category: editingSuggestion.category || 'Playgrounds',
         age_group: editingSuggestion.age_group || 'All Ages',
-        is_featured: editingSuggestion.is_featured || false
+        is_featured: editingSuggestion.is_featured || false,
+        is_school_holiday: editingSuggestion.is_school_holiday || false
       });
 
       // 2. Delete from suggestions queue
@@ -1165,6 +1167,24 @@ export default function AdminDashboard() {
                       }}>
                         {event.category || 'General'}
                       </span>
+                      {event.is_school_holiday && (
+                        <span style={{ 
+                          backgroundColor: 'hsl(14, 90%, 90%)', 
+                          color: 'hsl(14, 90%, 35%)', 
+                          fontSize: '0.72rem', 
+                          padding: '4px 12px', 
+                          marginBottom: '8px',
+                          borderRadius: '6px',
+                          border: '2px solid var(--text-dark)',
+                          fontWeight: '800',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          display: 'inline-block',
+                          marginLeft: '8px'
+                        }}>
+                          🏝️ School Holidays
+                        </span>
+                      )}
                       <h4 style={{ fontWeight: 900, fontSize: '1.2rem', color: 'var(--primary)', margin: 0 }}>{event.title}</h4>
                       
                       <div style={{ display: 'flex', gap: '16px', fontSize: '0.82rem', color: 'var(--text-muted)', marginTop: '8px', fontWeight: '700' }}>
@@ -1537,6 +1557,24 @@ export default function AdminDashboard() {
                       }}>
                         {s.source === 'User Suggestion' ? 'User Submitted Suggestion' : 'Recommended Lead'}
                       </span>
+                      {s.is_school_holiday && (
+                        <span style={{ 
+                          backgroundColor: 'hsl(14, 90%, 90%)', 
+                          color: 'hsl(14, 90%, 35%)', 
+                          padding: '4px 14px', 
+                          borderRadius: '6px',
+                          border: '2px solid var(--text-dark)',
+                          fontWeight: '800',
+                          fontSize: '0.72rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          display: 'inline-block',
+                          marginBottom: '10px',
+                          marginLeft: '8px'
+                        }}>
+                          🏝️ School Holidays
+                        </span>
+                      )}
                       <h3 style={{ 
                         fontFamily: 'var(--font-display)',
                         fontWeight: 900, 
@@ -1845,7 +1883,8 @@ export default function AdminDashboard() {
                   description: editingSuggestion.description || '',
                   link: editingSuggestion.link || '',
                   image_url: editingSuggestion.image_url || '',
-                  is_featured: editingSuggestion.is_featured || false
+                  is_featured: editingSuggestion.is_featured || false,
+                  is_school_holiday: editingSuggestion.is_school_holiday || false
                 });
                 
                 // Update local state
@@ -2066,6 +2105,29 @@ export default function AdminDashboard() {
                 <label htmlFor="is_featured_suggestion" style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span className="material-symbols-outlined" style={{ fontSize: '18px', color: 'var(--primary)' }}>grade</span>
                   Flag as Featured Event (Highlights at top of homepage)
+                </label>
+              </div>
+
+              {/* Flag as School Holiday Event Toggle */}
+              <div style={{ 
+                display: 'flex', 
+                alignItems: 'center', 
+                gap: '10px', 
+                padding: '12px 16px', 
+                borderRadius: '12px', 
+                backgroundColor: 'hsl(14, 90%, 95%)', 
+                border: '2.5px solid var(--text-dark)',
+                marginTop: '12px'
+              }}>
+                <input 
+                  type="checkbox" 
+                  id="is_school_holiday_suggestion" 
+                  checked={editingSuggestion.is_school_holiday || false}
+                  onChange={(e) => setEditingSuggestion(prev => ({ ...prev, is_school_holiday: e.target.checked }))}
+                  style={{ width: '18px', height: '18px', accentColor: 'hsl(14, 90%, 45%)', cursor: 'pointer' }}
+                />
+                <label htmlFor="is_school_holiday_suggestion" style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                  🏝️ School Holiday Event (Displays visual badge)
                 </label>
               </div>
 

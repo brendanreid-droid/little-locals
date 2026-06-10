@@ -23,6 +23,7 @@ export default function EventForm() {
     category: 'Playgrounds',
     age_group: 'All Ages',
     is_featured: false,
+    is_school_holiday: false,
     is_recurring: false,
     recurrence_type: 'weekly',
     recurrence_until: '',
@@ -128,6 +129,7 @@ export default function EventForm() {
             category: data.category || 'Playgrounds',
             age_group: data.age_group || 'All Ages',
             is_featured: data.is_featured || false,
+            is_school_holiday: data.is_school_holiday || false,
             is_recurring: data.is_recurring || false,
             recurrence_type: data.recurrence_type || 'weekly',
             recurrence_until: data.recurrence_until || '',
@@ -302,6 +304,7 @@ ${form.description || ''}
               category: form.category,
               age_group: form.age_group,
               is_featured: form.is_featured,
+              is_school_holiday: form.is_school_holiday,
               price: 'FREE',
               link: form.link
             });
@@ -808,6 +811,31 @@ ${form.description || ''}
             <label htmlFor="is_featured" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-dark)', cursor: 'pointer' }}>
               <span className="material-symbols-outlined" style={{ color: 'var(--primary)', fontSize: '20px' }}>grade</span>
               Flag as Featured Event (Highlights at the top of the homepage)
+            </label>
+          </div>
+
+          {/* Flag as School Holiday Event */}
+          <div style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '12px', 
+            padding: '16px 20px', 
+            borderRadius: 'var(--radius-md)', 
+            backgroundColor: 'hsl(14, 90%, 95%)', 
+            border: '1px solid var(--border-soft)', 
+            margin: '8px 0' 
+          }}>
+            <input 
+              type="checkbox" 
+              id="is_school_holiday" 
+              name="is_school_holiday"
+              style={{ width: '20px', height: '20px', accentColor: 'hsl(14, 90%, 45%)', cursor: 'pointer' }}
+              checked={form.is_school_holiday}
+              onChange={handleChange}
+              disabled={loading || uploading}
+            />
+            <label htmlFor="is_school_holiday" style={{ display: 'flex', alignItems: 'center', gap: '8px', fontWeight: '800', fontSize: '0.9rem', color: 'var(--text-dark)', cursor: 'pointer' }}>
+              🏝️ Flag as School Holiday Event (Displays visual badge)
             </label>
           </div>
 

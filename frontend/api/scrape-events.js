@@ -89,7 +89,8 @@ export default async function handler(req, res) {
       description: "Join local mums and dads for an outdoor toddler sensory play session right next to the fully fenced Umina Beach active zone. Shaded areas, baby swings, and sand play. Perfect morning coffee spot.",
       image_url: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/334455667/",
-      daysOffset: 3
+      daysOffset: 3,
+      is_school_holiday: false
     },
     {
       title: "Kibble Park LEGO Club",
@@ -100,7 +101,8 @@ export default async function handler(req, res) {
       description: "Free after-school LEGO building challenge for school-aged kids (6-12 years). Build creative models, showcase your designs in the library cabinets, and meet new friends. Bookings not required.",
       image_url: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/112233445/",
-      daysOffset: 5
+      daysOffset: 5,
+      is_school_holiday: false
     },
     {
       title: "The Entrance Splash Park Picnic",
@@ -111,7 +113,8 @@ export default async function handler(req, res) {
       description: "Free community picnic and splash day out for families. Pack a rug and lunch, enjoy the water fountains, fully fenced play equipment, and feeding of the pelicans at 3:30 PM nearby!",
       image_url: "https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/556677889/",
-      daysOffset: 7
+      daysOffset: 7,
+      is_school_holiday: false
     },
     {
       title: "Avoca Beach Rockpool Explorers",
@@ -122,7 +125,8 @@ export default async function handler(req, res) {
       description: "Free guided marine exploration for school holidays. Kids can learn about local anemones, crabs, and sea snails in the shallow rockpools. Shaded parent seating and clean amenities nearby.",
       image_url: "https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/778899001/",
-      daysOffset: 9
+      daysOffset: 9,
+      is_school_holiday: true
     },
     {
       title: "Erina Library Musical Storytime",
@@ -133,7 +137,8 @@ export default async function handler(req, res) {
       description: "Free interactive story and music program for toddlers and preschoolers. Features classic kids' songs, puppet play, and picture book readings. Parents must stay. Level access and stroller parking inside Erina Fair.",
       image_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/445566778/",
-      daysOffset: 11
+      daysOffset: 11,
+      is_school_holiday: false
     }
   ];
 
@@ -201,7 +206,8 @@ INSTRUCTIONS:
 1. Extract family-friendly, kids/children's events found in the raw website texts. Focus on things like school holiday events, children's workshops, kids discos, family fun days, playgrounds events, library storytimes, etc.
 2. Only extract events that are happening on or after today (${todayStr}). Do not include any past events.
 3. Skip any events that are already present in the "EXISTING EVENTS & SUGGESTIONS" list above.
-4. For each extracted event, map it to the following JSON schema:
+4. Set "is_school_holiday" to true if the event explicitly mentions school holidays, is run as a school holidays activity, or if the source URL path contains "school-holidays". Otherwise, set it to false.
+5. For each extracted event, map it to the following JSON schema:
    - title: Clean, catchy, parent-friendly title (e.g. "Ettalong Diggers School Holiday Magic Show")
    - category: Must be exactly one of: "Playground", "Library", "Art & Craft", "Outdoors", "Sports", "Music & Storytime", or "General".
    - location: The venue name and suburb/address, e.g. "Gosford RSL, 26 Central Coast Hwy, West Gosford NSW 2250".
@@ -211,6 +217,7 @@ INSTRUCTIONS:
    - description: Describe the activity, what to bring, shade options, playground fences, and parking. Provide highly readable, parent-friendly copy directly.
    - image_url: A high-quality Unsplash search URL suited to the activity category.
    - link: The exact source URL from the SOURCE header above (or a specific event link if found).
+   - is_school_holiday: Boolean indicating if it's a school holiday event.
 
 Ensure you return a clean JSON array matching the requested schema. Do not wrap it in markdown code blocks.
 `;
@@ -241,9 +248,10 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
                   age_group: { type: "STRING" },
                   description: { type: "STRING" },
                   image_url: { type: "STRING" },
-                  link: { type: "STRING" }
+                  link: { type: "STRING" },
+                  is_school_holiday: { type: "BOOLEAN" }
                 },
-                required: ["title", "category", "location", "date", "description", "time", "age_group"]
+                required: ["title", "category", "location", "date", "description", "time", "age_group", "is_school_holiday"]
               }
             }
           }
@@ -298,7 +306,8 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
         description: template.description,
         image_url: template.image_url,
         link: template.link,
-        date: getFutureDate(template.daysOffset)
+        date: getFutureDate(template.daysOffset),
+        is_school_holiday: template.is_school_holiday || false
       }))
       .filter(ev => {
         const isDuplicate = 
