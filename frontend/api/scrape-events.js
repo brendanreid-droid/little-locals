@@ -1,6 +1,71 @@
 // Vercel Serverless Function to securely scrape or generate free Central Coast kids events
 // End-point: POST /api/scrape-events
 
+const SOURCES = [
+  { name: "Gosford RSL", url: "https://grsl.com.au/box-office" },
+  { name: "Everglades Woy Woy", url: "https://everglades.net.au/whats-on/school-holidays/" },
+  { name: "Ettalong Diggers", url: "https://www.ettalongdiggers.com/whats-on/" },
+  { name: "Deepwater Plaza", url: "https://www.deepwaterplaza.com.au/whats-on/" },
+  { name: "Imperial Centre", url: "https://imperialcentre.com.au/whats-on/" },
+  { name: "Reptile Park", url: "https://www.reptilepark.com.au/plan-your-visit/whats-on" },
+  { name: "Wyong Milk Factory", url: "https://www.wyongmilkfactorytavernevents.com.au/" },
+  { name: "Kincumber Hotel", url: "https://www.kincumberhotel.com.au/whats-on.html" },
+  { name: "Bateau Bay Hotel", url: "https://www.bateaubayhotel.com.au/whats-on.html" },
+  { name: "Davistown RSL", url: "https://davistownrsl.com.au/whats-on/" },
+  { name: "Budgewoi Hotel", url: "https://srghospitality.com.au/venue/budgewoi-hotel/" },
+  { name: "Erina Fair", url: "https://erinafair.com.au/whats-new/events/" },
+  { name: "Westfield Tuggerah", url: "https://www.westfield.com.au/tuggerah/kids-and-family" },
+  { name: "Gosford Regional Gallery", url: "https://gosfordregionalgallery.com/page/kids#" },
+  {
+    name: "Central Coast Libraries",
+    url: "https://libraries.centralcoast.nsw.gov.au/whats-on?title=&category=39347&field_address_address_line1=&field_date_range_value=1&viewsreference%5Bcompressed%5D=eJxtUdtuwyAM_Rc_9yGZ1KXK274EecOhlhwSGZIuqvLvg6KRqtsDMseXc3zgDhYjQn-HGR0p9AAniByFoPeLyAmmYQgUfxGqW0byFQuPXMGV0GaOguh7ngJZM7BE0pA1VjUvWbNy4M-s1lbdvMIXRnKTbgl9iKTEwCTWoLVKIdQo7KktE6UhuSGj6B2ZFWXJbC3se9rGY5KxJnmJ7F14tlzis7nj-o-PP5lEP6OmbpMOx83EbaYHr6JTnK_w2sA2lbuuOTdHqRjwOObRAlam29GglB9r8mX60r13b-dqnCONxpLkz2z2H2OfpW0"
+  },
+  { name: "Breakers Wamberal", url: "https://www.breakerscc.com/entertainment-events" },
+  { name: "Terrigal Beach House", url: "https://www.terrigalbh.com.au/whats-on/" },
+  { name: "Beachcomber", url: "https://beachcomberhotelandresort.com.au/whats-on/" },
+  { name: "Lake Haven Shops", url: "https://www.lakehavencentre.com.au/whats-on" },
+  { name: "The Ary Toukley", url: "https://www.thearytoukley.com.au/sh" }
+];
+
+// Helper function to strip HTML markup and unnecessary sections
+function cleanHtml(html) {
+  if (!html) return "";
+
+  // Extract body content if present to save processing time
+  const bodyStartIndex = html.indexOf('<body');
+  let content = html;
+  if (bodyStartIndex !== -1) {
+    content = html.substring(bodyStartIndex);
+  }
+
+  let clean = content
+    .replace(/<head[^>]*>([\s\S]*?)<\/head>/gi, '')
+    .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '')
+    .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, '')
+    .replace(/<svg[^>]*>([\s\S]*?)<\/svg>/gi, '')
+    .replace(/<iframe[^>]*>([\s\S]*?)<\/iframe>/gi, '')
+    .replace(/<header[^>]*>([\s\S]*?)<\/header>/gi, '')
+    .replace(/<footer[^>]*>([\s\S]*?)<\/footer>/gi, '')
+    .replace(/<nav[^>]*>([\s\S]*?)<\/nav>/gi, '');
+
+  // Strip all HTML tags
+  clean = clean.replace(/<[^>]+>/g, ' ');
+
+  // Replace HTML entities
+  clean = clean
+    .replace(/&amp;/g, '&')
+    .replace(/&lt;/g, '<')
+    .replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&nbsp;/g, ' ');
+
+  // Compress whitespace
+  clean = clean.replace(/\s+/g, ' ').trim();
+
+  return clean;
+}
+
 export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
@@ -9,6 +74,9 @@ export default async function handler(req, res) {
 
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const todayStr = new Date().toISOString().split('T')[0];
+
+  // Extract existing events and suggestions lists from the request body to avoid duplicates
+  const { existingEvents = [], existingSuggestions = [] } = req.body;
 
   // List of high-fidelity mock events for templates & fallback
   const mockTemplates = [
@@ -76,57 +144,73 @@ export default async function handler(req, res) {
     return d.toISOString().split('T')[0];
   };
 
-  // 1. Live Web Scraping Attempt (Council Events Page)
-  let rawWebText = "";
-  try {
-    const response = await fetch("https://www.centralcoast.nsw.gov.au/whats-on", {
-      headers: {
-        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
-      },
-      signal: AbortSignal.timeout(4000) // 4 seconds timeout to prevent hanging
-    });
-    if (response.ok) {
-      const html = await response.text();
-      // Extract a representative, light-weight subset of the HTML body to parse
-      const bodyStartIndex = html.indexOf('<body');
-      if (bodyStartIndex !== -1) {
-        // Grab a 30,000 char window of the body which usually contains content listings
-        rawWebText = html.substring(bodyStartIndex, bodyStartIndex + 30000)
-          .replace(/<script[^>]*>([\s\S]*?)<\/script>/gi, '') // Strip script tags
-          .replace(/<style[^>]*>([\s\S]*?)<\/style>/gi, '')   // Strip style tags
-          .replace(/<[^>]+>/g, ' ')                           // Strip markup tags
-          .replace(/\s+/g, ' ')                               // Clean whitespace
-          .substring(0, 15000);                               // Cap final length
+  // 1. Concurrent Live Web Scraping for all 20 websites
+  console.log("Starting concurrent crawl of local websites...");
+  const crawlStartTime = Date.now();
+  
+  const fetchPromises = SOURCES.map(async (src) => {
+    try {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
+
+      const response = await fetch(src.url, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36'
+        },
+        signal: controller.signal
+      });
+      clearTimeout(timeoutId);
+
+      if (!response.ok) {
+        return { name: src.name, url: src.url, text: `[HTTP ${response.status}]` };
       }
+
+      const html = await response.text();
+      const cleanedText = cleanHtml(html);
+      
+      // Limit to 10,000 characters to keep payload sizes reasonable for the Gemini API
+      return { name: src.name, url: src.url, text: cleanedText.substring(0, 10000) };
+    } catch (err) {
+      console.log(`Crawl failed for ${src.name}: ${err.message}`);
+      return { name: src.name, url: src.url, text: `[Error: ${err.message}]` };
     }
-  } catch (err) {
-    console.log("Council events directory crawl timed out or was blocked. Proceeding with synthesis mode...");
-  }
+  });
+
+  const crawledSources = await Promise.all(fetchPromises);
+  const crawlDuration = ((Date.now() - crawlStartTime) / 1000).toFixed(2);
+  console.log(`Completed crawl of ${crawledSources.length} sources in ${crawlDuration} seconds.`);
+
+  // Filter out completely failed or error response text to save API token usage
+  const successfulCrawls = crawledSources.filter(src => !src.text.startsWith('[Error:') && !src.text.startsWith('[HTTP '));
 
   // 2. AI Synthesis and Parsing via Gemini (if Key is configured)
   if (geminiApiKey) {
     try {
       const promptText = `
-You are the "Little Locals Scraper Assistant". Your job is to extract or generate exactly 3 highly realistic, 100% free, family-friendly events happening on the Central Coast, NSW, Australia.
+You are the "Little Locals Scraper Assistant". Your job is to analyze raw website content from local Central Coast venues and extract upcoming kids' and family events.
 
 Current Date: ${todayStr}
 
-RAW WEBSITE CONTENT INGESTION:
-${rawWebText ? `Here is raw text from the Central Coast Council's What's On page: ${rawWebText}` : "No raw text available. Please synthesize events instead."}
+EXISTING EVENTS & SUGGESTIONS (DO NOT extract/duplicate any events that match these titles and dates):
+${JSON.stringify([...existingEvents, ...existingSuggestions])}
+
+RAW WEBSITE TEXT CONTENTS:
+${successfulCrawls.map(s => `=== SOURCE: ${s.name} (${s.url}) ===\n${s.text}`).join('\n\n')}
 
 INSTRUCTIONS:
-1. If the raw website content contains any kids/family-friendly free activities, extract up to 3 of them.
-2. If there are no clear free family-friendly activities in the raw text, or if the text is missing, synthesize exactly 3 completely new, highly realistic, family-friendly free events happening on the Central Coast within the next 14 days.
-3. Every event MUST follow the schema exactly:
-   - title: Clean, catchy, parent-friendly title (e.g. "Kibble Park Storytime Picnic")
+1. Extract family-friendly, kids/children's events found in the raw website texts. Focus on things like school holiday events, children's workshops, kids discos, family fun days, playgrounds events, library storytimes, etc.
+2. Only extract events that are happening on or after today (${todayStr}). Do not include any past events.
+3. Skip any events that are already present in the "EXISTING EVENTS & SUGGESTIONS" list above.
+4. For each extracted event, map it to the following JSON schema:
+   - title: Clean, catchy, parent-friendly title (e.g. "Ettalong Diggers School Holiday Magic Show")
    - category: Must be exactly one of: "Playground", "Library", "Art & Craft", "Outdoors", "Sports", "Music & Storytime", or "General".
-   - location: The exact park, library, or outdoor center name followed by suburb, e.g. "Woy Woy Lions Park, Brick Wharf Rd, Woy Woy NSW 2256".
-   - date: A string in YYYY-MM-DD format. The date MUST be in the future (relative to today ${todayStr}).
+   - location: The venue name and suburb/address, e.g. "Gosford RSL, 26 Central Coast Hwy, West Gosford NSW 2250".
+   - date: A string in YYYY-MM-DD format. Ensure you extract the correct date from the context.
    - time: Event times, e.g. "10:00 AM - 12:00 PM".
    - age_group: One of "All Ages", "0-5 years", "6-12 years", or "Teens".
-   - description: Describe the activity, what to bring, shade options, playground fences, and parking. Provide highly readable, parent-friendly copy directly (do not prepend any labels, hashtags, or scraper prefixes).
+   - description: Describe the activity, what to bring, shade options, playground fences, and parking. Provide highly readable, parent-friendly copy directly.
    - image_url: A high-quality Unsplash search URL suited to the activity category.
-   - link: A URL referencing the event (e.g., a mock Facebook event link like "https://www.facebook.com/events/12345/").
+   - link: The exact source URL from the SOURCE header above (or a specific event link if found).
 
 Ensure you return a clean JSON array matching the requested schema. Do not wrap it in markdown code blocks.
 `;
@@ -173,12 +257,20 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
         const parsedEvents = JSON.parse(text);
         
         if (Array.isArray(parsedEvents) && parsedEvents.length > 0) {
+          // Additional safety check to filter out past events and exact duplicates in Javascript
+          const filteredEvents = parsedEvents.filter(ev => {
+            if (!ev.date || ev.date < todayStr) return false;
+            const isDuplicate = 
+              existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
+              existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
+            return !isDuplicate;
+          });
+
           return res.status(200).json({
             success: true,
-            mode: rawWebText ? "Crawl + AI Extraction" : "AI Synthesis Mode",
-            suggestions: parsedEvents.map((ev, i) => ({
+            mode: `Multi-site crawl (${successfulCrawls.length}/${SOURCES.length} sites fetched) + AI Extraction`,
+            suggestions: filteredEvents.map((ev, i) => ({
               ...ev,
-              // Fallback default image URLs matching categories if Unsplash fails or is invalid
               image_url: ev.image_url || mockTemplates[i % mockTemplates.length].image_url,
               link: ev.link || `https://www.facebook.com/events/recommendation_${Date.now()}_${i}/`
             }))
@@ -191,22 +283,29 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
   }
 
   // 3. Graceful Fallback Mode (No Key / API Error / Crawl Timed Out)
-  // Randomly select 3 templates, update their dates dynamically, and return them
+  // Randomly select 3 templates, update their dates dynamically, filter duplicates, and return them
   try {
     const shuffled = [...mockTemplates].sort(() => 0.5 - Math.random());
     const selected = shuffled.slice(0, 3);
 
-    const generatedSuggestions = selected.map(template => ({
-      title: template.title,
-      category: template.category,
-      location: template.location,
-      age_group: template.age_group,
-      time: template.time,
-      description: template.description,
-      image_url: template.image_url,
-      link: template.link,
-      date: getFutureDate(template.daysOffset)
-    }));
+    const generatedSuggestions = selected
+      .map(template => ({
+        title: template.title,
+        category: template.category,
+        location: template.location,
+        age_group: template.age_group,
+        time: template.time,
+        description: template.description,
+        image_url: template.image_url,
+        link: template.link,
+        date: getFutureDate(template.daysOffset)
+      }))
+      .filter(ev => {
+        const isDuplicate = 
+          existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
+          existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
+        return !isDuplicate;
+      });
 
     return res.status(200).json({
       success: true,

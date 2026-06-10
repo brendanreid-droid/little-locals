@@ -407,7 +407,11 @@ export default function AdminDashboard() {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json'
-        }
+        },
+        body: JSON.stringify({
+          existingEvents: events.map(e => ({ title: e.title, date: e.date })),
+          existingSuggestions: suggestions.map(s => ({ title: s.title, date: s.date }))
+        })
       });
       
       const data = await response.json();
