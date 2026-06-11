@@ -151,8 +151,9 @@ function extractEventContent(html) {
 
 // Vercel serverless function configuration — extend timeout for crawl + Gemini API
 export const config = {
-  maxDuration: 60 // seconds (Hobby plan supports up to 60s)
+  maxDuration: 120
 };
+export const maxDuration = 120;
 
 export default async function handler(req, res) {
   // Only allow POST requests

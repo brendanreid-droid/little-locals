@@ -1,7 +1,7 @@
 {
   "functions": {
-    "api/scrape-events.js": {
-      "maxDuration": 60
+    "api/**": {
+      "maxDuration": 120
     }
   },
   "rewrites": [

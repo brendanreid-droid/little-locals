@@ -1,0 +1,10 @@
+{
+  "functions": {
+    "frontend/api/**": {
+      "maxDuration": 120
+    },
+    "api/**": {
+      "maxDuration": 120
+    }
+  }
+}
