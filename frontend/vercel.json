@@ -1,9 +1,4 @@
 {
-  "functions": {
-    "api/scrape-events.js": {
-      "maxDuration": 120
-    }
-  },
   "rewrites": [
     { "source": "/storage/(.*)", "destination": "https://firebasestorage.googleapis.com/v0/b/littlelocals-cc-55.firebasestorage.app/o/$1?alt=media" },
     { "source": "/((?!api/).*)", "destination": "/index.html" }
