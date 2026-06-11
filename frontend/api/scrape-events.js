@@ -27,16 +27,82 @@ const SOURCES = [
   { name: "The Ary Toukley", url: "https://www.thearytoukley.com.au/sh" }
 ];
 
-// Helper function to strip HTML markup and unnecessary sections
-function cleanHtml(html) {
+// Extract LD+JSON structured data (Schema.org Event objects) from HTML
+function extractLdJson(html) {
+  const results = [];
+  const regex = /<script[^>]*type\s*=\s*["']application\/ld\+json["'][^>]*>([\s\S]*?)<\/script>/gi;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    try {
+      const data = JSON.parse(match[1]);
+      // Recursively search for Event-type objects
+      const findEvents = (obj) => {
+        if (!obj) return;
+        if (Array.isArray(obj)) { obj.forEach(findEvents); return; }
+        if (typeof obj === 'object') {
+          const type = obj['@type'];
+          if (type && (typeof type === 'string' ? type.toLowerCase().includes('event') : Array.isArray(type) && type.some(t => t.toLowerCase().includes('event')))) {
+            results.push(JSON.stringify(obj));
+          }
+          // Check @graph arrays (Yoast, Rank Math)
+          if (obj['@graph']) findEvents(obj['@graph']);
+          Object.values(obj).forEach(v => { if (typeof v === 'object') findEvents(v); });
+        }
+      };
+      findEvents(data);
+    } catch (e) { /* ignore malformed JSON */ }
+  }
+  return results.join('\n');
+}
+
+// Extract text from <article> elements (Elementor event cards, WP posts)
+function extractArticles(html) {
+  const articles = [];
+  const regex = /<article[^>]*>([\s\S]*?)<\/article>/gi;
+  let match;
+  while ((match = regex.exec(html)) !== null) {
+    let text = match[1]
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<svg[^>]*>[\s\S]*?<\/svg>/gi, '')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&#8217;/g, "'").replace(/&#8211;/g, '-').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+      .replace(/\s+/g, ' ').trim();
+    if (text.length > 10) articles.push(text);
+  }
+  return articles.join('\n---\n');
+}
+
+// Extract content from <main> or primary content area
+function extractMainContent(html) {
+  // Try <main> first
+  const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
+  let content = mainMatch ? mainMatch[1] : '';
+
+  // If no <main>, try common content wrappers
+  if (!content) {
+    const contentMatch = html.match(/<div[^>]*(?:id|class)\s*=\s*["'][^"']*(?:content|main|page-content|entry-content)[^"']*["'][^>]*>([\s\S]*?)<\/div>/i);
+    content = contentMatch ? contentMatch[1] : '';
+  }
+
+  if (!content) return '';
+
+  return content
+    .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+    .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+    .replace(/<svg[^>]*>[\s\S]*?<\/svg>/gi, '')
+    .replace(/<nav[^>]*>[\s\S]*?<\/nav>/gi, '')
+    .replace(/<[^>]+>/g, ' ')
+    .replace(/&amp;/g, '&').replace(/&nbsp;/g, ' ').replace(/&#8217;/g, "'").replace(/&#8211;/g, '-').replace(/&#39;/g, "'").replace(/&quot;/g, '"')
+    .replace(/\s+/g, ' ').trim();
+}
+
+// Full body fallback: strip HTML to plain text (original approach)
+function cleanHtmlFull(html) {
   if (!html) return "";
 
-  // Extract body content if present to save processing time
   const bodyStartIndex = html.indexOf('<body');
-  let content = html;
-  if (bodyStartIndex !== -1) {
-    content = html.substring(bodyStartIndex);
-  }
+  let content = bodyStartIndex !== -1 ? html.substring(bodyStartIndex) : html;
 
   let clean = content
     .replace(/<head[^>]*>([\s\S]*?)<\/head>/gi, '')
@@ -48,22 +114,39 @@ function cleanHtml(html) {
     .replace(/<footer[^>]*>([\s\S]*?)<\/footer>/gi, '')
     .replace(/<nav[^>]*>([\s\S]*?)<\/nav>/gi, '');
 
-  // Strip all HTML tags
   clean = clean.replace(/<[^>]+>/g, ' ');
-
-  // Replace HTML entities
   clean = clean
-    .replace(/&amp;/g, '&')
-    .replace(/&lt;/g, '<')
-    .replace(/&gt;/g, '>')
-    .replace(/&quot;/g, '"')
-    .replace(/&#39;/g, "'")
-    .replace(/&nbsp;/g, ' ');
-
-  // Compress whitespace
+    .replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>')
+    .replace(/&quot;/g, '"').replace(/&#39;/g, "'").replace(/&nbsp;/g, ' ')
+    .replace(/&#8217;/g, "'").replace(/&#8211;/g, '-');
   clean = clean.replace(/\s+/g, ' ').trim();
 
   return clean;
+}
+
+// Smart multi-pass content extraction: prioritizes structured data > articles > main > full body
+function extractEventContent(html) {
+  const parts = [];
+
+  // Pass 1: LD+JSON structured event data (highest quality)
+  const ldJson = extractLdJson(html);
+  if (ldJson) parts.push('[STRUCTURED DATA]\n' + ldJson);
+
+  // Pass 2: Article elements (Elementor event cards, WP post listings)
+  const articles = extractArticles(html);
+  if (articles) parts.push('[EVENT CARDS]\n' + articles);
+
+  // Pass 3: Main content area
+  const mainContent = extractMainContent(html);
+  if (mainContent) parts.push('[MAIN CONTENT]\n' + mainContent);
+
+  // If we got useful structured content, return it
+  if (parts.length > 0) {
+    return parts.join('\n\n');
+  }
+
+  // Pass 4: Fall back to full body text extraction
+  return cleanHtmlFull(html);
 }
 
 export default async function handler(req, res) {
@@ -171,7 +254,7 @@ export default async function handler(req, res) {
   const fetchPromises = SOURCES.map(async (src) => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 3500);
+      const timeoutId = setTimeout(() => controller.abort(), 6000);
 
       const response = await fetch(src.url, {
         headers: {
@@ -186,12 +269,14 @@ export default async function handler(req, res) {
       }
 
       const html = await response.text();
-      const cleanedText = cleanHtml(html);
+      const extractedText = extractEventContent(html);
       
-      // Limit to 10,000 characters to keep payload sizes reasonable for the Gemini API
-      return { name: src.name, url: src.url, text: cleanedText.substring(0, 10000) };
+      // Limit to 15,000 characters per source for the Gemini API
+      const trimmedText = extractedText.substring(0, 15000);
+      console.log(`  ✓ ${src.name}: ${html.length} bytes HTML → ${trimmedText.length} chars extracted`);
+      return { name: src.name, url: src.url, text: trimmedText };
     } catch (err) {
-      console.log(`Crawl failed for ${src.name}: ${err.message}`);
+      console.log(`  ✗ ${src.name}: ${err.message}`);
       return { name: src.name, url: src.url, text: `[Error: ${err.message}]` };
     }
   });
@@ -202,6 +287,7 @@ export default async function handler(req, res) {
 
   // Filter out completely failed or error response text to save API token usage
   const successfulCrawls = crawledSources.filter(src => !src.text.startsWith('[Error:') && !src.text.startsWith('[HTTP '));
+  console.log(`Successful crawls: ${successfulCrawls.length}/${SOURCES.length} — Total chars: ${successfulCrawls.reduce((sum, s) => sum + s.text.length, 0)}`);
 
   // 2. AI Synthesis and Parsing via Gemini (if Key is configured)
   if (geminiApiKey) {
@@ -217,22 +303,23 @@ ${JSON.stringify([...existingEvents, ...existingSuggestions])}
 DISMISSED / DELETED EVENTS (DO NOT recommend or suggest ANY event whose title matches these, regardless of date):
 ${JSON.stringify(dismissedSuggestions)}
 
-RAW WEBSITE TEXT CONTENTS:
+RAW WEBSITE TEXT CONTENTS (may include sections labelled [STRUCTURED DATA], [EVENT CARDS], and [MAIN CONTENT] — check all sections for event information):
 ${successfulCrawls.map(s => `=== SOURCE: ${s.name} (${s.url}) ===\n${s.text}`).join('\n\n')}
 
 INSTRUCTIONS:
-1. Extract family-friendly, kids/children's events found in the raw website texts. Focus on school holiday events, children's workshops, kids discos, family fun days, playgrounds events, library storytimes, etc.
-2. Only extract events that are happening on or after today (${todayStr}). Do not include any past events.
-3. Skip any events that are already present in the "EXISTING LIVE EVENTS & PENDING SUGGESTIONS" list (match by title case-insensitive AND date). For "DISMISSED / DELETED EVENTS", skip any event whose title matches a dismissed title (case-insensitive), regardless of date.
-4. Set "is_school_holiday" to true if the event explicitly mentions school holidays, is run as a school holidays activity, or if the source URL path contains "school-holidays". Otherwise, set it to false.
-5. CONSOLIDATE REPEATING EVENTS:
+1. Carefully analyze ALL content from ALL sources above. Extract every family-friendly, kids/children's event you can find. This includes: school holiday events, children's workshops, kids discos, family fun days, playground events, library storytimes, kids' movie nights, kids eat free deals, sensory play, craft activities, animal shows, school holiday programs, and any event described as suitable for families or children.
+2. Also include general venue events at family-friendly venues (RSLs, clubs, hotels, shopping centres) that would appeal to families — e.g. barefoot bowls, community markets, free live music with kids' activities, etc.
+3. Only extract events that are happening on or after today (${todayStr}). Do not include any past events.
+4. Skip any events that are already present in the "EXISTING LIVE EVENTS & PENDING SUGGESTIONS" list (match by title case-insensitive AND date). For "DISMISSED / DELETED EVENTS", skip any event whose title matches a dismissed title (case-insensitive), regardless of date.
+5. Set "is_school_holiday" to true if the event explicitly mentions school holidays, is run as a school holidays activity, or if the source URL path contains "school-holidays". Otherwise, set it to false.
+6. CONSOLIDATE REPEATING EVENTS:
    - If an event appears to repeat (e.g., happens every Wednesday, every Saturday, weekly, or is a repeating holiday class), DO NOT extract multiple individual occurrences.
    - Extract it ONLY ONCE representing the first upcoming occurrence (use its start date as "date").
    - Set "is_recurring" to true.
    - Set "recurrence_type" to one of: "weekly", "fortnightly", "monthly".
    - Set "recurrence_until" to the date the series ends (YYYY-MM-DD format). If no end date is specified, default to 3 months from today's date (relative to ${todayStr}), capped at a maximum of 6 months.
    - For single, one-off events, set "is_recurring" to false, "recurrence_type" to null, and "recurrence_until" to null.
-6. For each extracted event, map it to the following JSON schema:
+7. For each extracted event, map it to the following JSON schema:
    - title: Clean, catchy, parent-friendly title (e.g. "Ettalong Diggers School Holiday Magic Show")
    - category: Must be exactly one of: "School Holidays", "Weekend Activities", "Weekday Activities", "Markets", "Playgrounds", "Indoor Activities", or "Playgroups".
    - location: The venue name and suburb/address, e.g. "Gosford RSL, 26 Central Coast Hwy, West Gosford NSW 2250".
