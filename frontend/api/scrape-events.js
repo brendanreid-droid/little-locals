@@ -294,10 +294,17 @@ export default async function handler(req, res) {
   const successfulCrawls = crawledSources.filter(src => !src.text.startsWith('[Error:') && !src.text.startsWith('[HTTP '));
   console.log(`Successful crawls: ${successfulCrawls.length}/${SOURCES.length} — Total chars: ${successfulCrawls.reduce((sum, s) => sum + s.text.length, 0)}`);
 
-  // 2. AI Synthesis and Parsing via Gemini (if Key is configured)
-  if (geminiApiKey) {
-    try {
-      const promptText = `
+  // 2. AI Synthesis and Parsing via Gemini (Requires API Key)
+  if (!geminiApiKey) {
+    console.error("Scraper aborted: GEMINI_API_KEY environment variable is missing on the server.");
+    return res.status(400).json({
+      success: false,
+      error: "The GEMINI_API_KEY environment variable is not configured on the server. Please check your Vercel project settings."
+    });
+  }
+
+  try {
+    const promptText = `
 You are the "Little Locals Scraper Assistant". Your job is to analyze raw website content from local Central Coast venues and extract all upcoming kids' and family-friendly events happening over the next 6 months (starting from ${todayStr}).
 
 Current Date: ${todayStr}
@@ -342,160 +349,142 @@ INSTRUCTIONS:
 Ensure you return a clean JSON array matching the requested schema. Do not wrap it in markdown code blocks.
 `;
 
-      console.log(`Sending ${promptText.length} chars to Gemini API...`);
+    console.log(`Sending ${promptText.length} chars to Gemini API...`);
 
-      const geminiStart = Date.now();
-      const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          contents: [{
-            parts: [{
-              text: promptText
-            }]
-          }],
-          generationConfig: {
-            responseMimeType: "application/json",
-            responseSchema: {
-              type: "ARRAY",
-              items: {
-                type: "OBJECT",
-                properties: {
-                  title: { type: "STRING" },
-                  category: { type: "STRING" },
-                  location: { type: "STRING" },
-                  date: { type: "STRING" },
-                  time: { type: "STRING" },
-                  age_group: { type: "STRING" },
-                  description: { type: "STRING" },
-                  image_url: { type: "STRING" },
-                  link: { type: "STRING" },
-                  is_school_holiday: { type: "BOOLEAN" },
-                  is_recurring: { type: "BOOLEAN" },
-                  recurrence_type: { type: "STRING" },
-                  recurrence_until: { type: "STRING" }
-                },
-                required: ["title", "category", "location", "date", "description", "time", "age_group", "is_school_holiday", "is_recurring"]
-              }
+    const geminiStart = Date.now();
+    const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        contents: [{
+          parts: [{
+            text: promptText
+          }]
+        }],
+        generationConfig: {
+          responseMimeType: "application/json",
+          responseSchema: {
+            type: "ARRAY",
+            items: {
+              type: "OBJECT",
+              properties: {
+                title: { type: "STRING" },
+                category: { type: "STRING" },
+                location: { type: "STRING" },
+                date: { type: "STRING" },
+                time: { type: "STRING" },
+                age_group: { type: "STRING" },
+                description: { type: "STRING" },
+                image_url: { type: "STRING" },
+                link: { type: "STRING" },
+                is_school_holiday: { type: "BOOLEAN" },
+                is_recurring: { type: "BOOLEAN" },
+                recurrence_type: { type: "STRING" },
+                recurrence_until: { type: "STRING" }
+              },
+              required: ["title", "category", "location", "date", "description", "time", "age_group", "is_school_holiday", "is_recurring"]
             }
           }
-        })
+        }
+      })
+    });
+
+    const geminiDuration = ((Date.now() - geminiStart) / 1000).toFixed(2);
+    const data = await response.json();
+
+    if (!response.ok) {
+      const errorMsg = `Gemini API HTTP ${response.status} after ${geminiDuration}s: ${JSON.stringify(data.error || data)}`;
+      console.error(errorMsg);
+      return res.status(500).json({
+        success: false,
+        error: errorMsg,
+        crawledCount: successfulCrawls.length
       });
-
-      const geminiDuration = ((Date.now() - geminiStart) / 1000).toFixed(2);
-      const data = await response.json();
-
-      if (!response.ok) {
-        console.error(`Gemini API HTTP ${response.status} after ${geminiDuration}s:`, JSON.stringify(data).substring(0, 500));
-        // Fall through to fallback
-      } else if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
-        const text = data.candidates[0].content.parts[0].text;
-        console.log(`Gemini responded in ${geminiDuration}s with ${text.length} chars`);
-        
-        let parsedEvents;
-        try {
-          parsedEvents = JSON.parse(text);
-        } catch (parseErr) {
-          console.error(`Failed to parse Gemini JSON: ${parseErr.message}. Raw text: ${text.substring(0, 300)}`);
-          parsedEvents = [];
-        }
-        
-        if (Array.isArray(parsedEvents) && parsedEvents.length > 0) {
-          console.log(`Gemini extracted ${parsedEvents.length} events. Titles: ${parsedEvents.map(e => e.title).join(', ')}`);
-          
-          // Additional safety check to filter out past events and duplicates in Javascript
-          const filteredEvents = parsedEvents.filter(ev => {
-            if (!ev.date || ev.date < todayStr) {
-              console.log(`  Filtered out (past/no date): "${ev.title}" date=${ev.date}`);
-              return false;
-            }
-            
-            // Match existing events/suggestions by title + date
-            const isExistingDuplicate = 
-              existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
-              existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
-            // Match dismissed events by title ONLY — once dismissed, never re-suggest
-            const isDismissed = 
-              dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase());
-            
-            if (isExistingDuplicate) console.log(`  Filtered out (duplicate): "${ev.title}"`);
-            if (isDismissed) console.log(`  Filtered out (dismissed): "${ev.title}"`);
-              
-            return !isExistingDuplicate && !isDismissed;
-          });
-
-          console.log(`After filtering: ${filteredEvents.length} events remain (${parsedEvents.length - filteredEvents.length} removed)`);
-
-          if (filteredEvents.length > 0) {
-            return res.status(200).json({
-              success: true,
-              mode: `Multi-site crawl (${successfulCrawls.length}/${SOURCES.length} sites fetched) + AI Extraction`,
-              suggestions: filteredEvents.map((ev, i) => ({
-                ...ev,
-                image_url: ev.image_url || mockTemplates[i % mockTemplates.length].image_url,
-                link: ev.link || `https://www.facebook.com/events/recommendation_${Date.now()}_${i}/`,
-                // Normalize null values for optional recurrence params
-                recurrence_type: ev.is_recurring ? (ev.recurrence_type || 'weekly') : null,
-                recurrence_until: ev.is_recurring ? (ev.recurrence_until || getFutureDate(90)) : null
-              }))
-            });
-          } else {
-            console.log('All Gemini events were filtered out by dedup/dismiss logic. Falling back.');
-          }
-        } else {
-          console.log(`Gemini returned empty or non-array result: ${text.substring(0, 200)}`);
-        }
-      } else {
-        console.error(`Gemini response missing candidates after ${geminiDuration}s. Response keys: ${Object.keys(data)}. Finish reason: ${data.candidates?.[0]?.finishReason}. Block reason: ${data.promptFeedback?.blockReason}`);
-      }
-    } catch (geminiErr) {
-      console.error("Gemini API call failed:", geminiErr.message, geminiErr.stack?.substring(0, 300));
     }
-  } else {
-    console.log('No GEMINI_API_KEY configured — skipping AI extraction.');
-  }
 
-  // 3. Graceful Fallback Mode (No Key / API Error / Crawl Timed Out)
-  // Randomly select 3 templates, update their dates dynamically, filter duplicates, and return them
-  try {
-    const shuffled = [...mockTemplates].sort(() => 0.5 - Math.random());
-    const selected = shuffled.slice(0, 3);
-
-    const generatedSuggestions = selected
-      .map(template => ({
-        title: template.title,
-        category: template.category,
-        location: template.location,
-        age_group: template.age_group,
-        time: template.time,
-        description: template.description,
-        image_url: template.image_url,
-        link: template.link,
-        date: getFutureDate(template.daysOffset),
-        is_school_holiday: template.is_school_holiday || false,
-        is_recurring: template.is_recurring || false,
-        recurrence_type: template.recurrence_type || null,
-        recurrence_until: template.recurrence_until || null
-      }))
-      .filter(ev => {
-        const isExistingDuplicate = 
-          existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
-          existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
-        const isDismissed = 
-          dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase());
-        return !isExistingDuplicate && !isDismissed;
+    if (!data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      const errorMsg = `Gemini response missing text after ${geminiDuration}s. Finish reason: ${data.candidates?.[0]?.finishReason}. Block reason: ${data.promptFeedback?.blockReason}`;
+      console.error(errorMsg);
+      return res.status(500).json({
+        success: false,
+        error: errorMsg,
+        crawledCount: successfulCrawls.length
       });
+    }
+
+    const text = data.candidates[0].content.parts[0].text;
+    console.log(`Gemini responded in ${geminiDuration}s with ${text.length} chars`);
+    
+    let parsedEvents;
+    try {
+      parsedEvents = JSON.parse(text);
+    } catch (parseErr) {
+      const errorMsg = `Failed to parse Gemini JSON: ${parseErr.message}. Raw text snippet: ${text.substring(0, 300)}`;
+      console.error(errorMsg);
+      return res.status(500).json({
+        success: false,
+        error: errorMsg,
+        crawledCount: successfulCrawls.length
+      });
+    }
+    
+    if (!Array.isArray(parsedEvents)) {
+      const errorMsg = `Gemini returned a non-array JSON object: ${text.substring(0, 300)}`;
+      console.error(errorMsg);
+      return res.status(500).json({
+        success: false,
+        error: errorMsg,
+        crawledCount: successfulCrawls.length
+      });
+    }
+
+    console.log(`Gemini extracted ${parsedEvents.length} events. Titles: ${parsedEvents.map(e => e.title).join(', ')}`);
+    
+    // Additional safety check to filter out past events and duplicates in Javascript
+    const filteredEvents = parsedEvents.filter(ev => {
+      if (!ev.date || ev.date < todayStr) {
+        console.log(`  Filtered out (past/no date): "${ev.title}" date=${ev.date}`);
+        return false;
+      }
+      
+      // Match existing events/suggestions by title + date
+      const isExistingDuplicate = 
+        existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
+        existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
+      // Match dismissed events by title ONLY — once dismissed, never re-suggest
+      const isDismissed = 
+        dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase());
+      
+      if (isExistingDuplicate) console.log(`  Filtered out (duplicate): "${ev.title}"`);
+      if (isDismissed) console.log(`  Filtered out (dismissed): "${ev.title}"`);
+        
+      return !isExistingDuplicate && !isDismissed;
+    });
+
+    console.log(`After filtering: ${filteredEvents.length} events remain (${parsedEvents.length - filteredEvents.length} removed)`);
 
     return res.status(200).json({
       success: true,
-      mode: "Template Synthesis Fallback (Zero Setup Mode)",
-      suggestions: generatedSuggestions
+      mode: `Multi-site crawl (${successfulCrawls.length}/${SOURCES.length} sites fetched) + AI Extraction`,
+      suggestions: filteredEvents.map((ev, i) => ({
+        ...ev,
+        image_url: ev.image_url || mockTemplates[i % mockTemplates.length].image_url,
+        link: ev.link || `https://www.facebook.com/events/recommendation_${Date.now()}_${i}/`,
+        // Normalize null values for optional recurrence params
+        recurrence_type: ev.is_recurring ? (ev.recurrence_type || 'weekly') : null,
+        recurrence_until: ev.is_recurring ? (ev.recurrence_until || getFutureDate(90)) : null
+      }))
     });
 
-  } catch (fallbackErr) {
-    console.error("Fallback generator crashed:", fallbackErr);
-    return res.status(500).json({ error: 'Serverless scraper crashed: ' + fallbackErr.message });
+  } catch (geminiErr) {
+    const errorMsg = `Exception in Gemini handler: ${geminiErr.message}`;
+    console.error(errorMsg, geminiErr.stack?.substring(0, 300));
+    return res.status(500).json({
+      success: false,
+      error: errorMsg,
+      crawledCount: successfulCrawls.length
+    });
   }
 }
