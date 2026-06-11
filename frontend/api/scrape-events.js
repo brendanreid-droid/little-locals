@@ -149,6 +149,11 @@ function extractEventContent(html) {
   return cleanHtmlFull(html);
 }
 
+// Vercel serverless function configuration — extend timeout for crawl + Gemini API
+export const config = {
+  maxDuration: 60 // seconds (Hobby plan supports up to 60s)
+};
+
 export default async function handler(req, res) {
   // Only allow POST requests
   if (req.method !== 'POST') {
@@ -337,6 +342,9 @@ INSTRUCTIONS:
 Ensure you return a clean JSON array matching the requested schema. Do not wrap it in markdown code blocks.
 `;
 
+      console.log(`Sending ${promptText.length} chars to Gemini API...`);
+
+      const geminiStart = Date.now();
       const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiApiKey}`, {
         method: 'POST',
         headers: {
@@ -376,16 +384,33 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
         })
       });
 
+      const geminiDuration = ((Date.now() - geminiStart) / 1000).toFixed(2);
       const data = await response.json();
 
-      if (response.ok && data.candidates?.[0]?.content?.parts?.[0]?.text) {
+      if (!response.ok) {
+        console.error(`Gemini API HTTP ${response.status} after ${geminiDuration}s:`, JSON.stringify(data).substring(0, 500));
+        // Fall through to fallback
+      } else if (data.candidates?.[0]?.content?.parts?.[0]?.text) {
         const text = data.candidates[0].content.parts[0].text;
-        const parsedEvents = JSON.parse(text);
+        console.log(`Gemini responded in ${geminiDuration}s with ${text.length} chars`);
+        
+        let parsedEvents;
+        try {
+          parsedEvents = JSON.parse(text);
+        } catch (parseErr) {
+          console.error(`Failed to parse Gemini JSON: ${parseErr.message}. Raw text: ${text.substring(0, 300)}`);
+          parsedEvents = [];
+        }
         
         if (Array.isArray(parsedEvents) && parsedEvents.length > 0) {
+          console.log(`Gemini extracted ${parsedEvents.length} events. Titles: ${parsedEvents.map(e => e.title).join(', ')}`);
+          
           // Additional safety check to filter out past events and duplicates in Javascript
           const filteredEvents = parsedEvents.filter(ev => {
-            if (!ev.date || ev.date < todayStr) return false;
+            if (!ev.date || ev.date < todayStr) {
+              console.log(`  Filtered out (past/no date): "${ev.title}" date=${ev.date}`);
+              return false;
+            }
             
             // Match existing events/suggestions by title + date
             const isExistingDuplicate = 
@@ -394,27 +419,42 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
             // Match dismissed events by title ONLY — once dismissed, never re-suggest
             const isDismissed = 
               dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase());
+            
+            if (isExistingDuplicate) console.log(`  Filtered out (duplicate): "${ev.title}"`);
+            if (isDismissed) console.log(`  Filtered out (dismissed): "${ev.title}"`);
               
             return !isExistingDuplicate && !isDismissed;
           });
 
-          return res.status(200).json({
-            success: true,
-            mode: `Multi-site crawl (${successfulCrawls.length}/${SOURCES.length} sites fetched) + AI Extraction`,
-            suggestions: filteredEvents.map((ev, i) => ({
-              ...ev,
-              image_url: ev.image_url || mockTemplates[i % mockTemplates.length].image_url,
-              link: ev.link || `https://www.facebook.com/events/recommendation_${Date.now()}_${i}/`,
-              // Normalize null values for optional recurrence params
-              recurrence_type: ev.is_recurring ? (ev.recurrence_type || 'weekly') : null,
-              recurrence_until: ev.is_recurring ? (ev.recurrence_until || getFutureDate(90)) : null
-            }))
-          });
+          console.log(`After filtering: ${filteredEvents.length} events remain (${parsedEvents.length - filteredEvents.length} removed)`);
+
+          if (filteredEvents.length > 0) {
+            return res.status(200).json({
+              success: true,
+              mode: `Multi-site crawl (${successfulCrawls.length}/${SOURCES.length} sites fetched) + AI Extraction`,
+              suggestions: filteredEvents.map((ev, i) => ({
+                ...ev,
+                image_url: ev.image_url || mockTemplates[i % mockTemplates.length].image_url,
+                link: ev.link || `https://www.facebook.com/events/recommendation_${Date.now()}_${i}/`,
+                // Normalize null values for optional recurrence params
+                recurrence_type: ev.is_recurring ? (ev.recurrence_type || 'weekly') : null,
+                recurrence_until: ev.is_recurring ? (ev.recurrence_until || getFutureDate(90)) : null
+              }))
+            });
+          } else {
+            console.log('All Gemini events were filtered out by dedup/dismiss logic. Falling back.');
+          }
+        } else {
+          console.log(`Gemini returned empty or non-array result: ${text.substring(0, 200)}`);
         }
+      } else {
+        console.error(`Gemini response missing candidates after ${geminiDuration}s. Response keys: ${Object.keys(data)}. Finish reason: ${data.candidates?.[0]?.finishReason}. Block reason: ${data.promptFeedback?.blockReason}`);
       }
     } catch (geminiErr) {
-      console.error("Gemini API Parse failed. Falling back to structured templates...", geminiErr);
+      console.error("Gemini API call failed:", geminiErr.message, geminiErr.stack?.substring(0, 300));
     }
+  } else {
+    console.log('No GEMINI_API_KEY configured — skipping AI extraction.');
   }
 
   // 3. Graceful Fallback Mode (No Key / API Error / Crawl Timed Out)
