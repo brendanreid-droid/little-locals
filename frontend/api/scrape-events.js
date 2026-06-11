@@ -259,7 +259,7 @@ export default async function handler(req, res) {
   const fetchPromises = SOURCES.map(async (src) => {
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 6000);
+      const timeoutId = setTimeout(() => controller.abort(), 3500);
 
       const response = await fetch(src.url, {
         headers: {
