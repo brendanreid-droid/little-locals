@@ -75,8 +75,8 @@ export default async function handler(req, res) {
   const geminiApiKey = process.env.GEMINI_API_KEY;
   const todayStr = new Date().toISOString().split('T')[0];
 
-  // Extract existing events and suggestions lists from the request body to avoid duplicates
-  const { existingEvents = [], existingSuggestions = [] } = req.body;
+  // Extract existing events, suggestions, and dismissed suggestions lists from the request body to avoid duplicates
+  const { existingEvents = [], existingSuggestions = [], dismissedSuggestions = [] } = req.body;
 
   // List of high-fidelity mock events for templates & fallback
   const mockTemplates = [
@@ -90,7 +90,10 @@ export default async function handler(req, res) {
       image_url: "https://images.unsplash.com/photo-1596464716127-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/334455667/",
       daysOffset: 3,
-      is_school_holiday: false
+      is_school_holiday: false,
+      is_recurring: false,
+      recurrence_type: null,
+      recurrence_until: null
     },
     {
       title: "Kibble Park LEGO Club",
@@ -102,7 +105,10 @@ export default async function handler(req, res) {
       image_url: "https://images.unsplash.com/photo-1513364776144-60967b0f800f?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/112233445/",
       daysOffset: 5,
-      is_school_holiday: false
+      is_school_holiday: false,
+      is_recurring: false,
+      recurrence_type: null,
+      recurrence_until: null
     },
     {
       title: "The Entrance Splash Park Picnic",
@@ -114,7 +120,10 @@ export default async function handler(req, res) {
       image_url: "https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/556677889/",
       daysOffset: 7,
-      is_school_holiday: false
+      is_school_holiday: false,
+      is_recurring: false,
+      recurrence_type: null,
+      recurrence_until: null
     },
     {
       title: "Avoca Beach Rockpool Explorers",
@@ -126,7 +135,10 @@ export default async function handler(req, res) {
       image_url: "https://images.unsplash.com/photo-1502082553048-f2a82984de30?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/778899001/",
       daysOffset: 9,
-      is_school_holiday: true
+      is_school_holiday: true,
+      is_recurring: false,
+      recurrence_type: null,
+      recurrence_until: null
     },
     {
       title: "Erina Library Musical Storytime",
@@ -138,7 +150,10 @@ export default async function handler(req, res) {
       image_url: "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=800&q=80",
       link: "https://www.facebook.com/events/445566778/",
       daysOffset: 11,
-      is_school_holiday: false
+      is_school_holiday: false,
+      is_recurring: false,
+      recurrence_type: null,
+      recurrence_until: null
     }
   ];
 
@@ -192,24 +207,34 @@ export default async function handler(req, res) {
   if (geminiApiKey) {
     try {
       const promptText = `
-You are the "Little Locals Scraper Assistant". Your job is to analyze raw website content from local Central Coast venues and extract upcoming kids' and family events.
+You are the "Little Locals Scraper Assistant". Your job is to analyze raw website content from local Central Coast venues and extract all upcoming kids' and family-friendly events happening over the next 6 months (starting from ${todayStr}).
 
 Current Date: ${todayStr}
 
-EXISTING EVENTS & SUGGESTIONS (DO NOT extract/duplicate any events that match these titles and dates):
+EXISTING LIVE EVENTS & PENDING SUGGESTIONS (DO NOT extract/duplicate any events that match these titles and dates):
 ${JSON.stringify([...existingEvents, ...existingSuggestions])}
+
+DISMISSED / DELETED EVENTS (DO NOT recommend or suggest these events again - match by title and date):
+${JSON.stringify(dismissedSuggestions)}
 
 RAW WEBSITE TEXT CONTENTS:
 ${successfulCrawls.map(s => `=== SOURCE: ${s.name} (${s.url}) ===\n${s.text}`).join('\n\n')}
 
 INSTRUCTIONS:
-1. Extract family-friendly, kids/children's events found in the raw website texts. Focus on things like school holiday events, children's workshops, kids discos, family fun days, playgrounds events, library storytimes, etc.
+1. Extract family-friendly, kids/children's events found in the raw website texts. Focus on school holiday events, children's workshops, kids discos, family fun days, playgrounds events, library storytimes, etc.
 2. Only extract events that are happening on or after today (${todayStr}). Do not include any past events.
-3. Skip any events that are already present in the "EXISTING EVENTS & SUGGESTIONS" list above.
+3. Skip any events that are already present in the "EXISTING LIVE EVENTS & PENDING SUGGESTIONS" or "DISMISSED / DELETED EVENTS" lists above. Match strictly by title (case-insensitive) and date.
 4. Set "is_school_holiday" to true if the event explicitly mentions school holidays, is run as a school holidays activity, or if the source URL path contains "school-holidays". Otherwise, set it to false.
-5. For each extracted event, map it to the following JSON schema:
+5. CONSOLIDATE REPEATING EVENTS:
+   - If an event appears to repeat (e.g., happens every Wednesday, every Saturday, weekly, or is a repeating holiday class), DO NOT extract multiple individual occurrences.
+   - Extract it ONLY ONCE representing the first upcoming occurrence (use its start date as "date").
+   - Set "is_recurring" to true.
+   - Set "recurrence_type" to one of: "weekly", "fortnightly", "monthly".
+   - Set "recurrence_until" to the date the series ends (YYYY-MM-DD format). If no end date is specified, default to 3 months from today's date (relative to ${todayStr}), capped at a maximum of 6 months.
+   - For single, one-off events, set "is_recurring" to false, "recurrence_type" to null, and "recurrence_until" to null.
+6. For each extracted event, map it to the following JSON schema:
    - title: Clean, catchy, parent-friendly title (e.g. "Ettalong Diggers School Holiday Magic Show")
-   - category: Must be exactly one of: "Playground", "Library", "Art & Craft", "Outdoors", "Sports", "Music & Storytime", or "General".
+   - category: Must be exactly one of: "School Holidays", "Weekend Activities", "Weekday Activities", "Markets", "Playgrounds", "Indoor Activities", or "Playgroups".
    - location: The venue name and suburb/address, e.g. "Gosford RSL, 26 Central Coast Hwy, West Gosford NSW 2250".
    - date: A string in YYYY-MM-DD format. Ensure you extract the correct date from the context.
    - time: Event times, e.g. "10:00 AM - 12:00 PM".
@@ -218,6 +243,9 @@ INSTRUCTIONS:
    - image_url: A high-quality Unsplash search URL suited to the activity category.
    - link: The exact source URL from the SOURCE header above (or a specific event link if found).
    - is_school_holiday: Boolean indicating if it's a school holiday event.
+   - is_recurring: Boolean indicating if the event repeats.
+   - recurrence_type: String (weekly, fortnightly, monthly, or null).
+   - recurrence_until: String (YYYY-MM-DD or null).
 
 Ensure you return a clean JSON array matching the requested schema. Do not wrap it in markdown code blocks.
 `;
@@ -249,9 +277,12 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
                   description: { type: "STRING" },
                   image_url: { type: "STRING" },
                   link: { type: "STRING" },
-                  is_school_holiday: { type: "BOOLEAN" }
+                  is_school_holiday: { type: "BOOLEAN" },
+                  is_recurring: { type: "BOOLEAN" },
+                  recurrence_type: { type: "STRING" },
+                  recurrence_until: { type: "STRING" }
                 },
-                required: ["title", "category", "location", "date", "description", "time", "age_group", "is_school_holiday"]
+                required: ["title", "category", "location", "date", "description", "time", "age_group", "is_school_holiday", "is_recurring"]
               }
             }
           }
@@ -265,12 +296,15 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
         const parsedEvents = JSON.parse(text);
         
         if (Array.isArray(parsedEvents) && parsedEvents.length > 0) {
-          // Additional safety check to filter out past events and exact duplicates in Javascript
+          // Additional safety check to filter out past events and duplicates in Javascript
           const filteredEvents = parsedEvents.filter(ev => {
             if (!ev.date || ev.date < todayStr) return false;
+            
             const isDuplicate = 
               existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
-              existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
+              existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date) ||
+              dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase() && d.date === ev.date);
+              
             return !isDuplicate;
           });
 
@@ -280,7 +314,10 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
             suggestions: filteredEvents.map((ev, i) => ({
               ...ev,
               image_url: ev.image_url || mockTemplates[i % mockTemplates.length].image_url,
-              link: ev.link || `https://www.facebook.com/events/recommendation_${Date.now()}_${i}/`
+              link: ev.link || `https://www.facebook.com/events/recommendation_${Date.now()}_${i}/`,
+              // Normalize null values for optional recurrence params
+              recurrence_type: ev.is_recurring ? (ev.recurrence_type || 'weekly') : null,
+              recurrence_until: ev.is_recurring ? (ev.recurrence_until || getFutureDate(90)) : null
             }))
           });
         }
@@ -307,12 +344,16 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
         image_url: template.image_url,
         link: template.link,
         date: getFutureDate(template.daysOffset),
-        is_school_holiday: template.is_school_holiday || false
+        is_school_holiday: template.is_school_holiday || false,
+        is_recurring: template.is_recurring || false,
+        recurrence_type: template.recurrence_type || null,
+        recurrence_until: template.recurrence_until || null
       }))
       .filter(ev => {
         const isDuplicate = 
           existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
-          existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
+          existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date) ||
+          dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase() && d.date === ev.date);
         return !isDuplicate;
       });
 

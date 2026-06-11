@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   const [topPostThisMonth, setTopPostThisMonth] = useState(null);
   const [extendingSeries, setExtendingSeries] = useState(null);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
+  const [dismissed, setDismissed] = useState([]);
   const navigate = useNavigate();
 
   const timeOptions = [
@@ -139,6 +140,26 @@ export default function AdminDashboard() {
           }
         }
         setSuggestions(activeSuggestions);
+
+        // Fetch dismissed suggestions
+        const dismissedCol = collection(db, 'dismissed_suggestions');
+        const dismissedSnapshot = await getDocs(dismissedCol);
+        const fetchedDismissed = dismissedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+        // Delete past dismissed suggestions from Firestore to keep DB clean
+        const activeDismissed = [];
+        for (const dis of fetchedDismissed) {
+          if (dis.date && dis.date < todayStr) {
+            try {
+              await deleteDoc(doc(db, 'dismissed_suggestions', dis.id));
+            } catch (err) {
+              console.error("Failed to delete expired dismissed suggestion:", dis.id, err);
+            }
+          } else {
+            activeDismissed.push({ title: dis.title?.toLowerCase(), date: dis.date });
+          }
+        }
+        setDismissed(activeDismissed);
 
         // Fetch blog posts
         const postsCol = collection(db, 'posts');
@@ -279,14 +300,37 @@ export default function AdminDashboard() {
         const snapshot = await getDocs(eventsCol);
         const matchingEvents = snapshot.docs.filter(docObj => docObj.data().recurring_id === event.recurring_id);
         
+        const dismissedCol = collection(db, 'dismissed_suggestions');
+        const newDismissed = [];
         for (const docObj of matchingEvents) {
+          const data = docObj.data();
           await deleteDoc(doc(db, 'events', docObj.id));
+          
+          if (data.title && data.date) {
+            await addDoc(dismissedCol, {
+              title: data.title,
+              date: data.date,
+              dismissed_at: new Date().toISOString()
+            });
+            newDismissed.push({ title: data.title.toLowerCase(), date: data.date });
+          }
         }
+        setDismissed(prev => [...prev, ...newDismissed]);
         
         setEvents(prev => prev.filter(e => e.recurring_id !== event.recurring_id));
         alert("All occurrences in the recurring series have been deleted.");
       } else {
         await deleteDoc(doc(db, 'events', event.id));
+        
+        if (event.title && event.date) {
+          await addDoc(collection(db, 'dismissed_suggestions'), {
+            title: event.title,
+            date: event.date,
+            dismissed_at: new Date().toISOString()
+          });
+          setDismissed(prev => [...prev, { title: event.title.toLowerCase(), date: event.date }]);
+        }
+
         setEvents(prev => prev.filter(e => e.id !== event.id));
       }
     } catch (error) {
@@ -309,22 +353,53 @@ export default function AdminDashboard() {
 
   const handleApproveSuggestion = async (suggestion) => {
     try {
+      let targetDates = [suggestion.date];
+      const isRecurring = suggestion.is_recurring && suggestion.recurrence_until;
+      const recurringId = isRecurring ? `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : null;
+
+      if (isRecurring) {
+        const startDate = new Date(suggestion.date);
+        const untilDate = new Date(suggestion.recurrence_until);
+        const dateStrings = [];
+        let curr = new Date(startDate);
+        
+        while (curr <= untilDate) {
+          dateStrings.push(curr.toISOString().split('T')[0]);
+          if (suggestion.recurrence_type === 'weekly') {
+            curr.setDate(curr.getDate() + 7);
+          } else if (suggestion.recurrence_type === 'fortnightly') {
+            curr.setDate(curr.getDate() + 14);
+          } else if (suggestion.recurrence_type === 'monthly') {
+            curr.setMonth(curr.getMonth() + 1);
+          } else {
+            break;
+          }
+        }
+        targetDates = dateStrings;
+      }
+
       // Add to main events collection
       const eventsCol = collection(db, 'events');
-      await addDoc(eventsCol, {
-        title: suggestion.title,
-        date: suggestion.date || '',
-        time: suggestion.time || '',
-        location: suggestion.location || '',
-        description: suggestion.description || '',
-        image_url: suggestion.image_url || '',
-        price: 'FREE',
-        link: suggestion.link || '',
-        category: suggestion.category || 'Playgrounds',
-        age_group: suggestion.age_group || 'All Ages',
-        is_featured: suggestion.is_featured || false,
-        is_school_holiday: suggestion.is_school_holiday || false
-      });
+      for (const occDate of targetDates) {
+        await addDoc(eventsCol, {
+          title: suggestion.title,
+          date: occDate,
+          time: suggestion.time || '',
+          location: suggestion.location || '',
+          description: suggestion.description || '',
+          image_url: suggestion.image_url || '',
+          price: 'FREE',
+          link: suggestion.link || '',
+          category: suggestion.category || 'Playgrounds',
+          age_group: suggestion.age_group || 'All Ages',
+          is_featured: suggestion.is_featured || false,
+          is_school_holiday: suggestion.is_school_holiday || false,
+          is_recurring: isRecurring,
+          recurring_id: recurringId,
+          recurrence_type: isRecurring ? suggestion.recurrence_type : null,
+          recurrence_until: isRecurring ? suggestion.recurrence_until : null
+        });
+      }
 
       // Delete from suggestions queue
       await deleteDoc(doc(db, 'suggestions', suggestion.id));
@@ -354,21 +429,52 @@ export default function AdminDashboard() {
     
     try {
       // 1. Add to main events collection
+      let targetDates = [editingSuggestion.date];
+      const isRecurring = editingSuggestion.is_recurring && editingSuggestion.recurrence_until;
+      const recurringId = isRecurring ? `rec_${Date.now()}_${Math.random().toString(36).substr(2, 9)}` : null;
+
+      if (isRecurring) {
+        const startDate = new Date(editingSuggestion.date);
+        const untilDate = new Date(editingSuggestion.recurrence_until);
+        const dateStrings = [];
+        let curr = new Date(startDate);
+        
+        while (curr <= untilDate) {
+          dateStrings.push(curr.toISOString().split('T')[0]);
+          if (editingSuggestion.recurrence_type === 'weekly') {
+            curr.setDate(curr.getDate() + 7);
+          } else if (editingSuggestion.recurrence_type === 'fortnightly') {
+            curr.setDate(curr.getDate() + 14);
+          } else if (editingSuggestion.recurrence_type === 'monthly') {
+            curr.setMonth(curr.getMonth() + 1);
+          } else {
+            break;
+          }
+        }
+        targetDates = dateStrings;
+      }
+
       const eventsCol = collection(db, 'events');
-      await addDoc(eventsCol, {
-        title: editingSuggestion.title,
-        date: editingSuggestion.date || '',
-        time: editingSuggestion.time || '',
-        location: editingSuggestion.location || '',
-        description: editingSuggestion.description || '',
-        image_url: editingSuggestion.image_url || '',
-        price: 'FREE',
-        link: editingSuggestion.link || '',
-        category: editingSuggestion.category || 'Playgrounds',
-        age_group: editingSuggestion.age_group || 'All Ages',
-        is_featured: editingSuggestion.is_featured || false,
-        is_school_holiday: editingSuggestion.is_school_holiday || false
-      });
+      for (const occDate of targetDates) {
+        await addDoc(eventsCol, {
+          title: editingSuggestion.title,
+          date: occDate,
+          time: editingSuggestion.time || '',
+          location: editingSuggestion.location || '',
+          description: editingSuggestion.description || '',
+          image_url: editingSuggestion.image_url || '',
+          price: 'FREE',
+          link: editingSuggestion.link || '',
+          category: editingSuggestion.category || 'Playgrounds',
+          age_group: editingSuggestion.age_group || 'All Ages',
+          is_featured: editingSuggestion.is_featured || false,
+          is_school_holiday: editingSuggestion.is_school_holiday || false,
+          is_recurring: isRecurring,
+          recurring_id: recurringId,
+          recurrence_type: isRecurring ? editingSuggestion.recurrence_type : null,
+          recurrence_until: isRecurring ? editingSuggestion.recurrence_until : null
+        });
+      }
 
       // 2. Delete from suggestions queue
       await deleteDoc(doc(db, 'suggestions', editingSuggestion.id));
@@ -390,12 +496,23 @@ export default function AdminDashboard() {
     }
   };
 
-  const handleRejectSuggestion = async (id) => {
+  const handleRejectSuggestion = async (suggestion) => {
     if (!window.confirm("Dismiss this recommended lead?")) return;
     
     try {
-      await deleteDoc(doc(db, 'suggestions', id));
-      setSuggestions(prev => prev.filter(s => s.id !== id));
+      await deleteDoc(doc(db, 'suggestions', suggestion.id));
+      
+      // Save to dismissed suggestions list
+      if (suggestion.title && suggestion.date) {
+        await addDoc(collection(db, 'dismissed_suggestions'), {
+          title: suggestion.title,
+          date: suggestion.date,
+          dismissed_at: new Date().toISOString()
+        });
+        setDismissed(prev => [...prev, { title: suggestion.title.toLowerCase(), date: suggestion.date }]);
+      }
+
+      setSuggestions(prev => prev.filter(s => s.id !== suggestion.id));
     } catch (error) {
       console.error("Error rejecting suggestion:", error);
       alert("Failed to dismiss suggestion: " + error.message);
@@ -412,7 +529,8 @@ export default function AdminDashboard() {
         },
         body: JSON.stringify({
           existingEvents: events.map(e => ({ title: e.title, date: e.date })),
-          existingSuggestions: suggestions.map(s => ({ title: s.title, date: s.date }))
+          existingSuggestions: suggestions.map(s => ({ title: s.title, date: s.date })),
+          dismissedSuggestions: dismissed
         })
       });
       
@@ -549,9 +667,22 @@ export default function AdminDashboard() {
         return data.title === title;
       });
 
+      const dismissedCol = collection(db, 'dismissed_suggestions');
+      const newDismissed = [];
       for (const docObj of matchingDocs) {
+        const data = docObj.data();
         await deleteDoc(doc(db, 'events', docObj.id));
+        
+        if (data.title && data.date) {
+          await addDoc(dismissedCol, {
+            title: data.title,
+            date: data.date,
+            dismissed_at: new Date().toISOString()
+          });
+          newDismissed.push({ title: data.title.toLowerCase(), date: data.date });
+        }
       }
+      setDismissed(prev => [...prev, ...newDismissed]);
 
       setEvents(prev => prev.filter(e => {
         if (recurringId && e.recurring_id === recurringId) return false;
@@ -1575,6 +1706,24 @@ export default function AdminDashboard() {
                           🏝️ School Holidays
                         </span>
                       )}
+                      {s.is_recurring && (
+                        <span style={{ 
+                          backgroundColor: 'var(--teal-soft)', 
+                          color: 'var(--teal)', 
+                          padding: '4px 14px', 
+                          borderRadius: '6px',
+                          border: '2px solid var(--text-dark)',
+                          fontWeight: '800',
+                          fontSize: '0.72rem',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.05em',
+                          display: 'inline-block',
+                          marginBottom: '10px',
+                          marginLeft: '8px'
+                        }}>
+                          🔁 Repeats {s.recurrence_type} until {s.recurrence_until ? new Date(s.recurrence_until).toLocaleDateString('en-AU') : ''}
+                        </span>
+                      )}
                       <h3 style={{ 
                         fontFamily: 'var(--font-display)',
                         fontWeight: 900, 
@@ -1629,7 +1778,7 @@ export default function AdminDashboard() {
                         <Edit2 size={16} /> Edit
                       </button>
                       <button 
-                        onClick={() => handleRejectSuggestion(s.id)} 
+                        onClick={() => handleRejectSuggestion(s)} 
                         style={{ 
                           padding: '10px 20px', 
                           fontSize: '0.85rem', 
@@ -1884,7 +2033,10 @@ export default function AdminDashboard() {
                   link: editingSuggestion.link || '',
                   image_url: editingSuggestion.image_url || '',
                   is_featured: editingSuggestion.is_featured || false,
-                  is_school_holiday: editingSuggestion.is_school_holiday || false
+                  is_school_holiday: editingSuggestion.is_school_holiday || false,
+                  is_recurring: editingSuggestion.is_recurring || false,
+                  recurrence_type: editingSuggestion.is_recurring ? (editingSuggestion.recurrence_type || 'weekly') : null,
+                  recurrence_until: editingSuggestion.is_recurring ? (editingSuggestion.recurrence_until || '') : null
                 });
                 
                 // Update local state
@@ -2129,6 +2281,69 @@ export default function AdminDashboard() {
                 <label htmlFor="is_school_holiday_suggestion" style={{ fontWeight: '800', fontSize: '0.85rem', color: 'var(--text-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   🏝️ School Holiday Event (Displays visual badge)
                 </label>
+              </div>
+
+              {/* Recurrence Setup */}
+              <div style={{ 
+                padding: '20px', 
+                borderRadius: '12px', 
+                border: '2.5px solid var(--text-dark)', 
+                backgroundColor: 'var(--bg-cream)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '16px',
+                marginTop: '12px',
+                boxSizing: 'border-box'
+              }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                  <input 
+                    type="checkbox" 
+                    id="is_recurring_suggestion" 
+                    checked={editingSuggestion.is_recurring || false}
+                    onChange={(e) => setEditingSuggestion(prev => ({ ...prev, is_recurring: e.target.checked }))}
+                    style={{ width: '20px', height: '20px', accentColor: 'var(--primary)', cursor: 'pointer' }}
+                  />
+                  <label htmlFor="is_recurring_suggestion" style={{ fontWeight: '800', fontSize: '0.95rem', color: 'var(--text-dark)', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span className="material-symbols-outlined" style={{ fontSize: '20px', color: 'var(--primary)' }}>sync</span>
+                    Make this a recurring event series
+                  </label>
+                </div>
+
+                {(editingSuggestion.is_recurring) && (
+                  <div style={{ 
+                    display: 'grid', 
+                    gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
+                    gap: '16px',
+                    paddingTop: '12px',
+                    borderTop: '2px dashed var(--border-soft)'
+                  }}>
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontWeight: '800' }}>Repeat Frequency</label>
+                      <select 
+                        className="form-control"
+                        value={editingSuggestion.recurrence_type || 'weekly'}
+                        onChange={(e) => setEditingSuggestion(prev => ({ ...prev, recurrence_type: e.target.value }))}
+                        style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', height: '48px', padding: '0 12px' }}
+                      >
+                        <option value="weekly">Weekly</option>
+                        <option value="fortnightly">Fortnightly</option>
+                        <option value="monthly">Monthly</option>
+                      </select>
+                    </div>
+
+                    <div className="form-group" style={{ marginBottom: 0 }}>
+                      <label className="form-label" style={{ fontWeight: '800' }}>Repeat Until Date *</label>
+                      <input 
+                        type="date" 
+                        className="form-control"
+                        value={editingSuggestion.recurrence_until || ''}
+                        onChange={(e) => setEditingSuggestion(prev => ({ ...prev, recurrence_until: e.target.value }))}
+                        style={{ border: '2.5px solid var(--text-dark)', borderRadius: '12px', height: '48px', padding: '0 12px' }}
+                        required={editingSuggestion.is_recurring}
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div style={{ display: 'flex', gap: '12px', marginTop: '16px', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
