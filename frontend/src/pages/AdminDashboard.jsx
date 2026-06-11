@@ -141,24 +141,11 @@ export default function AdminDashboard() {
         }
         setSuggestions(activeSuggestions);
 
-        // Fetch dismissed suggestions
+        // Fetch dismissed suggestions (keep ALL dismissed records permanently — never re-suggest)
         const dismissedCol = collection(db, 'dismissed_suggestions');
         const dismissedSnapshot = await getDocs(dismissedCol);
         const fetchedDismissed = dismissedSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-
-        // Delete past dismissed suggestions from Firestore to keep DB clean
-        const activeDismissed = [];
-        for (const dis of fetchedDismissed) {
-          if (dis.date && dis.date < todayStr) {
-            try {
-              await deleteDoc(doc(db, 'dismissed_suggestions', dis.id));
-            } catch (err) {
-              console.error("Failed to delete expired dismissed suggestion:", dis.id, err);
-            }
-          } else {
-            activeDismissed.push({ title: dis.title?.toLowerCase(), date: dis.date });
-          }
-        }
+        const activeDismissed = fetchedDismissed.map(dis => ({ title: dis.title?.toLowerCase(), date: dis.date }));
         setDismissed(activeDismissed);
 
         // Fetch blog posts
@@ -557,8 +544,11 @@ export default function AdminDashboard() {
         const isDuplicate = 
           events.some(e => e.title?.toLowerCase() === item.title?.toLowerCase() && e.date === item.date) ||
           suggestions.some(s => s.title?.toLowerCase() === item.title?.toLowerCase() && s.date === item.date);
+        // Also check dismissed by title only — once dismissed, never re-suggest
+        const isDismissed = 
+          dismissed.some(d => d.title === item.title?.toLowerCase());
           
-        if (isDuplicate) {
+        if (isDuplicate || isDismissed) {
           skippedCount++;
           continue;
         }

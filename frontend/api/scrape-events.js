@@ -214,7 +214,7 @@ Current Date: ${todayStr}
 EXISTING LIVE EVENTS & PENDING SUGGESTIONS (DO NOT extract/duplicate any events that match these titles and dates):
 ${JSON.stringify([...existingEvents, ...existingSuggestions])}
 
-DISMISSED / DELETED EVENTS (DO NOT recommend or suggest these events again - match by title and date):
+DISMISSED / DELETED EVENTS (DO NOT recommend or suggest ANY event whose title matches these, regardless of date):
 ${JSON.stringify(dismissedSuggestions)}
 
 RAW WEBSITE TEXT CONTENTS:
@@ -223,7 +223,7 @@ ${successfulCrawls.map(s => `=== SOURCE: ${s.name} (${s.url}) ===\n${s.text}`).j
 INSTRUCTIONS:
 1. Extract family-friendly, kids/children's events found in the raw website texts. Focus on school holiday events, children's workshops, kids discos, family fun days, playgrounds events, library storytimes, etc.
 2. Only extract events that are happening on or after today (${todayStr}). Do not include any past events.
-3. Skip any events that are already present in the "EXISTING LIVE EVENTS & PENDING SUGGESTIONS" or "DISMISSED / DELETED EVENTS" lists above. Match strictly by title (case-insensitive) and date.
+3. Skip any events that are already present in the "EXISTING LIVE EVENTS & PENDING SUGGESTIONS" list (match by title case-insensitive AND date). For "DISMISSED / DELETED EVENTS", skip any event whose title matches a dismissed title (case-insensitive), regardless of date.
 4. Set "is_school_holiday" to true if the event explicitly mentions school holidays, is run as a school holidays activity, or if the source URL path contains "school-holidays". Otherwise, set it to false.
 5. CONSOLIDATE REPEATING EVENTS:
    - If an event appears to repeat (e.g., happens every Wednesday, every Saturday, weekly, or is a repeating holiday class), DO NOT extract multiple individual occurrences.
@@ -300,12 +300,15 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
           const filteredEvents = parsedEvents.filter(ev => {
             if (!ev.date || ev.date < todayStr) return false;
             
-            const isDuplicate = 
+            // Match existing events/suggestions by title + date
+            const isExistingDuplicate = 
               existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
-              existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date) ||
-              dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase() && d.date === ev.date);
+              existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
+            // Match dismissed events by title ONLY — once dismissed, never re-suggest
+            const isDismissed = 
+              dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase());
               
-            return !isDuplicate;
+            return !isExistingDuplicate && !isDismissed;
           });
 
           return res.status(200).json({
@@ -350,11 +353,12 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
         recurrence_until: template.recurrence_until || null
       }))
       .filter(ev => {
-        const isDuplicate = 
+        const isExistingDuplicate = 
           existingEvents.some(e => e.title?.toLowerCase() === ev.title?.toLowerCase() && e.date === ev.date) ||
-          existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date) ||
-          dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase() && d.date === ev.date);
-        return !isDuplicate;
+          existingSuggestions.some(s => s.title?.toLowerCase() === ev.title?.toLowerCase() && s.date === ev.date);
+        const isDismissed = 
+          dismissedSuggestions.some(d => d.title?.toLowerCase() === ev.title?.toLowerCase());
+        return !isExistingDuplicate && !isDismissed;
       });
 
     return res.status(200).json({
