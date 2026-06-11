@@ -1,9 +1,6 @@
 {
   "functions": {
-    "api/*.js": {
-      "maxDuration": 120
-    },
-    "api/**/*.js": {
+    "api/scrape-events.js": {
       "maxDuration": 120
     }
   },

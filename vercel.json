@@ -1,15 +1,9 @@
 {
   "functions": {
-    "frontend/api/*.js": {
+    "frontend/api/scrape-events.js": {
       "maxDuration": 120
     },
-    "frontend/api/**/*.js": {
-      "maxDuration": 120
-    },
-    "api/*.js": {
-      "maxDuration": 120
-    },
-    "api/**/*.js": {
+    "api/scrape-events.js": {
       "maxDuration": 120
     }
   }
