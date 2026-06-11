@@ -164,7 +164,7 @@ export default async function handler(req, res) {
   const todayStr = new Date().toISOString().split('T')[0];
 
   // Extract existing events, suggestions, and dismissed suggestions lists from the request body to avoid duplicates
-  const { existingEvents = [], existingSuggestions = [], dismissedSuggestions = [] } = req.body;
+  const { existingEvents = [], existingSuggestions = [], dismissedSuggestions = [] } = req.body || {};
 
   // List of high-fidelity mock events for templates & fallback
   const mockTemplates = [
