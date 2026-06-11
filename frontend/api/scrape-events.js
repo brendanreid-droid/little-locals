@@ -126,23 +126,22 @@ function cleanHtmlFull(html) {
 
 // Smart multi-pass content extraction: prioritizes structured data > articles > main > full body
 function extractEventContent(html) {
-  const parts = [];
-
   // Pass 1: LD+JSON structured event data (highest quality)
   const ldJson = extractLdJson(html);
-  if (ldJson) parts.push('[STRUCTURED DATA]\n' + ldJson);
+  if (ldJson && ldJson.trim().length > 10) {
+    return '[STRUCTURED DATA]\n' + ldJson;
+  }
 
   // Pass 2: Article elements (Elementor event cards, WP post listings)
   const articles = extractArticles(html);
-  if (articles) parts.push('[EVENT CARDS]\n' + articles);
+  if (articles && articles.trim().length > 10) {
+    return '[EVENT CARDS]\n' + articles;
+  }
 
   // Pass 3: Main content area
   const mainContent = extractMainContent(html);
-  if (mainContent) parts.push('[MAIN CONTENT]\n' + mainContent);
-
-  // If we got useful structured content, return it
-  if (parts.length > 0) {
-    return parts.join('\n\n');
+  if (mainContent && mainContent.trim().length > 10) {
+    return '[MAIN CONTENT]\n' + mainContent;
   }
 
   // Pass 4: Fall back to full body text extraction

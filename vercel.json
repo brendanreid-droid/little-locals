@@ -1,9 +1,15 @@
 {
   "functions": {
-    "frontend/api/**": {
+    "frontend/api/*.js": {
       "maxDuration": 120
     },
-    "api/**": {
+    "frontend/api/**/*.js": {
+      "maxDuration": 120
+    },
+    "api/*.js": {
+      "maxDuration": 120
+    },
+    "api/**/*.js": {
       "maxDuration": 120
     }
   }
