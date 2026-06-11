@@ -164,7 +164,16 @@ export default async function handler(req, res) {
   const todayStr = new Date().toISOString().split('T')[0];
 
   // Extract existing events, suggestions, and dismissed suggestions lists from the request body to avoid duplicates
-  const { existingEvents = [], existingSuggestions = [], dismissedSuggestions = [] } = req.body || {};
+  const { existingEvents = [], existingSuggestions = [], dismissedSuggestions = [], targetSource } = req.body || {};
+
+  // Filter sources if targetSource is provided
+  const activeSources = targetSource
+    ? SOURCES.filter(src => src.name?.toLowerCase() === targetSource.toLowerCase())
+    : SOURCES;
+
+  if (activeSources.length === 0) {
+    return res.status(400).json({ error: `Requested source "${targetSource}" not found in scraper sources list.` });
+  }
 
   // List of high-fidelity mock events for templates & fallback
   const mockTemplates = [
@@ -256,7 +265,7 @@ export default async function handler(req, res) {
   console.log("Starting concurrent crawl of local websites...");
   const crawlStartTime = Date.now();
   
-  const fetchPromises = SOURCES.map(async (src) => {
+  const fetchPromises = activeSources.map(async (src) => {
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 3500);
@@ -292,7 +301,7 @@ export default async function handler(req, res) {
 
   // Filter out completely failed or error response text to save API token usage
   const successfulCrawls = crawledSources.filter(src => !src.text.startsWith('[Error:') && !src.text.startsWith('[HTTP '));
-  console.log(`Successful crawls: ${successfulCrawls.length}/${SOURCES.length} — Total chars: ${successfulCrawls.reduce((sum, s) => sum + s.text.length, 0)}`);
+  console.log(`Successful crawls: ${successfulCrawls.length}/${activeSources.length} — Total chars: ${successfulCrawls.reduce((sum, s) => sum + s.text.length, 0)}`);
 
   // 2. AI Synthesis and Parsing via Gemini (Requires API Key)
   if (!geminiApiKey) {
@@ -467,7 +476,7 @@ Ensure you return a clean JSON array matching the requested schema. Do not wrap 
 
     return res.status(200).json({
       success: true,
-      mode: `Multi-site crawl (${successfulCrawls.length}/${SOURCES.length} sites fetched) + AI Extraction`,
+      mode: `Single or multi-site crawl (${successfulCrawls.length}/${activeSources.length} sites fetched) + AI Extraction`,
       suggestions: filteredEvents.map((ev, i) => ({
         ...ev,
         image_url: ev.image_url || mockTemplates[i % mockTemplates.length].image_url,

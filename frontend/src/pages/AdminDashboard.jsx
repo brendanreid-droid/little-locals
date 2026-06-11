@@ -23,6 +23,8 @@ export default function AdminDashboard() {
   const [extendingSeries, setExtendingSeries] = useState(null);
   const [showSeriesManager, setShowSeriesManager] = useState(false);
   const [dismissed, setDismissed] = useState([]);
+  const [scrapingStatus, setScrapingStatus] = useState('');
+  const [scrapingProgress, setScrapingProgress] = useState(0);
   const navigate = useNavigate();
 
   const timeOptions = [
@@ -508,53 +510,99 @@ export default function AdminDashboard() {
 
   const handleRunScraper = async () => {
     setScraping(true);
+    setScrapingProgress(0);
+    setScrapingStatus('Starting event crawler...');
+
+    const scraperSources = [
+      "Gosford RSL", "Everglades Woy Woy", "Ettalong Diggers", "Deepwater Plaza", "Imperial Centre",
+      "Reptile Park", "Wyong Milk Factory", "Kincumber Hotel", "Bateau Bay Hotel", "Davistown RSL",
+      "Budgewoi Hotel", "Erina Fair", "Westfield Tuggerah", "Gosford Regional Gallery",
+      "Central Coast Libraries", "Breakers Wamberal", "Terrigal Beach House", "Beachcomber",
+      "Lake Haven Shops", "The Ary Toukley"
+    ];
+
+    const allNewSuggestions = [];
+    let errorCount = 0;
+    let successCount = 0;
+    let lastError = null;
+
     try {
-      const response = await fetch('/api/scrape-events', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          existingEvents: events.map(e => ({ title: e.title, date: e.date })),
-          existingSuggestions: suggestions.map(s => ({ title: s.title, date: s.date })),
-          dismissedSuggestions: dismissed
-        })
-      });
-      
-      let data;
-      const contentType = response.headers.get("content-type");
-      if (contentType && contentType.includes("application/json")) {
-        data = await response.json();
-      } else {
-        const text = await response.text();
-        throw new Error(`Server returned non-JSON response: ${text.substring(0, 500)}`);
+      const existingEventsList = events.map(e => ({ title: e.title, date: e.date }));
+      const existingSuggestionsList = suggestions.map(s => ({ title: s.title, date: s.date }));
+
+      for (let i = 0; i < scraperSources.length; i++) {
+        const sourceName = scraperSources[i];
+        setScrapingStatus(`Scraping ${sourceName} (${i + 1}/${scraperSources.length})...`);
+        setScrapingProgress(Math.round((i / scraperSources.length) * 100));
+
+        try {
+          const response = await fetch('/api/scrape-events', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              existingEvents: existingEventsList,
+              existingSuggestions: [...existingSuggestionsList, ...allNewSuggestions],
+              dismissedSuggestions: dismissed,
+              targetSource: sourceName
+            })
+          });
+
+          let data;
+          const contentType = response.headers.get("content-type");
+          if (contentType && contentType.includes("application/json")) {
+            data = await response.json();
+          } else {
+            const text = await response.text();
+            throw new Error(`Server returned non-JSON response: ${text.substring(0, 300)}`);
+          }
+
+          if (!response.ok) {
+            throw new Error(data.error || 'Failed to execute scraper.');
+          }
+
+          const siteSuggestions = data.suggestions || [];
+          allNewSuggestions.push(...siteSuggestions);
+          successCount++;
+        } catch (err) {
+          console.error(`Error scraping ${sourceName}:`, err);
+          errorCount++;
+          lastError = err;
+        }
+
+        // Add a tiny delay between requests to be polite and let UI render
+        await new Promise(r => setTimeout(r, 100));
       }
-      
-      if (!response.ok) {
-        throw new Error(data.error || 'Failed to execute scraper.');
-      }
-      
-      const newSuggestions = data.suggestions || [];
-      if (newSuggestions.length === 0) {
-        alert("Scraper executed successfully, but found no new free events this time.");
+
+      setScrapingProgress(100);
+      setScrapingStatus('Saving findings to database...');
+
+      if (allNewSuggestions.length === 0) {
+        if (errorCount > 0) {
+          alert(`Scraper completed with ${errorCount} errors. Found no new events. Last error: ${lastError?.message}`);
+        } else {
+          alert("Scraper completed successfully! No new events found on any of the websites.");
+        }
         setScraping(false);
         return;
       }
-      
+
       // Save each scraped suggestion to Firestore if it is not a duplicate
       const suggestionsCol = collection(db, 'suggestions');
       const addedSuggestions = [];
       let skippedCount = 0;
-      
-      for (const item of newSuggestions) {
-        // Compare titles (case-insensitive) and dates to detect duplicates
+
+      for (const item of allNewSuggestions) {
+        // Double-check duplicates locally in case multiple sites found same event
         const isDuplicate = 
           events.some(e => e.title?.toLowerCase() === item.title?.toLowerCase() && e.date === item.date) ||
-          suggestions.some(s => s.title?.toLowerCase() === item.title?.toLowerCase() && s.date === item.date);
-        // Also check dismissed by title only — once dismissed, never re-suggest
+          suggestions.some(s => s.title?.toLowerCase() === item.title?.toLowerCase() && s.date === item.date) ||
+          addedSuggestions.some(a => a.title?.toLowerCase() === item.title?.toLowerCase() && a.date === item.date);
+        
         const isDismissed = 
           dismissed.some(d => d.title === item.title?.toLowerCase());
-          
+
         if (isDuplicate || isDismissed) {
           skippedCount++;
           continue;
@@ -563,20 +611,23 @@ export default function AdminDashboard() {
         const docRef = await addDoc(suggestionsCol, item);
         addedSuggestions.push({ id: docRef.id, ...item });
       }
-      
+
       // Update local state instantly so the user sees the new listings
       setSuggestions(prev => [...addedSuggestions, ...prev]);
-      
+
       if (addedSuggestions.length === 0) {
-        alert(`Scraper completed successfully! (${data.mode})\n\nAll ${newSuggestions.length} found events were skipped because they are already present on your calendar or suggestions queue.`);
+        alert(`Scraper finished! (${successCount}/${scraperSources.length} successful).\n\nAll ${allNewSuggestions.length} found events were duplicates or already dismissed.`);
       } else {
-        alert(`Scraper completed successfully! (${data.mode})\n\nFound ${newSuggestions.length} events. Added ${addedSuggestions.length} new recommended activities to your queue. Skipped ${skippedCount} duplicates.`);
+        alert(`Scraper finished successfully! (${successCount}/${scraperSources.length} successful).\n\nFound ${allNewSuggestions.length} events. Added ${addedSuggestions.length} new recommended activities to your queue. Skipped ${skippedCount} duplicates.`);
       }
+
     } catch (error) {
-      console.error("Scraper handler error:", error);
-      alert("Scraper run encountered an error: " + error.message);
+      console.error("Scraper runner error:", error);
+      alert("Scraper runner crashed: " + error.message);
     } finally {
       setScraping(false);
+      setScrapingStatus('');
+      setScrapingProgress(0);
     }
   };
 
@@ -1625,6 +1676,47 @@ export default function AdminDashboard() {
               </button>
             </div>
           </div>
+
+          {scraping && (
+            <div 
+              style={{
+                marginBottom: '36px',
+                padding: '24px',
+                backgroundColor: 'var(--primary-soft)',
+                border: '3px solid var(--text-dark)',
+                borderRadius: '20px',
+                boxShadow: '4px 4px 0px 0px var(--text-dark)',
+                animation: 'slideUp 0.3s ease'
+              }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+                <span style={{ fontWeight: '800', color: 'var(--primary)', fontSize: '0.95rem' }}>
+                  {scrapingStatus}
+                </span>
+                <span style={{ fontWeight: '900', color: 'var(--primary)', fontSize: '1rem' }}>
+                  {scrapingProgress}%
+                </span>
+              </div>
+              <div 
+                style={{
+                  height: '16px',
+                  backgroundColor: 'white',
+                  border: '2.5px solid var(--text-dark)',
+                  borderRadius: '10px',
+                  overflow: 'hidden'
+                }}
+              >
+                <div 
+                  style={{
+                    width: `${scrapingProgress}%`,
+                    height: '100%',
+                    backgroundColor: 'var(--secondary)',
+                    transition: 'width 0.3s ease'
+                  }}
+                />
+              </div>
+            </div>
+          )}
 
           {suggestions.length === 0 ? (
             <div style={{ 
