@@ -129,6 +129,7 @@ export default function AdminDashboard() {
         }
 
         // Write archive records, merging each against any pre-existing record for the same key.
+        const failedArchiveKeys = new Set();
         for (const [key, record] of pendingArchive) {
           try {
             const existing = archiveById.get(key);
@@ -137,12 +138,18 @@ export default function AdminDashboard() {
             archiveById.set(key, { id: key, ...merged });
           } catch (err) {
             console.error("Failed to archive expired event:", key, err);
+            failedArchiveKeys.add(key);
           }
         }
 
         // Only after archiving, delete the expired occurrences from events.
+        // Skip deletion for any key whose archive write failed, to avoid data loss.
         for (const event of fetchedEvents) {
           if (event.date && event.date < todayStr) {
+            if (failedArchiveKeys.has(archiveKeyFor(event))) {
+              console.warn("Skipping delete; archive failed for:", event.id);
+              continue;
+            }
             try {
               await deleteDoc(doc(db, 'events', event.id));
             } catch (err) {
