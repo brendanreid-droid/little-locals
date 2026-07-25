@@ -6,11 +6,15 @@ import { db, auth, storage } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Plus, Edit2, Trash2, LogOut, Search, Calendar, MapPin, Smile, CheckCircle, XCircle, BookOpen, Cpu, RefreshCw, Mail, AlertTriangle, Repeat } from 'lucide-react';
 import { archiveKeyFor, buildArchiveRecord, mergeArchiveRecord } from '../lib/archive.js';
-// recurrence helpers imported in Task 6
+import { generateOccurrenceDates, validateRecurrenceRange, newRecurringId } from '../lib/recurrence.js';
 
 export default function AdminDashboard() {
   const [events, setEvents] = useState([]);
   const [archivedEvents, setArchivedEvents] = useState([]);
+  const [repostTarget, setRepostTarget] = useState(null); // archive record being re-posted
+  const [repostStart, setRepostStart] = useState('');
+  const [repostUntil, setRepostUntil] = useState('');
+  const [reposting, setReposting] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [posts, setPosts] = useState([]);
   const [scraping, setScraping] = useState(false);
@@ -787,14 +791,91 @@ export default function AdminDashboard() {
     }
   };
 
-  const filteredEvents = events.filter(event => 
+  const openRepostModal = (archiveRecord) => {
+    setRepostTarget(archiveRecord);
+    // Default start = today; default until = today + 3 months.
+    const today = new Date();
+    const until = new Date(today);
+    until.setMonth(until.getMonth() + 3);
+    const toYmd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    setRepostStart(toYmd(today));
+    setRepostUntil(toYmd(until));
+  };
+
+  const handleRemoveArchived = async (item) => {
+    if (!window.confirm(`Remove "${item.title}" from the archive? This does not affect any live events.`)) return;
+    try {
+      await deleteDoc(doc(db, 'archived_events', item.id));
+      setArchivedEvents(prev => prev.filter(a => a.id !== item.id));
+    } catch (err) {
+      console.error("Failed to remove archived event:", err);
+      alert("Failed to remove archived event: " + err.message);
+    }
+  };
+
+  const handleRepostSubmit = async () => {
+    if (!repostTarget) return;
+    try {
+      validateRecurrenceRange(repostStart, repostUntil);
+    } catch (err) {
+      alert(err.message);
+      return;
+    }
+    setReposting(true);
+    try {
+      const type = repostTarget.recurrence_type || 'weekly';
+      const dates = generateOccurrenceDates(repostStart, repostUntil, type);
+      const recurringId = newRecurringId();
+      const eventsCol = collection(db, 'events');
+
+      const template = {
+        title: repostTarget.title || '',
+        category: repostTarget.category || 'Playgrounds',
+        location: repostTarget.location || '',
+        time: repostTarget.time || '',
+        age_group: repostTarget.age_group || 'All Ages',
+        description: repostTarget.description || '',
+        image_url: repostTarget.image_url || '',
+        price: 'FREE',
+        link: repostTarget.link || '',
+        recurrence_type: type,
+      };
+
+      const created = [];
+      for (const occDate of dates) {
+        const docAdded = await addDoc(eventsCol, {
+          ...template,
+          date: occDate,
+          recurring_id: recurringId,
+          is_recurring: true,
+        });
+        created.push({ id: docAdded.id, ...template, date: occDate, recurring_id: recurringId, is_recurring: true });
+      }
+
+      setEvents(prev => [...prev, ...created].sort((a, b) => new Date(a.date) - new Date(b.date)));
+      setRepostTarget(null);
+      alert(`Re-posted "${template.title}" — created ${created.length} occurrences (${type}).`);
+    } catch (err) {
+      console.error("Failed to re-post series:", err);
+      alert("Failed to re-post series: " + err.message);
+    } finally {
+      setReposting(false);
+    }
+  };
+
+  const filteredEvents = events.filter(event =>
     (event.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (event.location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
-  const filteredPosts = posts.filter(post => 
+  const filteredPosts = posts.filter(post =>
     (post.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
     (post.category?.toLowerCase() || '').includes(searchTerm.toLowerCase())
+  );
+
+  const filteredArchived = archivedEvents.filter(a =>
+    (a.title?.toLowerCase() || '').includes(searchTerm.toLowerCase()) ||
+    (a.location?.toLowerCase() || '').includes(searchTerm.toLowerCase())
   );
 
   // Dynamic titles for the custom analytics cards (live data)
@@ -1122,6 +1203,22 @@ export default function AdminDashboard() {
                 className="admin-tab-btn"
               >
                 Suggested ({suggestions.length})
+              </button>
+
+              <button
+                onClick={() => { setActiveTab('archived'); setSearchTerm(''); }}
+                style={{
+                  padding: '8px 16px', fontWeight: '900', fontSize: '0.78rem', cursor: 'pointer',
+                  border: '2px solid var(--text-dark)', borderRadius: '50px',
+                  backgroundColor: activeTab === 'archived' ? 'var(--primary)' : 'var(--bg-white)',
+                  color: activeTab === 'archived' ? 'white' : 'var(--text-dark)',
+                  boxShadow: activeTab === 'archived' ? '2px 2px 0px 0px var(--text-dark)' : 'none',
+                  transform: activeTab === 'archived' ? 'translateY(-2px)' : 'none',
+                  transition: 'var(--transition-bouncy)', textTransform: 'uppercase', letterSpacing: '0.05em'
+                }}
+                className="admin-tab-btn"
+              >
+                Past Events ({archivedEvents.length})
               </button>
             </div>
           </div>
@@ -1649,8 +1746,8 @@ export default function AdminDashboard() {
           )}
         </div>
 
-      ) : (
-        
+      ) : activeTab === 'suggestions' ? (
+
         /* Tab: Suggested Scrapes List */
         <div>
           <div 
@@ -1971,15 +2068,61 @@ export default function AdminDashboard() {
                       View original source link
                     </a>
                   )}
- 
+
                 </div>
               ))}
             </div>
           )}
         </div>
+
+      ) : (
+
+        /* Tab: Past Events (Archived) List */
+        <div>
+          {filteredArchived.length === 0 ? (
+            <p style={{ textAlign: 'center', padding: '40px 0', fontWeight: '700', color: 'var(--text-dark)' }}>
+              No past events archived yet. When a recurring event's dates pass, it will appear here to re-post.
+            </p>
+          ) : (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {filteredArchived.map(item => (
+                <div key={item.id} style={{
+                  display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                  gap: '12px', padding: '14px 18px', border: '2px solid var(--text-dark)',
+                  borderRadius: '14px', backgroundColor: 'var(--bg-white)', flexWrap: 'wrap'
+                }}>
+                  <div style={{ minWidth: '200px' }}>
+                    <div style={{ fontWeight: '900', fontSize: '0.95rem' }}>{item.title}</div>
+                    <div style={{ fontSize: '0.78rem', fontWeight: '700', color: 'var(--text-muted, #666)' }}>
+                      {item.category || 'Uncategorised'} · Last ran {item.last_occurrence_date || 'unknown'}
+                      {item.is_recurring ? ` · ${item.recurrence_type || 'recurring'}` : ' · one-off'}
+                    </div>
+                  </div>
+                  <div style={{ display: 'flex', gap: '8px' }}>
+                    {item.is_recurring && (
+                      <button onClick={() => openRepostModal(item)}
+                        style={{ padding: '8px 14px', fontWeight: '900', fontSize: '0.72rem', cursor: 'pointer',
+                          border: '2px solid var(--text-dark)', borderRadius: '50px',
+                          backgroundColor: 'var(--primary)', color: 'white', textTransform: 'uppercase' }}>
+                        Re-post
+                      </button>
+                    )}
+                    <button onClick={() => handleRemoveArchived(item)}
+                      style={{ padding: '8px 14px', fontWeight: '900', fontSize: '0.72rem', cursor: 'pointer',
+                        border: '2px solid var(--text-dark)', borderRadius: '50px',
+                        backgroundColor: 'var(--bg-white)', color: 'var(--text-dark)', textTransform: 'uppercase' }}>
+                      Remove
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
       )}
       </div>
-        
+
         {/* Right Column: Sidebar (Spans 4 columns) */}
         <div 
           className="admin-sidebar-col"
@@ -2502,6 +2645,44 @@ export default function AdminDashboard() {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* Re-post Archived Event Modal */}
+      {repostTarget && (
+        <div style={{
+          position: 'fixed', inset: 0, backgroundColor: 'rgba(0,0,0,0.5)',
+          display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '20px'
+        }}>
+          <div style={{
+            backgroundColor: 'var(--bg-white)', border: '3px solid var(--text-dark)', borderRadius: '18px',
+            padding: '24px', width: '100%', maxWidth: '420px', boxShadow: '6px 6px 0 0 var(--text-dark)'
+          }}>
+            <h3 style={{ fontWeight: '900', marginBottom: '4px' }}>Re-post event</h3>
+            <p style={{ fontWeight: '700', fontSize: '0.85rem', marginBottom: '16px' }}>
+              "{repostTarget.title}" — {repostTarget.recurrence_type || 'weekly'}
+            </p>
+            <label style={{ display: 'block', fontWeight: '800', fontSize: '0.8rem', marginBottom: '4px' }}>Start date</label>
+            <input
+              type="date" value={repostStart} onChange={e => setRepostStart(e.target.value)}
+              style={{ width: '100%', padding: '10px', border: '2px solid var(--text-dark)', borderRadius: '10px', marginBottom: '12px' }}
+            />
+            <label style={{ display: 'block', fontWeight: '800', fontSize: '0.8rem', marginBottom: '4px' }}>Repeat until (max 6 months)</label>
+            <input
+              type="date" value={repostUntil} onChange={e => setRepostUntil(e.target.value)}
+              style={{ width: '100%', padding: '10px', border: '2px solid var(--text-dark)', borderRadius: '10px', marginBottom: '20px' }}
+            />
+            <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
+              <button onClick={() => setRepostTarget(null)} disabled={reposting}
+                style={{ padding: '10px 16px', fontWeight: '900', border: '2px solid var(--text-dark)', borderRadius: '50px', backgroundColor: 'var(--bg-white)', cursor: 'pointer' }}>
+                Cancel
+              </button>
+              <button onClick={handleRepostSubmit} disabled={reposting}
+                style={{ padding: '10px 16px', fontWeight: '900', border: '2px solid var(--text-dark)', borderRadius: '50px', backgroundColor: 'var(--primary)', color: 'white', cursor: reposting ? 'wait' : 'pointer' }}>
+                {reposting ? 'Re-posting…' : 'Re-post'}
+              </button>
+            </div>
           </div>
         </div>
       )}
