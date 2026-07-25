@@ -1,13 +1,16 @@
 import { useState, useEffect } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
-import { collection, getDocs, doc, deleteDoc, addDoc, updateDoc, query, orderBy } from 'firebase/firestore';
+import { collection, getDocs, doc, deleteDoc, addDoc, updateDoc, setDoc, query, orderBy } from 'firebase/firestore';
 import { signOut, onAuthStateChanged } from 'firebase/auth';
 import { db, auth, storage } from '../firebase';
 import { ref, uploadBytesResumable, getDownloadURL } from 'firebase/storage';
 import { Plus, Edit2, Trash2, LogOut, Search, Calendar, MapPin, Smile, CheckCircle, XCircle, BookOpen, Cpu, RefreshCw, Mail, AlertTriangle, Repeat } from 'lucide-react';
+import { archiveKeyFor, buildArchiveRecord, mergeArchiveRecord } from '../lib/archive.js';
+// recurrence helpers imported in Task 6
 
 export default function AdminDashboard() {
   const [events, setEvents] = useState([]);
+  const [archivedEvents, setArchivedEvents] = useState([]);
   const [suggestions, setSuggestions] = useState([]);
   const [posts, setPosts] = useState([]);
   const [scraping, setScraping] = useState(false);
@@ -108,8 +111,36 @@ export default function AdminDashboard() {
         const eventSnapshot = await getDocs(eq);
         const fetchedEvents = eventSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
 
-        // Delete past events from Firestore
+        // Fetch existing archive records once, keyed by doc id, so merges are in-memory.
+        const archivedSnap = await getDocs(collection(db, 'archived_events'));
+        const archiveById = new Map(archivedSnap.docs.map(d => [d.id, { id: d.id, ...d.data() }]));
+
+        // Archive past events (template per series / one-off), then delete the occurrence.
         const activeEvents = [];
+        const pendingArchive = new Map(); // key -> merged archive record (this load's expiries)
+        for (const event of fetchedEvents) {
+          if (event.date && event.date < todayStr) {
+            const key = archiveKeyFor(event);
+            const incoming = buildArchiveRecord(event);
+            pendingArchive.set(key, mergeArchiveRecord(pendingArchive.get(key), incoming));
+          } else {
+            activeEvents.push(event);
+          }
+        }
+
+        // Write archive records, merging each against any pre-existing record for the same key.
+        for (const [key, record] of pendingArchive) {
+          try {
+            const existing = archiveById.get(key);
+            const merged = mergeArchiveRecord(existing || null, record);
+            await setDoc(doc(db, 'archived_events', key), merged);
+            archiveById.set(key, { id: key, ...merged });
+          } catch (err) {
+            console.error("Failed to archive expired event:", key, err);
+          }
+        }
+
+        // Only after archiving, delete the expired occurrences from events.
         for (const event of fetchedEvents) {
           if (event.date && event.date < todayStr) {
             try {
@@ -117,11 +148,14 @@ export default function AdminDashboard() {
             } catch (err) {
               console.error("Failed to delete expired event:", event.id, err);
             }
-          } else {
-            activeEvents.push(event);
           }
         }
         setEvents(activeEvents);
+
+        // Populate the Past Events tab from the up-to-date archive map.
+        const fetchedArchived = Array.from(archiveById.values())
+          .sort((a, b) => (b.last_occurrence_date || '').localeCompare(a.last_occurrence_date || ''));
+        setArchivedEvents(fetchedArchived);
 
         // Fetch suggestions (from scraper queue)
         const suggestionsCol = collection(db, 'suggestions');
