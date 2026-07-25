@@ -12,12 +12,23 @@ function toYmd(date) {
   return `${y}-${m}-${d}`;
 }
 
+// Add n calendar months to a date, clamping the day to the last valid day of the target month.
+function addMonths(date, n) {
+  const y = date.getFullYear();
+  const m = date.getMonth();
+  const d = date.getDate();
+  const lastDayOfTarget = new Date(y, m + n + 1, 0).getDate(); // day 0 of next month = last day
+  return new Date(y, m + n, Math.min(d, lastDayOfTarget));
+}
+
 // Returns an array of YYYY-MM-DD strings from start..until inclusive.
 // type: 'weekly' | 'fortnightly' | 'monthly'. Unknown types return [start].
 export function generateOccurrenceDates(startStr, untilStr, type) {
   const until = parseYmd(untilStr);
+  const startDate = parseYmd(startStr);
   const dates = [];
-  let curr = parseYmd(startStr);
+  let curr = startDate;
+  let monthIndex = 0;
   while (curr <= until) {
     dates.push(toYmd(curr));
     if (type === 'weekly') {
@@ -25,7 +36,8 @@ export function generateOccurrenceDates(startStr, untilStr, type) {
     } else if (type === 'fortnightly') {
       curr = new Date(curr); curr.setDate(curr.getDate() + 14);
     } else if (type === 'monthly') {
-      curr = new Date(curr); curr.setMonth(curr.getMonth() + 1);
+      monthIndex += 1;
+      curr = addMonths(startDate, monthIndex);
     } else {
       break;
     }
@@ -40,8 +52,7 @@ export function validateRecurrenceRange(startStr, untilStr) {
   if (until <= start) {
     throw new Error('Repeat Until Date must be after the start Date.');
   }
-  const max = new Date(start);
-  max.setMonth(max.getMonth() + 6);
+  const max = addMonths(start, 6);
   if (until > max) {
     throw new Error('To keep performance high, a recurring series cannot repeat for more than 6 months.');
   }

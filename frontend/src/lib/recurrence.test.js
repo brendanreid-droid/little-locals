@@ -22,6 +22,11 @@ describe('generateOccurrenceDates', () => {
       .toEqual(['2026-07-27', '2026-08-03', '2026-08-10']);
   });
 
+  it('monthly: clamps month-end start dates and anchors to the original day', () => {
+    expect(generateOccurrenceDates('2026-01-31', '2026-04-30', 'monthly'))
+      .toEqual(['2026-01-31', '2026-02-28', '2026-03-31', '2026-04-30']);
+  });
+
   it('unknown frequency yields just the start date', () => {
     expect(generateOccurrenceDates('2026-07-27', '2026-08-17', 'nope'))
       .toEqual(['2026-07-27']);
