@@ -14,6 +14,7 @@ export default function AdminDashboard() {
   const [repostTarget, setRepostTarget] = useState(null); // archive record being re-posted
   const [repostStart, setRepostStart] = useState('');
   const [repostUntil, setRepostUntil] = useState('');
+  const [repostFrequency, setRepostFrequency] = useState('weekly'); // 'weekly' | 'fortnightly' | 'monthly' | 'one-time'
   const [reposting, setReposting] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [posts, setPosts] = useState([]);
@@ -800,6 +801,9 @@ export default function AdminDashboard() {
     const toYmd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     setRepostStart(toYmd(today));
     setRepostUntil(toYmd(until));
+    // Default to the event's original cadence; fall back to weekly for events
+    // that were never flagged recurring (e.g. scraped one-off dated events).
+    setRepostFrequency(archiveRecord.recurrence_type || 'weekly');
   };
 
   const handleRemoveArchived = async (item) => {
@@ -815,19 +819,24 @@ export default function AdminDashboard() {
 
   const handleRepostSubmit = async () => {
     if (!repostTarget) return;
-    try {
-      validateRecurrenceRange(repostStart, repostUntil);
-    } catch (err) {
-      alert(err.message);
+    const oneTime = repostFrequency === 'one-time';
+
+    // Recurring re-posts need a valid date range; one-time only needs the start date.
+    if (!oneTime) {
+      try {
+        validateRecurrenceRange(repostStart, repostUntil);
+      } catch (err) {
+        alert(err.message);
+        return;
+      }
+    } else if (!repostStart) {
+      alert('Please choose a date for the event.');
       return;
     }
+
     setReposting(true);
     try {
-      const type = repostTarget.recurrence_type || 'weekly';
-      const dates = generateOccurrenceDates(repostStart, repostUntil, type);
-      const recurringId = newRecurringId();
       const eventsCol = collection(db, 'events');
-
       const template = {
         title: repostTarget.title || '',
         category: repostTarget.category || 'Playgrounds',
@@ -838,26 +847,38 @@ export default function AdminDashboard() {
         image_url: repostTarget.image_url || '',
         price: 'FREE',
         link: repostTarget.link || '',
-        recurrence_type: type,
       };
 
       const created = [];
-      for (const occDate of dates) {
+      if (oneTime) {
+        // Single event on the chosen date; not part of a recurring series.
         const docAdded = await addDoc(eventsCol, {
           ...template,
-          date: occDate,
-          recurring_id: recurringId,
-          is_recurring: true,
+          date: repostStart,
+          is_recurring: false,
         });
-        created.push({ id: docAdded.id, ...template, date: occDate, recurring_id: recurringId, is_recurring: true });
+        created.push({ id: docAdded.id, ...template, date: repostStart, is_recurring: false });
+      } else {
+        const dates = generateOccurrenceDates(repostStart, repostUntil, repostFrequency);
+        const recurringId = newRecurringId();
+        for (const occDate of dates) {
+          const docAdded = await addDoc(eventsCol, {
+            ...template,
+            date: occDate,
+            recurrence_type: repostFrequency,
+            recurring_id: recurringId,
+            is_recurring: true,
+          });
+          created.push({ id: docAdded.id, ...template, date: occDate, recurrence_type: repostFrequency, recurring_id: recurringId, is_recurring: true });
+        }
       }
 
       setEvents(prev => [...prev, ...created].sort((a, b) => new Date(a.date) - new Date(b.date)));
       setRepostTarget(null);
-      alert(`Re-posted "${template.title}" — created ${created.length} occurrences (${type}).`);
+      alert(`Re-posted "${template.title}" — created ${created.length} event${created.length === 1 ? '' : 's'} (${oneTime ? 'one-time' : repostFrequency}).`);
     } catch (err) {
-      console.error("Failed to re-post series:", err);
-      alert("Failed to re-post series: " + err.message);
+      console.error("Failed to re-post event:", err);
+      alert("Failed to re-post event: " + err.message);
     } finally {
       setReposting(false);
     }
@@ -2099,14 +2120,12 @@ export default function AdminDashboard() {
                     </div>
                   </div>
                   <div style={{ display: 'flex', gap: '8px' }}>
-                    {item.is_recurring && (
-                      <button onClick={() => openRepostModal(item)}
-                        style={{ padding: '8px 14px', fontWeight: '900', fontSize: '0.72rem', cursor: 'pointer',
-                          border: '2px solid var(--text-dark)', borderRadius: '50px',
-                          backgroundColor: 'var(--primary)', color: 'white', textTransform: 'uppercase' }}>
-                        Re-post
-                      </button>
-                    )}
+                    <button onClick={() => openRepostModal(item)}
+                      style={{ padding: '8px 14px', fontWeight: '900', fontSize: '0.72rem', cursor: 'pointer',
+                        border: '2px solid var(--text-dark)', borderRadius: '50px',
+                        backgroundColor: 'var(--primary)', color: 'white', textTransform: 'uppercase' }}>
+                      Re-post
+                    </button>
                     <button onClick={() => handleRemoveArchived(item)}
                       style={{ padding: '8px 14px', fontWeight: '900', fontSize: '0.72rem', cursor: 'pointer',
                         border: '2px solid var(--text-dark)', borderRadius: '50px',
@@ -2661,18 +2680,33 @@ export default function AdminDashboard() {
           }}>
             <h3 style={{ fontWeight: '900', marginBottom: '4px' }}>Re-post event</h3>
             <p style={{ fontWeight: '700', fontSize: '0.85rem', marginBottom: '16px' }}>
-              "{repostTarget.title}" — {repostTarget.recurrence_type || 'weekly'}
+              "{repostTarget.title}"
             </p>
-            <label style={{ display: 'block', fontWeight: '800', fontSize: '0.8rem', marginBottom: '4px' }}>Start date</label>
+            <label style={{ display: 'block', fontWeight: '800', fontSize: '0.8rem', marginBottom: '4px' }}>Frequency</label>
+            <select
+              value={repostFrequency} onChange={e => setRepostFrequency(e.target.value)}
+              style={{ width: '100%', padding: '10px', border: '2px solid var(--text-dark)', borderRadius: '10px', marginBottom: '12px', backgroundColor: 'var(--bg-white)', fontWeight: '700' }}>
+              <option value="weekly">Weekly</option>
+              <option value="fortnightly">Fortnightly</option>
+              <option value="monthly">Monthly</option>
+              <option value="one-time">One-time (single date)</option>
+            </select>
+            <label style={{ display: 'block', fontWeight: '800', fontSize: '0.8rem', marginBottom: '4px' }}>
+              {repostFrequency === 'one-time' ? 'Event date' : 'Start date'}
+            </label>
             <input
               type="date" value={repostStart} onChange={e => setRepostStart(e.target.value)}
               style={{ width: '100%', padding: '10px', border: '2px solid var(--text-dark)', borderRadius: '10px', marginBottom: '12px' }}
             />
-            <label style={{ display: 'block', fontWeight: '800', fontSize: '0.8rem', marginBottom: '4px' }}>Repeat until (max 6 months)</label>
-            <input
-              type="date" value={repostUntil} onChange={e => setRepostUntil(e.target.value)}
-              style={{ width: '100%', padding: '10px', border: '2px solid var(--text-dark)', borderRadius: '10px', marginBottom: '20px' }}
-            />
+            {repostFrequency !== 'one-time' && (
+              <>
+                <label style={{ display: 'block', fontWeight: '800', fontSize: '0.8rem', marginBottom: '4px' }}>Repeat until (max 6 months)</label>
+                <input
+                  type="date" value={repostUntil} onChange={e => setRepostUntil(e.target.value)}
+                  style={{ width: '100%', padding: '10px', border: '2px solid var(--text-dark)', borderRadius: '10px', marginBottom: '20px' }}
+                />
+              </>
+            )}
             <div style={{ display: 'flex', gap: '10px', justifyContent: 'flex-end' }}>
               <button onClick={() => setRepostTarget(null)} disabled={reposting}
                 style={{ padding: '10px 16px', fontWeight: '900', border: '2px solid var(--text-dark)', borderRadius: '50px', backgroundColor: 'var(--bg-white)', cursor: 'pointer' }}>
